@@ -443,13 +443,21 @@ createApp({
         case 'Judged': {
           const parts = Object.entries(e).filter(([k]) => ITEM_NAMES[k])
             .map(([k, v]) => `${ITEM_NAMES[k]} ${Array.isArray(v) ? v.length + '곳' : yn(v)}`);
-          return { text: (e.by === 'gate' ? `권위 게이트 확정 (교정 ${e.corrected}건): ` : '분석 에이전트 판별: ') + parts.join(', ') };
+          if (e.by === 'gate') {
+            const fixed = new Set(e.corrected_items || []);
+            const marked = Object.entries(e).filter(([k]) => ITEM_NAMES[k])
+              .map(([k, v]) => `${ITEM_NAMES[k]} ${Array.isArray(v) ? v.length + '곳' : yn(v)}${fixed.has(k) ? '(교정됨)' : ''}`);
+            return { text: `권위 게이트 확정 (교정 ${e.corrected}건): ` + marked.join(', ') };
+          }
+          return { text: '분석 에이전트 판별: ' + parts.join(', ') };
         }
         case 'GateCorrected': {
           const fmt = v => Array.isArray(v) ? v.map(id => pinsById[id]?.name || id).join(', ') || '없음' : yn(v);
           return { text: `게이트 교정: ${e.label} ${fmt(e.llm)} → ${fmt(e.baseline)}`, warn: true };
         }
-        case 'EvidenceCard': return { text: `근거 카드 ⚡ ${pinsById[e.station_id]?.name || e.station_id} (${e.facts.join(', ')}) — 눌러서 지도 이동`, stationId: e.station_id };
+        case 'EvidenceCard': return {
+          text: `근거 카드 ⚡ ${pinsById[e.station_id]?.name || e.station_id} — ${e.picked_by === 'gate' ? '게이트가 기준으로 추가(교정됨)' : `AI 선택 (${e.facts.join(', ')})`} · 눌러서 지도 이동`,
+          stationId: e.station_id, warn: e.picked_by === 'gate' };
         case 'DraftWritten': return { text: `답변 작성 (시도 ${e.attempt})` };
         case 'Validation': return e.verdict === '합격' || e.verdict === '생략'
           ? { text: '검증 통과 (숫자·근거 대조)' }

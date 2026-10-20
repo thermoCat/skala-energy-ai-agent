@@ -18,7 +18,8 @@ from .facts import build_competition_facts, build_facts, build_watch_facts
 from .retry import with_retry
 from .validation import check_answer
 
-JUDGED_TYPES = ("station", "district", "scenario")   # 판별·게이트를 거치는 요청
+JUDGED_TYPES = ("station", "district", "scenario")
+GATE_REASON = "기준에 따라 확정 (분석 에이전트 판별과 달라 교정)"   # 판별·게이트를 거치는 요청
 MAX_REPLAN = 1
 MAX_REWRITE = 1
 
@@ -248,6 +249,8 @@ async def authority_gate_node(state: dict, deps: SupervisorDeps) -> dict:
     """권위 게이트 — 분석 에이전트 판별을 코드 기준과 대조해 확정 판정을 만드는 노드
 
     기준이 있는 항목은 다르면 코드 기준으로 교정하고 GateCorrected 이벤트를 남긴다.
+    확정 판정마다 corrected(교정 여부)와 llm_value(AI 원래 판별)를 붙이고,
+    교정된 항목은 AI의 이유 대신 "기준에 따라 확정"을 쓴다 — 틀린 판별의 이유가 맞는 결론에 붙지 않게.
     판별·기준·교정 여부는 decision_log 에 저장한다.
     """
     llm, baseline = state.get("llm_verdicts", {}), state.get("baseline", {})
@@ -255,22 +258,33 @@ async def authority_gate_node(state: dict, deps: SupervisorDeps) -> dict:
     verdicts, corrections = {}, []
     for n, (item, base_value) in enumerate(baseline.items(), start=1):
         mine = llm.get(item, {})
-        value = mine.get("value")
-        if not _same(value, base_value):
-            corrections.append({"item": item, "llm": value, "baseline": base_value})
+        llm_value = mine.get("value")
+        corrected = not _same(llm_value, base_value)
+        if corrected:
+            corrections.append({"item": item, "llm": llm_value, "baseline": base_value})
             events.append({"type": "GateCorrected", "item": item,
                            "label": criteria.GATED_ITEMS[item],
-                           "llm": value, "baseline": base_value})
-            value = base_value
-        if isinstance(base_value, list):
-            value = _ordered_candidates(mine.get("value"), base_value)
-        verdicts[item] = {"id": f"J{n}", "value": value, "facts": mine.get("facts", []),
-                          "reason": mine.get("reason"), "reasons": mine.get("reasons", {})}
+                           "llm": llm_value, "baseline": base_value})
+        value = (_ordered_candidates(llm_value, base_value) if isinstance(base_value, list)
+                 else base_value)
+        picked = set(llm_value or []) if isinstance(base_value, list) else set()
+        verdicts[item] = {
+            "id": f"J{n}", "value": value, "corrected": corrected, "llm_value": llm_value,
+            "facts": mine.get("facts", []),
+            "reason": GATE_REASON if corrected else mine.get("reason"),
+            # 목록 항목은 AI가 직접 고른 거점의 이유만 남긴다 (게이트가 더한 거점엔 AI 이유가 없음)
+            "reasons": {sid: r for sid, r in (mine.get("reasons") or {}).items()
+                        if sid in picked and sid in (value or [])},
+            "picked_by_llm": [sid for sid in (value or []) if sid in picked]
+            if isinstance(base_value, list) else None,
+        }
 
-    for sid in verdicts.get("fast_candidates", {}).get("value") or []:
-        cited = verdicts["fast_candidates"]["reasons"].get(sid, {}).get("facts", [])
+    fast = verdicts.get("fast_candidates", {})
+    for sid in fast.get("value") or []:
+        cited = fast["reasons"].get(sid, {}).get("facts", [])
         events.append({"type": "EvidenceCard", "station_id": sid, "verdict": "⚡",
-                       "facts": cited})
+                       "facts": cited, "picked_by": "llm" if sid in fast["picked_by_llm"]
+                       else "gate"})
 
     request_type = state["request_type"]
     scope_type = {"station": "station", "scenario": "station", "watch": "watch",
@@ -285,6 +299,7 @@ async def authority_gate_node(state: dict, deps: SupervisorDeps) -> dict:
         snapshot=source.get("snapshot", ""), rule_version=criteria.RULE_VERSION,
         llm_verdict=llm, baseline=baseline, verdict=verdicts, corrections=corrections)
     events.append({"type": "Judged", "by": "gate", "corrected": len(corrections),
+                   "corrected_items": [c["item"] for c in corrections],
                    **{item: v["value"] for item, v in verdicts.items()}})
     return {"verdicts": verdicts, "gate_corrections": corrections, "events": events}
 

@@ -22,7 +22,11 @@ class EnergyAnswer:
         return fmt.format(self.by_key[key]["value"]) + f"[{self.by_key[key]['id']}]"
 
     def j(self, item: str) -> str:
-        return f"[{self.verdicts[item]['id']}]" if item in self.verdicts else ""
+        if item not in self.verdicts:
+            return ""
+        # "[J2·교정]" 처럼 붙이면 번호의 숫자가 근거 없는 숫자로 잡혀서 괄호를 밖에 둔다
+        mark = "(교정됨)" if self.verdicts[item].get("corrected") else ""
+        return f"[{self.verdicts[item]['id']}]{mark}"
 
     def value(self, item: str):
         return self.verdicts.get(item, {}).get("value")
