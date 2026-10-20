@@ -91,6 +91,14 @@ class EnergyAnswer:
             f"(급속 1회 충전 시간 중앙값 {c('occupancy_min', '{}분')} 가정)",
         ]
 
+    def decision_lines(self) -> list[str]:
+        decisions = [f for k, f in self.by_key.items() if k.startswith("decision:")]
+        station_id = self.by_key.get("station", {}).get("station_id")
+        if station_id:   # 주유소 질문이면 그 주유소의 결정만
+            decisions = [f for f in decisions if f["station_id"] == station_id]
+        return [f"※ 지난 결정 — {f['name']}: {f['value']}[{f['id']}] (이번 판정과 함께 검토하세요)"
+                for f in decisions]
+
     def correction_lines(self, corrections: list[dict], item_labels: dict) -> list[str]:
         lines = []
         for fix in corrections:
@@ -138,6 +146,7 @@ class EnergyAnswer:
                 lines.append(self.station_line(self.by_key["station"]["station_id"]))
             else:
                 lines += self.cluster_lines()
+        lines += self.decision_lines()
         lines += self.correction_lines(corrections, item_labels)
         lines += [f"※ 데이터 없음: {TOOL_FUELS.get(e['tool'], e['tool'])}" for e in errors]
         lines.append("현장 확인 항목: " + " · ".join(site_checks))

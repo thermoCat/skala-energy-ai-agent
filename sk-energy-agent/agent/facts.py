@@ -81,6 +81,17 @@ def _add_scenario(facts: FactList, sim: dict) -> None:
     facts.add("cars_per_hour", "시간당 처리 대수 (가정)", sim["cars_per_hour"], "대", src)
 
 
+def _add_decisions(facts: FactList, log: dict, names: dict) -> None:
+    latest: dict = {}
+    for d in log.get("human", []):            # 최신순이라 거점마다 첫 행이 최근 결정
+        latest.setdefault(d["station_id"], d)
+    for sid, d in sorted(latest.items()):
+        kind = f" · {d['conversion_type']}" if d.get("conversion_type") else ""
+        facts.add(f"decision:{sid}", f"{names.get(sid, sid)} 지난 사람 결정",
+                  f"{d['created_at'][:10]} {d['choice']}{kind} — {d['note']} ({d['decided_by']})",
+                  "", log["source"], station_id=sid, name=names.get(sid, sid))
+
+
 def build_facts(results: dict, company: str) -> list[dict]:
     """조회 결과를 번호 붙은 사실 목록으로 만드는 함수 (실패한 Tool의 사실은 빠짐)
 
@@ -106,4 +117,7 @@ def build_facts(results: dict, company: str) -> list[dict]:
         _add_cluster(facts, results.get("cluster_cards", []), company)
     if _ok(results.get("simulate")):
         _add_scenario(facts, results["simulate"])
+    if _ok(results.get("decisions")):
+        names = {c["station_id"]: c["name"] for c in results.get("cluster_cards", []) if _ok(c)}
+        _add_decisions(facts, results["decisions"], names)
     return facts.items

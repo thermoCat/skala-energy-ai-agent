@@ -16,6 +16,7 @@ from pathlib import Path
 from fastmcp import FastMCP
 from pydantic import BaseModel, Field
 
+from agent.session_store import default_db_path, read_decision_log
 from energy.indicators import ev_supply, fuel_demand
 from energy.rules.cluster import review_cluster as _review_cluster
 from energy.rules.names import find_stations
@@ -142,6 +143,17 @@ def simulate(station_id: str, fast_add: int, kw: int = 100) -> dict:
         return _error("없는 주유소 번호", station_id=station_id)
     except ValueError as exc:
         return _error(str(exc), fast_add=fast_add)
+
+
+@mcp.tool()
+def get_decision_log(company: str = "SK에너지", station_id: str | None = None,
+                     gu: str | None = None) -> dict:
+    """사람이 입력한 결정과 게이트 판별 기록을 읽습니다 (읽기 전용 — 결정 기록은 대시보드 API만)."""
+    if not station_id and not gu:
+        return _error("station_id 또는 gu 가 필요함")
+    log = read_decision_log(default_db_path(), company, station_id=station_id, gu=gu)
+    return {**log, "company": company, "station_id": station_id, "gu": gu,
+            "source": "판단 이력 (SQLite)"}
 
 
 # ── Resource · Prompt ──────────────────────────────────────────

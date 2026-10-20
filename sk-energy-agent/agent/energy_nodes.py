@@ -166,6 +166,9 @@ async def energy_research_node(state: dict, deps: SupervisorDeps) -> dict:
     if is_own:   # 타사 거점은 판별하지 않으므로 기준 판정·시나리오도 부르지 않는다
         tasks["district"] = ("score_district", {"gu": gu})
         tasks["cluster"] = ("review_cluster", {"gu": gu, "brand": company})
+        scope = ({"station_id": state["station_id"]} if state.get("station_id")
+                 else {"gu": gu})
+        tasks["decisions"] = ("get_decision_log", {"company": company, **scope})
         if request_type == "scenario":
             tasks["simulate"] = ("simulate", {"station_id": state["station_id"],
                                               "fast_add": state["fast_add"],

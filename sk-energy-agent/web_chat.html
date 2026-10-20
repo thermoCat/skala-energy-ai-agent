@@ -39,6 +39,10 @@
   .chips { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px; }
   .chip { padding: 2px 8px; border-radius: 9px; border: 1px solid #3a3a52; font-size: 12px; color: #c3c3e0; }
   .note { color: #9a9ac0; font-size: 12px; margin-top: 6px; }
+  .decide { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 4px; }
+  .decide select, .decide input { background: #1e1e2e; color: #e2e2f0; border: 1px solid #3a3a52; border-radius: 6px; padding: 4px 6px; font-size: 12px; }
+  .decide input { flex: 1; min-width: 120px; }
+  .decide button { padding: 4px 10px; font-size: 12px; }
 
   /* 채팅 */
   #log { flex: 1; min-height: 0; overflow-y: auto; padding: 12px 16px; display: flex; flex-direction: column; gap: 10px; }
@@ -103,6 +107,19 @@
             <tr><th>반경 1km 충전 중 비율</th><td>{{ panel.card.fast_1km_busy_pct ?? '데이터 없음' }}<span v-if="panel.card.fast_1km_busy_pct !== null">% (한 시점, 대리 지표)</span></td></tr>
           </table>
           <div v-for="f in panel.card.fuel_signals || []" :key="f.fuel" class="note"><span class="badge idle">{{ f.label }}</span> {{ f.note }}</div>
+          <template v-if="panel.card.verdict">
+            <div class="note">결정 입력 (사람만 기록 — 에이전트는 읽기만)</div>
+            <form class="decide" @submit.prevent="saveDecision">
+              <select v-model="decision.choice"><option>진행</option><option>보류</option><option>제외</option></select>
+              <select v-model="decision.conversion_type">
+                <option :value="null">전환 유형 선택 안 함</option>
+                <option v-for="t in panel.card.conversion_types" :key="t" :value="t">{{ t }}</option>
+              </select>
+              <input type="text" v-model="decision.note" placeholder="메모 (예: 부지 협의 필요)" />
+              <button type="submit">저장</button>
+            </form>
+            <div v-for="d in panel.decisions" :key="d.id" class="note">· {{ d.created_at.slice(0, 16).replace('T', ' ') }} {{ d.choice }}<span v-if="d.conversion_type"> · {{ d.conversion_type }}</span> — {{ d.note }} ({{ d.decided_by }})</div>
+          </template>
           <template v-if="panel.card.site_checks">
             <div class="note">전환 유형 선택지</div>
             <div class="chips"><span v-for="t in panel.card.conversion_types" :key="t" class="chip">{{ t }}</span></div>
@@ -196,7 +213,8 @@ createApp({
     const backendLabel = ref('');
     const ownOnly = ref(false);
     const showDistricts = ref(true);
-    const panel = reactive({ kind: null, card: null, district: null, cluster: null, ms: 0 });
+    const panel = reactive({ kind: null, card: null, district: null, cluster: null, decisions: [], ms: 0 });
+    const decision = reactive({ choice: '보류', conversion_type: null, note: '' });
     const log = ref([]);
     const input = ref('');
     const sending = ref(false);
@@ -301,7 +319,8 @@ createApp({
     // ── 핀·자치구 클릭 → 정보 패널 + 질문 채움 (자동 전송 안 함) ────────
     async function selectStation(p) {
       const [card, ms] = await timedJson(`/api/stations/${p.station_id}/card?company=${encodeURIComponent(company)}`);
-      Object.assign(panel, { kind: 'station', card, district: null, cluster: null, ms });
+      Object.assign(panel, { kind: 'station', card, district: null, cluster: null, decisions: [], ms });
+      if (card.is_own) loadDecisions(p.station_id);
       const prefix = `[${p.gu} · ${p.brand} ${p.name}] `;
       target.value = { station_id: p.station_id, label: `${p.name} (${p.station_id})`, prefix };
       suggestions.value = card.is_own ? ['이 주유소에 무엇을 더해야 해?', '급속 2기 넣으면?']
@@ -318,6 +337,21 @@ createApp({
       target.value = { gu, label: `${gu} (${company} 거점 ${n}곳)`, prefix: '' };
       suggestions.value = [`${gu} ${company} 거점 ${n}곳을 어떻게 나눠 써야 해?`];
       input.value = suggestions.value[0];
+    }
+
+    async function loadDecisions(stationId) {
+      const [log] = await timedJson(`/api/decisions?company=${encodeURIComponent(company)}&station_id=${stationId}`);
+      panel.decisions = log.human || [];
+    }
+
+    async function saveDecision() {
+      const body = { station_id: panel.card.station_id, company, choice: decision.choice,
+                     conversion_type: decision.conversion_type, note: decision.note };
+      const r = await fetch('/api/decisions', { method: 'POST', headers: { 'content-type': 'application/json' },
+                                                body: JSON.stringify(body) });
+      if (!r.ok) { alert('저장 실패: ' + JSON.stringify((await r.json()).detail)); return; }
+      decision.note = '';
+      loadDecisions(panel.card.station_id);
     }
 
     function focusStation(stationId) {
@@ -410,8 +444,8 @@ createApp({
       es.onerror = () => { es.close(); sending.value = false; };
     }
 
-    return { company, backendLabel, ownOnly, showDistricts, panel, log, input, sending, logEl,
-             target, suggestions, signed, targetPrefix, focusStation, clearTarget, onSubmit };
+    return { company, backendLabel, ownOnly, showDistricts, panel, decision, log, input, sending, logEl,
+             target, suggestions, signed, targetPrefix, focusStation, clearTarget, onSubmit, saveDecision };
   },
 }).mount('#app');
 </script>

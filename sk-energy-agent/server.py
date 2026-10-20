@@ -11,6 +11,7 @@
 import json
 import os
 from contextlib import asynccontextmanager
+from typing import Literal
 
 from dotenv import load_dotenv
 
@@ -27,6 +28,7 @@ from agent.fake_llm import FastLLM, QualityLLM
 from agent.graph import build_graph
 from agent.mcp_client import MCPClient
 from agent.session_store import SqliteSessionStore
+from energy import criteria
 from agent.supervisor_v1 import run_v1
 
 CREATION_COUNT = 0   # Wave 1 — 프로세스 내 Agent 번들 생성 횟수 (항상 1이어야 정상)
@@ -284,6 +286,39 @@ async def api_district(gu: str, company: str = "SK에너지"):
 async def api_cluster(gu: str, company: str = "SK에너지"):
     """자사 묶음 화면 — 거점별 기준 판정(⚡/유지)·연료 신호·전환 유형·현장 확인 항목"""
     return await _tool("review_cluster", {"gu": gu, "brand": company})
+
+
+class DecisionRequest(BaseModel):
+    """사람이 입력하는 결정 (에이전트는 이 API를 쓰지 못함)"""
+    station_id: str
+    choice: Literal["진행", "보류", "제외"]
+    conversion_type: str | None = None
+    note: str = ""
+    company: str = "SK에너지"
+    decided_by: str = "담당자"
+
+
+@app.post("/api/decisions")
+async def api_record_decision(req: DecisionRequest):
+    """결정 입력 — 자사 거점만, 전환 유형은 정해진 선택지만 받는다"""
+    if req.conversion_type and req.conversion_type not in criteria.CONVERSION_TYPES:
+        raise HTTPException(status_code=422, detail={"message": "없는 전환 유형",
+                                                     "allowed": list(criteria.CONVERSION_TYPES)})
+    card = await _tool("get_station_card", {"station_id": req.station_id,
+                                            "company": req.company, "with_verdict": False})
+    if not card["is_own"]:
+        raise HTTPException(status_code=403, detail={"message": "자사 거점만 결정을 기록함"})
+    return app.state.deps.session_store.record_human_decision(
+        req.company, req.station_id, card["gu"], req.choice, req.conversion_type,
+        req.note.strip(), req.decided_by)
+
+
+@app.get("/api/decisions")
+async def api_decisions(company: str = "SK에너지", station_id: str | None = None,
+                        gu: str | None = None):
+    """주유소·자치구의 사람 결정과 게이트 판별 기록 (최신순)"""
+    return await _tool("get_decision_log", {"company": company, "station_id": station_id,
+                                            "gu": gu})
 
 
 @app.get("/api/criteria")

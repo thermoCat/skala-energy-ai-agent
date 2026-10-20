@@ -61,11 +61,13 @@ async def proxy_stream(req: Request):
     return StreamingResponse(relay(), media_type="text/event-stream")
 
 
-@app.get("/api/{path:path}")
+@app.api_route("/api/{path:path}", methods=["GET", "POST"])
 async def proxy_api(path: str, req: Request):
-    """대시보드 API(/api/...) 중계"""
+    """대시보드 API(/api/...) 중계 — 결정 입력(POST)도 그대로 넘긴다"""
     async with httpx.AsyncClient(timeout=30.0) as client:
-        r = await client.get(f"{BACKEND}/api/{path}", params=dict(req.query_params))
+        r = await client.request(req.method, f"{BACKEND}/api/{path}",
+                                 params=dict(req.query_params), content=await req.body(),
+                                 headers={"content-type": "application/json"})
     return JSONResponse(r.json(), status_code=r.status_code)
 
 

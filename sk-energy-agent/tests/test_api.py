@@ -1,4 +1,5 @@
 """대시보드 API 테스트 — FastAPI 앱을 수명 주기째 띄움 (실제 MCP 서버 + 실데이터 스냅샷 + fake LLM)"""
+import os
 import time
 
 import pytest
@@ -8,10 +9,16 @@ import server
 
 
 @pytest.fixture(scope="module")
-def client():
-    """서버 lifespan(MCP 연결·그래프 생성)을 모듈에서 1번만 돌리는 fixture"""
+def client(tmp_path_factory):
+    """서버 lifespan(MCP 연결·그래프 생성)을 모듈에서 1번만 돌리는 fixture (임시 이력 DB 사용)"""
+    before = os.environ.get("SESSION_DB_PATH")
+    os.environ["SESSION_DB_PATH"] = str(tmp_path_factory.mktemp("api") / "api.db")
     with TestClient(server.app) as c:
         yield c
+    if before is None:
+        os.environ.pop("SESSION_DB_PATH")
+    else:
+        os.environ["SESSION_DB_PATH"] = before
 
 
 def test_pins(client):
@@ -77,3 +84,21 @@ def test_chat_with_gu_from_map_click(client):
     meta = r.json()["metadata"]
     assert meta["request_type"] == "district" and meta["gate_corrections"] == 1
     assert meta["validation_passed"] is True
+
+
+def test_record_decision_and_read_back(client):
+    r = client.post("/api/decisions", json={"station_id": "A0009172", "choice": "보류",
+                                            "conversion_type": "소형 추가 (초급속 1~2기)",
+                                            "note": "부지 협의 필요"})
+    assert r.status_code == 200 and r.json()["gu"] == "동대문구"
+    log = client.get("/api/decisions", params={"station_id": "A0009172"}).json()
+    assert log["human"][0]["note"] == "부지 협의 필요"
+
+
+def test_decision_rules(client):
+    other = client.post("/api/decisions", json={"station_id": "A0009177", "choice": "진행"})
+    assert other.status_code == 403                                     # 타사 거점
+    assert client.post("/api/decisions", json={"station_id": "A0009172",
+                                               "choice": "사라"}).status_code == 422
+    assert client.post("/api/decisions", json={"station_id": "A0009172", "choice": "진행",
+                                               "conversion_type": "아무거나"}).status_code == 422

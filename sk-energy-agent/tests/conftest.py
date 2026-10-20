@@ -11,9 +11,11 @@ from agent.session_store import SqliteSessionStore
 
 
 @pytest.fixture
-def store(tmp_path):
-    """테스트마다 새로 만드는 대화·판별 이력 저장소"""
-    s = SqliteSessionStore(tmp_path / "test.db")
+def store(tmp_path, monkeypatch):
+    """테스트마다 새로 만드는 대화·판단 이력 저장소 (MCP 서버도 같은 파일을 읽게 경로를 맞춤)"""
+    db = tmp_path / "test.db"
+    monkeypatch.setenv("SESSION_DB_PATH", str(db))
+    s = SqliteSessionStore(db)
     yield s
     s.close()
 
