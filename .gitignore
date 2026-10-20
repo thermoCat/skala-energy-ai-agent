@@ -1,0 +1,10 @@
+# AI 도구 설정·작업 파일 (레포 전체)
+.claude/
+CLAUDE.md
+CLAUDE.local.md
+**/CLAUDE.md
+**/CLAUDE.local.md
+.mcp.json
+
+# OS
+.DS_Store
