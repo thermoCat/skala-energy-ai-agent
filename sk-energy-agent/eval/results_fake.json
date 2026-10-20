@@ -1,0 +1,335 @@
+{
+ "summary": {
+  "cases": 18,
+  "kind_ok": 18,
+  "number_accuracy_pct": 100.0,
+  "numbers": 297,
+  "unbacked": 0,
+  "expected_found": 31,
+  "expected_total": 31,
+  "llm_agreement_pct": 85.2,
+  "judged_items": 54,
+  "gate_corrections": 8,
+  "validation_passed": 18,
+  "median_seconds": 0.03
+ },
+ "rows": [
+  {
+   "name": "풍한주유소 진단",
+   "seconds": 0.37,
+   "kind": "station",
+   "kind_ok": true,
+   "numbers": 23,
+   "unbacked": [],
+   "expected_found": [
+    "+57.0%",
+    "317.1"
+   ],
+   "expected_missing": [],
+   "judged_items": 4,
+   "llm_agree": 3,
+   "gate_corrections": 1,
+   "validation": true,
+   "llm_calls": 4
+  },
+  {
+   "name": "박미주유소 진단",
+   "seconds": 0.03,
+   "kind": "station",
+   "kind_ok": true,
+   "numbers": 23,
+   "unbacked": [],
+   "expected_found": [
+    "+47.6%",
+    "1188.9"
+   ],
+   "expected_missing": [],
+   "judged_items": 4,
+   "llm_agree": 3,
+   "gate_corrections": 1,
+   "validation": true,
+   "llm_calls": 4
+  },
+  {
+   "name": "미래주유소 진단",
+   "seconds": 0.03,
+   "kind": "station",
+   "kind_ok": true,
+   "numbers": 21,
+   "unbacked": [],
+   "expected_found": [
+    "+47.8%",
+    "550.5"
+   ],
+   "expected_missing": [],
+   "judged_items": 4,
+   "llm_agree": 3,
+   "gate_corrections": 1,
+   "validation": true,
+   "llm_calls": 4
+  },
+  {
+   "name": "광호주유소 진단",
+   "seconds": 0.03,
+   "kind": "station",
+   "kind_ok": true,
+   "numbers": 23,
+   "unbacked": [],
+   "expected_found": [
+    "+47.1%",
+    "707.7"
+   ],
+   "expected_missing": [],
+   "judged_items": 4,
+   "llm_agree": 3,
+   "gate_corrections": 1,
+   "validation": true,
+   "llm_calls": 4
+  },
+  {
+   "name": "수서지점 진단",
+   "seconds": 0.04,
+   "kind": "station",
+   "kind_ok": true,
+   "numbers": 23,
+   "unbacked": [],
+   "expected_found": [
+    "+40.7%",
+    "280.3"
+   ],
+   "expected_missing": [],
+   "judged_items": 4,
+   "llm_agree": 4,
+   "gate_corrections": 0,
+   "validation": true,
+   "llm_calls": 4
+  },
+  {
+   "name": "동대문구 묶음",
+   "seconds": 0.03,
+   "kind": "district",
+   "kind_ok": true,
+   "numbers": 21,
+   "unbacked": [],
+   "expected_found": [
+    "+57.0%",
+    "317.1"
+   ],
+   "expected_missing": [],
+   "judged_items": 4,
+   "llm_agree": 3,
+   "gate_corrections": 1,
+   "validation": true,
+   "llm_calls": 4
+  },
+  {
+   "name": "강남구 묶음",
+   "seconds": 0.03,
+   "kind": "district",
+   "kind_ok": true,
+   "numbers": 13,
+   "unbacked": [],
+   "expected_found": [
+    "+40.7%",
+    "280.3"
+   ],
+   "expected_missing": [],
+   "judged_items": 4,
+   "llm_agree": 4,
+   "gate_corrections": 0,
+   "validation": true,
+   "llm_calls": 4
+  },
+  {
+   "name": "성북구 묶음",
+   "seconds": 0.03,
+   "kind": "district",
+   "kind_ok": true,
+   "numbers": 21,
+   "unbacked": [],
+   "expected_found": [
+    "+47.9%",
+    "504.7"
+   ],
+   "expected_missing": [],
+   "judged_items": 4,
+   "llm_agree": 3,
+   "gate_corrections": 1,
+   "validation": true,
+   "llm_calls": 4
+  },
+  {
+   "name": "양천구 묶음",
+   "seconds": 0.03,
+   "kind": "district",
+   "kind_ok": true,
+   "numbers": 13,
+   "unbacked": [],
+   "expected_found": [
+    "+46.7%",
+    "672.2"
+   ],
+   "expected_missing": [],
+   "judged_items": 4,
+   "llm_agree": 4,
+   "gate_corrections": 0,
+   "validation": true,
+   "llm_calls": 4
+  },
+  {
+   "name": "금천구 묶음",
+   "seconds": 0.02,
+   "kind": "district",
+   "kind_ok": true,
+   "numbers": 13,
+   "unbacked": [],
+   "expected_found": [
+    "+47.6%",
+    "1188.9"
+   ],
+   "expected_missing": [],
+   "judged_items": 4,
+   "llm_agree": 3,
+   "gate_corrections": 1,
+   "validation": true,
+   "llm_calls": 4
+  },
+  {
+   "name": "용산구 (문장만)",
+   "seconds": 0.03,
+   "kind": "district",
+   "kind_ok": true,
+   "numbers": 13,
+   "unbacked": [],
+   "expected_found": [
+    "+39.0%",
+    "556.8"
+   ],
+   "expected_missing": [],
+   "judged_items": 4,
+   "llm_agree": 4,
+   "gate_corrections": 0,
+   "validation": true,
+   "llm_calls": 4
+  },
+  {
+   "name": "풍한 +2기",
+   "seconds": 0.05,
+   "kind": "scenario",
+   "kind_ok": true,
+   "numbers": 15,
+   "unbacked": [],
+   "expected_found": [
+    "107",
+    "3.9"
+   ],
+   "expected_missing": [],
+   "judged_items": 2,
+   "llm_agree": 2,
+   "gate_corrections": 0,
+   "validation": true,
+   "llm_calls": 4
+  },
+  {
+   "name": "살피재 +3기",
+   "seconds": 0.04,
+   "kind": "scenario",
+   "kind_ok": true,
+   "numbers": 15,
+   "unbacked": [],
+   "expected_found": [
+    "119",
+    "5.9"
+   ],
+   "expected_missing": [],
+   "judged_items": 2,
+   "llm_agree": 2,
+   "gate_corrections": 0,
+   "validation": true,
+   "llm_calls": 4
+  },
+  {
+   "name": "박미 +2기 (이름)",
+   "seconds": 0.04,
+   "kind": "scenario",
+   "kind_ok": true,
+   "numbers": 15,
+   "unbacked": [],
+   "expected_found": [
+    "272",
+    "3.9"
+   ],
+   "expected_missing": [],
+   "judged_items": 2,
+   "llm_agree": 2,
+   "gate_corrections": 0,
+   "validation": true,
+   "llm_calls": 4
+  },
+  {
+   "name": "홍능주유소 (타사)",
+   "seconds": 0.03,
+   "kind": "station",
+   "kind_ok": true,
+   "numbers": 16,
+   "unbacked": [],
+   "expected_found": [
+    "+57.0%"
+   ],
+   "expected_missing": [],
+   "judged_items": 0,
+   "llm_agree": 0,
+   "gate_corrections": 0,
+   "validation": true,
+   "llm_calls": 3
+  },
+  {
+   "name": "신성주유소 (동명)",
+   "seconds": 0.0,
+   "kind": "ask_user",
+   "kind_ok": true,
+   "numbers": 0,
+   "unbacked": [],
+   "expected_found": [],
+   "expected_missing": [],
+   "judged_items": 0,
+   "llm_agree": 0,
+   "gate_corrections": 0,
+   "validation": null,
+   "llm_calls": 1
+  },
+  {
+   "name": "S-OIL 신성주유소",
+   "seconds": 0.02,
+   "kind": "station",
+   "kind_ok": true,
+   "numbers": 16,
+   "unbacked": [],
+   "expected_found": [],
+   "expected_missing": [],
+   "judged_items": 0,
+   "llm_agree": 0,
+   "gate_corrections": 0,
+   "validation": true,
+   "llm_calls": 3
+  },
+  {
+   "name": "GS 동작구 (재계획)",
+   "seconds": 0.04,
+   "kind": "district",
+   "kind_ok": true,
+   "numbers": 13,
+   "unbacked": [],
+   "expected_found": [
+    "+51.4%",
+    "698.8"
+   ],
+   "expected_missing": [],
+   "judged_items": 4,
+   "llm_agree": 3,
+   "gate_corrections": 1,
+   "validation": true,
+   "llm_calls": 4
+  }
+ ]
+}
