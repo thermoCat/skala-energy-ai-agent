@@ -372,8 +372,11 @@ async def _call_tool_safely(deps: SupervisorDeps, name: str, args: dict) -> dict
 async def station_research_node(state: AgentState, deps: SupervisorDeps) -> dict:
     """주유소 카드를 받고 그 자치구의 수요·공급·기준 판정을 병렬로 조회하는 노드"""
     events = list(state["events"])
+    # 분석 에이전트가 볼 사실의 원천이므로 기준 판정은 빼고 받는다 (기준은 게이트만)
     card = await _call_tool_safely(deps, "get_station_card",
-                                   {"station_id": state["station_id"]})
+                                   {"station_id": state["station_id"],
+                                    "company": state.get("company", "SK에너지"),
+                                    "with_verdict": False})
     events.append({"type": "TaskCompleted", "source": "get_station_card",
                    "target": state["station_id"], "ok": "error" not in card})
     if "error" in card:
@@ -381,7 +384,7 @@ async def station_research_node(state: AgentState, deps: SupervisorDeps) -> dict
                 "events": events}
 
     gu = card["gu"]
-    is_own = card["brand"] == state.get("company", "SK에너지")
+    is_own = card["is_own"]
     names = ["get_fuel_demand", "get_ev_supply"]
     if is_own:   # 타사 거점은 판별하지 않으므로 기준 판정도 부르지 않는다
         names.append("score_district")

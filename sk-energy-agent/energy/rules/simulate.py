@@ -1,7 +1,7 @@
 """급속충전기를 더한다고 가정했을 때의 변화를 계산하는 순수 함수"""
 from energy import criteria
 from energy.indicators import session_minutes
-from energy.rules.score import score_districts
+from energy.rules.score import district_table, score_districts
 from energy.store import Snapshot
 
 def _district_view(table, gu: str) -> dict:
@@ -49,7 +49,7 @@ def simulate_fast_add(snap: Snapshot, station_id: str, fast_add: int,
         "gu": gu,
         "fast_add": fast_add,
         "kw": kw,
-        "before": _district_view(score_districts(snap), gu),
+        "before": _district_view(district_table(snap), gu),
         "after": _district_view(score_districts(snap, extra_fast={gu: fast_add}), gu),
         "parking_spaces": fast_add,
         "occupancy_min": occupancy,

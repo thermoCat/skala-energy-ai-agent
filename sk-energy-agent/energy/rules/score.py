@@ -1,12 +1,12 @@
 """자치구 기준 판정을 계산하는 순수 함수 (권위 게이트 대조용)"""
-from functools import reduce
+from functools import lru_cache, reduce
 
 import pandas as pd
 
 from energy import criteria
 from energy.indicators import (busy_pct_by_gu, change_rate, fast_density, fast_ids_by_gu,
                                fuel_count_by_gu)
-from energy.store import Snapshot
+from energy.store import Snapshot, load_snapshot
 
 
 def bottom_flags(values: pd.Series, ratio: float) -> pd.Series:
@@ -96,6 +96,22 @@ def score_districts(snap: Snapshot, extra_fast: dict[str, int] | None = None) ->
     return table
 
 
+@lru_cache(maxsize=8)
+def _cached_table(snapshot_name: str) -> pd.DataFrame:
+    return score_districts(load_snapshot(snapshot_name))
+
+
+def district_table(snap: Snapshot) -> pd.DataFrame:
+    """스냅샷의 자치구 기준 판정 표를 반환하는 함수 (스냅샷마다 1번만 계산)
+
+    Args:
+        snap: 스냅샷
+    Returns:
+        score_districts 결과 표
+    """
+    return _cached_table(snap.name)
+
+
 def _bool_or_none(value) -> bool | None:
     return None if value is None or pd.isna(value) else bool(value)
 
@@ -109,7 +125,7 @@ def district_baseline(snap: Snapshot, gu: str) -> dict:
     Returns:
         병목·유휴 위험 기준 값과 순위·점수, rule_version dict
     """
-    row = score_districts(snap).loc[gu]
+    row = district_table(snap).loc[gu]
     return {
         "gu": gu,
         "ev_bottleneck": bool(row["ev_bottleneck"]),
