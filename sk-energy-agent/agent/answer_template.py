@@ -99,6 +99,25 @@ class EnergyAnswer:
         return [f"※ 지난 결정 — {f['name']}: {f['value']}[{f['id']}] (이번 판정과 함께 검토하세요)"
                 for f in decisions]
 
+    def watch_lines(self) -> list[str]:
+        c = self.cite
+        if not self.value("alert_needed"):
+            return [f"자사 거점 주변에 새로 멈춘 급속충전기가 없습니다{self.j('alert_needed')}."]
+        marks = "①②③④⑤"
+        top = self.value("alert_stations") or []
+        picks = [f"{marks[i]} {self.by_key[f'new_failures:{sid}']['name']}"
+                 f"({self.by_key[f'new_failures:{sid}']['gu']}) — "
+                 f"새 고장 {c(f'new_failures:{sid}', '{}개')}" for i, sid in enumerate(top)]
+        lines = [f"자사 거점 {c('stations_affected', '{}곳')} 주변 반경 1km에서 급속충전기가 새로 "
+                 f"멈췄습니다{self.j('alert_needed')} (새 고장 {c('new_failures', '{}개')}, "
+                 f"기준: {c('watch_rule')}).",
+                 f"먼저 볼 거점{self.j('alert_stations')}: " + "  ".join(picks)]
+        if "stations_rest" in self.by_key:
+            lines.append(f"나머지 {c('stations_rest', '{}곳')}은 알림을 눌러 목록에서 확인하세요.")
+        lines.append("주변 충전기가 멈추면 자사 거점의 충전 수요·고객 안내에 영향이 있어 "
+                     "현장 확인이 필요합니다.")
+        return lines
+
     def correction_lines(self, corrections: list[dict], item_labels: dict) -> list[str]:
         lines = []
         for fix in corrections:
@@ -116,6 +135,10 @@ class EnergyAnswer:
     def build(self, request_type, corrections, is_own, errors, site_checks, item_labels,
               replanned_from) -> list[str]:
         station = self.by_key.get("station", {}).get("value")
+        if request_type == "watch":
+            lines = [f"[{self.by_key['watch_scope']['value']} 매일 감시 · "
+                     f"{self.by_key['watch_window']['value']}]"]
+            return lines + self.watch_lines() + self.correction_lines(corrections, item_labels)
         if request_type == "district":
             own = self.by_key.get("own_count", {})
             header = f"[{own.get('label', '').replace(' 거점 수', '')} 거점 {own.get('value', 0)}곳]"

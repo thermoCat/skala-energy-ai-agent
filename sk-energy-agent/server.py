@@ -321,6 +321,33 @@ async def api_decisions(company: str = "SK에너지", station_id: str | None = N
                                             "gu": gu})
 
 
+@app.post("/api/jobs/{job}/run")
+async def api_run_job(job: str, company: str = "SK에너지", gu: str | None = None):
+    """상시 작업 수동 실행 (시연용) — 지금은 매일 감시(daily_watch)만"""
+    if job != "daily_watch":
+        raise HTTPException(status_code=404, detail={"message": f"없는 작업: {job}"})
+    result = await app.state.graph.ainvoke(
+        {"query": "매일 감시", "job": job, "thread_id": f"job-{job}", "history": [],
+         "company": company, "gu": gu, "events": [], "cost_usd": 0.0})
+    return {"job": job, "company": company, "gu": gu, "job_run_id": result["job_run_id"],
+            "alert_id": result.get("alert_id"), "llm_calls": result.get("llm_calls", 0),
+            "message": result["final"], "events": result["events"]}
+
+
+@app.get("/api/alerts")
+async def api_alerts(company: str = "SK에너지", unread: bool = False):
+    """알림함 (최신순)"""
+    return {"alerts": app.state.deps.session_store.list_alerts(company, unread)}
+
+
+@app.post("/api/alerts/{alert_id}/read")
+async def api_alert_read(alert_id: int, company: str = "SK에너지"):
+    """알림 읽음 표시 (다른 회사 알림은 건드리지 않음)"""
+    if not app.state.deps.session_store.mark_alert_read(alert_id, company):
+        raise HTTPException(status_code=404, detail={"message": "없는 알림"})
+    return {"id": alert_id, "read": 1}
+
+
 @app.get("/api/criteria")
 async def api_criteria():
     """판별 기준 임계값·가정값·규칙 버전 (criteria://energy-mix)"""

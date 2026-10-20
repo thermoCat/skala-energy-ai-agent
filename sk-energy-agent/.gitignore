@@ -14,5 +14,8 @@ data/snapshots/*/ev_chargers_z41.csv
 dev-docs/
 .pytest_cache/
 
+# 매시 수집 충전기 원본 (용량이 커서 제외, 감시에 필요한 열은 fast_status.csv 로 커밋)
+data/snapshots/*T*/ev_chargers_z11.csv
+
 # 강의 베이스코드 설명서 (로컬 참고용, 저장소에 올리지 않음)
 doc/

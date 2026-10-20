@@ -23,6 +23,13 @@ EV_IDLE_MIN_SNAPSHOTS = 3
 # 수소 병목: 같은 충전소·같은 시간대에 대기 차량이 있는 날이 3일 이상
 H2_QUEUE_MIN_DAYS = 3
 
+# 매일 감시: 자사 거점 반경 1km 급속이 최근 3회 수집 연속 고장이고, 고장으로 바뀐 지 24시간 이내면 "새 고장"
+# — 오래 멈춰 있던 충전기까지 잡으면 SK 주유소 47곳에 알림이 떠서 아침 알림의 의미가 사라진다
+ALERT_STATS = ("1", "4", "5")        # 통신이상 · 운영중지 · 점검중
+WATCH_CONSECUTIVE = 3
+NEW_FAILURE_HOURS = 24
+ALERT_TOP_STATIONS = 3              # 회사당 하루 알림 1건, 위에 올리는 거점 수
+
 # 묶음 안 급속 후보: 반경 1km 급속 수가 묶음 중앙값 이하, 적은 순으로 최대 2곳
 FAST_CANDIDATE_MAX = 2
 
@@ -53,6 +60,8 @@ GATED_ITEMS = {
     "fast_candidates": "묶음 급속 후보",
     "ev_bottleneck_before": "급속 추가 전 전기 병목",
     "ev_bottleneck_after": "급속 추가 후 전기 병목",
+    "alert_needed": "알림 필요",
+    "alert_stations": "알림 상단 거점",
 }
 
 # 모든 진단 카드에 붙는 현장 확인 항목

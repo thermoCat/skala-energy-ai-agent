@@ -121,3 +121,32 @@ def build_facts(results: dict, company: str) -> list[dict]:
         names = {c["station_id"]: c["name"] for c in results.get("cluster_cards", []) if _ok(c)}
         _add_decisions(facts, results["decisions"], names)
     return facts.items
+
+
+def build_watch_facts(summary: dict, top: int) -> list[dict]:
+    """매일 감시 요약을 번호 붙은 사실 목록으로 만드는 함수
+
+    Args:
+        summary: detect_anomalies 결과
+        top: 알림 위에 올릴 거점 수
+    Returns:
+        사실 목록 (감시 범위·구간·규칙, 새 고장 수, 거점별 새 고장 수)
+    """
+    facts = FactList()
+    src = summary["source"]
+    scope = f"{summary['company']} · {summary['gu'] or '서울 전체'}"
+    facts.add("watch_scope", "감시 범위", scope, "", src)
+    facts.add("watch_window", "감시 구간 (수집 시각)",
+              " → ".join(w[:16].replace("T", " ") for w in summary["window"]), "", src)
+    facts.add("watch_rule", "새 고장 기준", f"최근 {len(summary['window'])}회 수집 연속 고장 + "
+              "고장으로 바뀐 지 24시간 이내", "", src)
+    facts.add("own_stations", "감시한 자사 거점", summary["own_stations"], "곳", src)
+    facts.add("new_failures", "자사 거점 반경 1km 새 고장 급속", summary["new_failures"], "개", src)
+    facts.add("stations_affected", "새 고장이 주변에 있는 자사 거점", len(summary["stations"]), "곳", src)
+    for s in summary["stations"]:
+        facts.add(f"new_failures:{s['station_id']}", f"{s['name']} ({s['gu']}) 반경 1km 새 고장 급속",
+                  s["new_failures"], "개", src, station_id=s["station_id"], name=s["name"], gu=s["gu"])
+    rest = len(summary["stations"]) - top
+    if rest > 0:
+        facts.add("stations_rest", "알림 위에 올리지 않은 나머지 거점", rest, "곳", src)
+    return facts.items

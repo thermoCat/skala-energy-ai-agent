@@ -17,8 +17,9 @@
   #app { height: 100%; display: flex; flex-direction: column; }
   header {
     padding: 10px 18px; background: #262638; border-bottom: 1px solid #3a3a52;
-    display: flex; align-items: center; gap: 14px; font-size: 14px;
+    display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; font-size: 14px;
   }
+  header > * { white-space: nowrap; }
   header b { font-size: 15px; }
   header .muted { color: #8b8bd8; font-size: 12px; }
   header label { font-size: 12px; color: #c3c3e0; display: flex; gap: 4px; align-items: center; }
@@ -39,6 +40,10 @@
   .chips { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px; }
   .chip { padding: 2px 8px; border-radius: 9px; border: 1px solid #3a3a52; font-size: 12px; color: #c3c3e0; }
   .note { color: #9a9ac0; font-size: 12px; margin-top: 6px; }
+  .hbtn { padding: 5px 10px; font-size: 12px; background: #34345a; }
+  .alert { border: 1px solid #3a3a52; border-radius: 8px; padding: 8px 10px; margin-bottom: 8px; white-space: pre-wrap; }
+  .alert.unread { border-color: #ffb86b; }
+  .alert .stations div { cursor: pointer; text-decoration: underline dotted; }
   .decide { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 4px; }
   .decide select, .decide input { background: #1e1e2e; color: #e2e2f0; border: 1px solid #3a3a52; border-radius: 6px; padding: 4px 6px; font-size: 12px; }
   .decide input { flex: 1; min-width: 120px; }
@@ -84,6 +89,8 @@
   <header>
     <b>{{ company }} 에너지 허브 대시보드</b>
     <span class="muted">{{ backendLabel }}</span>
+    <button type="button" class="hbtn" @click="showAlerts">🔔 알림 {{ unread }}</button>
+    <button type="button" class="hbtn" :disabled="watching" @click="runWatch">{{ watching ? '감시 중…' : '매일 감시 실행' }}</button>
     <label><input type="checkbox" v-model="ownOnly" /> 자사 핀만</label>
     <label><input type="checkbox" v-model="showDistricts" /> 자치구 신호 (빨강 전기 병목 · 파랑 테두리 유휴 위험)</label>
   </header>
@@ -152,6 +159,20 @@
           </template>
         </template>
 
+        <template v-else-if="panel.kind === 'alerts'">
+          <h3>알림함</h3>
+          <div class="sub">{{ panel.runInfo }}</div>
+          <div v-if="!panel.alerts.length" class="note">알림이 없습니다. 이상이 없으면 알림을 만들지 않습니다 (LLM 0회).</div>
+          <div v-for="a in panel.alerts" :key="a.id" class="alert" :class="{ unread: !a.read }">
+            <div>{{ a.message }}</div>
+            <div class="stations note">
+              <div v-for="s in a.payload.stations" :key="s.station_id" @click="openAlertStation(a, s.station_id)">
+                {{ s.name }} ({{ s.gu }}) — 새 고장 {{ s.new_failures }}개
+              </div>
+            </div>
+          </div>
+        </template>
+
         <div v-else class="note">지도에서 주유소 핀이나 자치구 원을 누르면 숫자가 바로 뜨고, 질문이 채워집니다.<br/>● 주유소 · ◆ LPG 충전소 · 큰 핀 = {{ company }} · ⚡ 급속 후보</div>
       </div>
 
@@ -213,7 +234,10 @@ createApp({
     const backendLabel = ref('');
     const ownOnly = ref(false);
     const showDistricts = ref(true);
-    const panel = reactive({ kind: null, card: null, district: null, cluster: null, decisions: [], ms: 0 });
+    const panel = reactive({ kind: null, card: null, district: null, cluster: null, decisions: [],
+                             alerts: [], runInfo: '', ms: 0 });
+    const unread = ref(0);
+    const watching = ref(false);
     const decision = reactive({ choice: '보류', conversion_type: null, note: '' });
     const log = ref([]);
     const input = ref('');
@@ -312,6 +336,7 @@ createApp({
       for (const p of data.pins) pinsById[p.station_id] = p;
       drawDistricts(data.pins, data.districts);
       drawPins(data.pins);
+      refreshUnread();
     });
     watch(ownOnly, () => pinsData && drawPins(pinsData.pins));
     watch(showDistricts, v => v ? districtLayer.addTo(map) : districtLayer.remove());
@@ -337,6 +362,40 @@ createApp({
       target.value = { gu, label: `${gu} (${company} 거점 ${n}곳)`, prefix: '' };
       suggestions.value = [`${gu} ${company} 거점 ${n}곳을 어떻게 나눠 써야 해?`];
       input.value = suggestions.value[0];
+    }
+
+    async function refreshUnread() {
+      const [data] = await timedJson(`/api/alerts?company=${encodeURIComponent(company)}&unread=true`);
+      unread.value = data.alerts.length;
+    }
+
+    async function showAlerts() {
+      const [data] = await timedJson(`/api/alerts?company=${encodeURIComponent(company)}`);
+      Object.assign(panel, { kind: 'alerts', alerts: data.alerts });
+    }
+
+    async function runWatch() {
+      watching.value = true;
+      try {
+        const r = await fetch(`/api/jobs/daily_watch/run?company=${encodeURIComponent(company)}`, { method: 'POST' });
+        const res = await r.json();
+        panel.runInfo = res.alert_id
+          ? `매일 감시 실행: 알림 1건 (LLM ${res.llm_calls}회)`
+          : `매일 감시 실행: 새 고장 없음 → 알림 없음 (LLM ${res.llm_calls}회)`;
+        await refreshUnread();
+        await showAlerts();
+      } finally {
+        watching.value = false;
+      }
+    }
+
+    async function openAlertStation(alert, stationId) {
+      if (!alert.read) {
+        await fetch(`/api/alerts/${alert.id}/read?company=${encodeURIComponent(company)}`, { method: 'POST' });
+        alert.read = 1;
+        refreshUnread();
+      }
+      focusStation(stationId);
     }
 
     async function loadDecisions(stationId) {
@@ -445,7 +504,8 @@ createApp({
     }
 
     return { company, backendLabel, ownOnly, showDistricts, panel, decision, log, input, sending, logEl,
-             target, suggestions, signed, targetPrefix, focusStation, clearTarget, onSubmit, saveDecision };
+             target, suggestions, signed, targetPrefix, focusStation, clearTarget, onSubmit, saveDecision,
+             unread, watching, showAlerts, runWatch, openAlertStation };
   },
 }).mount('#app');
 </script>

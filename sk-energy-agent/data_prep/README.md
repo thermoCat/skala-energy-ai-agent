@@ -23,6 +23,7 @@
 | `collect.py` | API 수집 배치 (수소 대기, 환경공단 충전기, 오피넷 반경 검색). 오피넷 호출은 `data/opinet_calls.tsv`에 기록하고 300건에서 멈춤 |
 | `plan_grid.py` | 서울을 덮는 최소 반경 검색 원 배치 계산 (오피넷 호출 절약) |
 | `build_supply.py` | 스냅샷으로 서울 자치구 × 5개 연료 수급표, 주유소 목록 생성 |
+| `build_fast_status.py` | 스냅샷 충전기 원본에서 서울 급속 상태만 골라 `fast_status.csv` 생성 (매일 감시용, 매시 원본은 git 제외) |
 | `build_border_chargers.py` | 서울 거점 2km 안의 경기·인천 급속충전기만 골라 `ev_fast_border.csv` 생성 (경계 근처 반경 급속 수용) |
 
 ### 스냅샷 수집 (키는 `~/.zshrc`의 환경변수)
@@ -32,6 +33,7 @@ python3 -I data_prep/collect.py h2 data/snapshots/<날짜>
 python3 -I data_prep/collect.py ev data/snapshots/<날짜> 11
 python3 -I data_prep/build_supply.py data/snapshots/<날짜> data/derived/seoul_fuel_monthly.csv 2026.09
 python3 -I data_prep/build_border_chargers.py data/snapshots/<날짜>   # 경기·인천 충전기(ev 28, 41) 수집 후
+python3 -I data_prep/build_fast_status.py data/snapshots/<날짜>T<시>   # 매시 수집 후 (매일 감시용)
 ```
 
 - 공공데이터포털 키는 Encoding 키를 그대로 URL에 붙입니다(다시 인코딩하면 인증 실패).

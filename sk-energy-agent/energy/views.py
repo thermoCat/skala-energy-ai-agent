@@ -45,7 +45,9 @@ def station_card_view(snap: Snapshot, station_id: str, company: str,
     mine = next(s for s in cluster["stations"] if s["station_id"] == station_id)
     card["verdict"] = {"code": mine["verdict"], "label": mine["label"],
                        "reasons": mine["reasons"]}
-    card["fuel_signals"] = [f for f in cluster["fuel_signals"] if f["idle"]]
+    # 카드에는 이 거점 시설의 연료 신호만 (주유소 → 경유, LPG 충전소 → LPG)
+    card["fuel_signals"] = [f for f in cluster["fuel_signals"]
+                            if f["idle"] and f["prodcd"] == card["prodcd"]]
     card["cluster_median_fast_1km"] = cluster["cluster_median_fast_1km"]
     card["conversion_types"] = cluster["conversion_types"]
     card["site_checks"] = cluster["site_checks"]

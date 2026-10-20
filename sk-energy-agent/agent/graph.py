@@ -90,6 +90,12 @@ class AgentState(TypedDict, total=False):
     gate_corrections: list[dict]
     validation: dict             # {"passed", "issues"}
     rewrite_count: int
+    # 상시 작업
+    job: str                     # "daily_watch" (없으면 채팅 요청)
+    started_at: str
+    llm_calls: int               # 이번 실행의 LLM 호출 수
+    alert_id: int | None
+    job_run_id: int
 
 
 def _cost(state: AgentState, usage: dict) -> float:
@@ -99,6 +105,8 @@ def _cost(state: AgentState, usage: dict) -> float:
 @traceable(name="route_node")
 async def route_node(state: AgentState, deps: SupervisorDeps) -> dict:
     """Wave 5 — 모든 쿼리가 무거운 파이프라인을 탈 필요는 없다."""
+    if state.get("job") == "daily_watch":
+        return energy.start_job(state)
     routed = energy.energy_route(state, deps)
     if routed is not None:
         return routed
@@ -323,8 +331,8 @@ async def finalize_node(state: AgentState, deps: SupervisorDeps) -> dict:
 
 
 def _after_route(state: AgentState) -> str:
-    return {"chat": "chat_answer", "energy": "energy_research",
-            "resolve": "resolve"}.get(state["route"], "plan")
+    return {"chat": "chat_answer", "energy": "energy_research", "resolve": "resolve",
+            "watch": "watch"}.get(state["route"], "plan")
 
 
 def _after_replan_check(state: AgentState) -> str:
@@ -357,11 +365,17 @@ def build_graph(deps: SupervisorDeps):
     g.add_node("authority_gate", node(energy.authority_gate_node))
     g.add_node("energy_write", node(energy.energy_write_node))
     g.add_node("energy_validate", node(energy.energy_validate_node))
+    g.add_node("watch", node(energy.watch_node))
+    g.add_node("watch_deliver", node(energy.watch_deliver_node))
 
     g.set_entry_point("route")
     g.add_conditional_edges("route", _after_route,
                             {"chat_answer": "chat_answer", "plan": "plan",
-                             "resolve": "resolve", "energy_research": "energy_research"})
+                             "resolve": "resolve", "energy_research": "energy_research",
+                             "watch": "watch"})
+    g.add_conditional_edges("watch", energy.after_watch,
+                            {"analyst": "analyst", "watch_deliver": "watch_deliver"})
+    g.add_edge("watch_deliver", END)
     g.add_conditional_edges("resolve", energy.after_resolve,
                             {"energy_research": "energy_research", "ask_user": "ask_user"})
     g.add_edge("ask_user", END)
@@ -373,7 +387,8 @@ def build_graph(deps: SupervisorDeps):
     g.add_edge("authority_gate", "energy_write")
     g.add_edge("energy_write", "energy_validate")
     g.add_conditional_edges("energy_validate", energy.after_validate,
-                            {"energy_write": "energy_write", "finalize": "finalize"})
+                            {"energy_write": "energy_write", "finalize": "finalize",
+                             "watch_deliver": "watch_deliver"})
     g.add_edge("chat_answer", END)
     g.add_edge("plan", "gate")
     g.add_edge("gate", "research")

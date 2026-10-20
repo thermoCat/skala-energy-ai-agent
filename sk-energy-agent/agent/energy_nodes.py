@@ -5,6 +5,7 @@ Supervisor(분류) → 이름 찾기 → 워커(코드 조회) ⇄ 재계획 →
 """
 import asyncio
 import time
+from datetime import datetime
 
 from langgraph.config import get_stream_writer
 from langsmith import traceable
@@ -13,7 +14,7 @@ from energy import criteria
 from energy.seoul import BRAND_ALIASES, SEOUL_GU
 
 from .deps import SupervisorDeps
-from .facts import build_facts
+from .facts import build_facts, build_watch_facts
 from .retry import with_retry
 from .validation import check_answer
 
@@ -22,8 +23,10 @@ MAX_REPLAN = 1
 MAX_REWRITE = 1
 
 
-def _cost(state: dict, usage: dict) -> float:
-    return round(state.get("cost_usd", 0.0) + usage["usd"], 6)
+def _spend(state: dict, usage: dict) -> dict:
+    # LLM을 부를 때마다 비용과 호출 수를 함께 쌓는다 — 상시 감시는 이상 없으면 0회여야 함
+    return {"cost_usd": round(state.get("cost_usd", 0.0) + usage["usd"], 6),
+            "llm_calls": state.get("llm_calls", 0) + 1}
 
 
 def _company(state: dict) -> str:
@@ -66,7 +69,7 @@ def energy_route(state: dict, deps: SupervisorDeps) -> dict | None:
     gu = parsed.get("gu") if parsed.get("gu") in SEOUL_GU else None
     scenario = parsed.get("fast_add") is not None
     update = {"fast_add": parsed.get("fast_add"), "kw": parsed.get("kw") or 100,
-              "cost_usd": _cost(state, usage)}
+              **_spend(state, usage)}
 
     if state.get("station_id"):
         request_type = "scenario" if scenario else "station"
@@ -222,7 +225,7 @@ async def analyst_node(state: dict, deps: SupervisorDeps) -> dict:
     """분석 에이전트 — 사실 [F]만 보고 판별하는 노드 (기준 판정은 넘기지 않음)"""
     verdicts, usage = deps.quality_llm.judge_energy(state["request_type"], state["facts"])
     summary = {item: v.get("value") for item, v in verdicts.items()}
-    return {"llm_verdicts": verdicts, "cost_usd": _cost(state, usage),
+    return {"llm_verdicts": verdicts, **_spend(state, usage),
             "events": state["events"] + [{"type": "Judged", "by": "analyst", **summary}]}
 
 
@@ -257,7 +260,7 @@ async def authority_gate_node(state: dict, deps: SupervisorDeps) -> dict:
                            "label": criteria.GATED_ITEMS[item],
                            "llm": value, "baseline": base_value})
             value = base_value
-        if item == "fast_candidates":
+        if isinstance(base_value, list):
             value = _ordered_candidates(mine.get("value"), base_value)
         verdicts[item] = {"id": f"J{n}", "value": value, "facts": mine.get("facts", []),
                           "reason": mine.get("reason"), "reasons": mine.get("reasons", {})}
@@ -267,12 +270,15 @@ async def authority_gate_node(state: dict, deps: SupervisorDeps) -> dict:
         events.append({"type": "EvidenceCard", "station_id": sid, "verdict": "⚡",
                        "facts": cited})
 
-    station_scope = state["request_type"] in ("station", "scenario")
+    request_type = state["request_type"]
+    scope_type = {"station": "station", "scenario": "station", "watch": "watch"}.get(
+        request_type, "gu")
+    scope_id = {"station": state.get("station_id"), "scenario": state.get("station_id"),
+                "watch": state.get("gu") or _company(state)}.get(request_type, state.get("gu"))
     results = state["tool_results"]
-    source = results.get("district") or results.get("simulate") or {}
+    source = results.get("district") or results.get("simulate") or results.get("watch") or {}
     deps.session_store.log_decision(
-        company=_company(state), scope_type="station" if station_scope else "gu",
-        scope_id=state["station_id"] if station_scope else state["gu"],
+        company=_company(state), scope_type=scope_type, scope_id=scope_id,
         snapshot=source.get("snapshot", ""), rule_version=criteria.RULE_VERSION,
         llm_verdict=llm, baseline=baseline, verdict=verdicts, corrections=corrections)
     events.append({"type": "Judged", "by": "gate", "corrected": len(corrections),
@@ -299,7 +305,7 @@ async def energy_write_node(state: dict, deps: SupervisorDeps) -> dict:
         feedback=(state.get("validation") or {}).get("issues"),
         on_token=lambda piece: writer({"type": "AnswerToken", "attempt": attempt,
                                        "delta": piece}))
-    return {"draft": draft, "cost_usd": _cost(state, usage),
+    return {"draft": draft, **_spend(state, usage),
             "events": state["events"] + [{"type": "DraftWritten", "attempt": attempt,
                                           "length": len(draft)}]}
 
@@ -319,9 +325,70 @@ async def energy_validate_node(state: dict, deps: SupervisorDeps) -> dict:
     verdict = "합격" if passed else ("불합격 → 재작성" if attempt <= MAX_REWRITE
                                      else "불합격 (재작성 한도 도달)")
     return {"validation": {"passed": passed, "issues": issues},
-            "rewrite_count": attempt, "cost_usd": _cost(state, usage),
+            "rewrite_count": attempt, **_spend(state, usage),
             "events": state["events"] + [{"type": "Validation", "attempt": attempt,
                                           "verdict": verdict, "issues": issues}]}
+
+
+# ── 매일 감시 (상시 작업) ─────────────────────────────────────────
+
+@traceable(name="watch_node")
+async def watch_node(state: dict, deps: SupervisorDeps) -> dict:
+    """매일 감시 1차 감지(코드) — 자사 거점 주변 새 고장을 찾고, 없으면 LLM 없이 끝낸다"""
+    company = _company(state)
+    args = {"company": company, **({"gu": state["gu"]} if state.get("gu") else {})}
+    summary = await call_tool(deps, "detect_anomalies", args)
+    if "error" in summary:
+        return {"tool_results": {"watch": summary}, "facts": [], "baseline": {},
+                "errors": [{"tool": "detect_anomalies", **summary["error"]}],
+                "events": state["events"] + [{"type": "WatchChecked", "ok": False}]}
+    top = [s["station_id"] for s in summary["stations"][:criteria.ALERT_TOP_STATIONS]]
+    event = {"type": "WatchChecked", "ok": True, "new_failures": summary["new_failures"],
+             "stations": len(summary["stations"]), "alert_needed": summary["alert_needed"]}
+    return {"tool_results": {"watch": summary}, "is_own": True,
+            "facts": build_watch_facts(summary, criteria.ALERT_TOP_STATIONS),
+            "baseline": {"alert_needed": summary["alert_needed"], "alert_stations": top},
+            "events": state["events"] + [event]}
+
+
+@traceable(name="watch_deliver_node")
+async def watch_deliver_node(state: dict, deps: SupervisorDeps) -> dict:
+    """매일 감시 결과를 알림함(이상 있을 때 1건)과 작업 실행 기록에 저장하는 노드"""
+    company = _company(state)
+    summary = state["tool_results"].get("watch", {})
+    scope_id = state.get("gu") or company
+    alert_id, created = None, False
+    if state.get("verdicts", {}).get("alert_needed", {}).get("value"):
+        alert_id, created = deps.session_store.save_alert(
+            company, "daily_watch", "new_charger_failure", scope_id,
+            " → ".join(summary.get("window", [])), state["draft"], summary)
+        final = state["draft"]
+    elif "error" in summary:
+        final = "매일 감시 데이터를 읽지 못했습니다. 수집 상태를 확인해 주세요."
+    else:
+        window = " → ".join(w[:16].replace("T", " ") for w in summary.get("window", []))
+        final = (f"[{company} · {state.get('gu') or '서울 전체'} 매일 감시 · {window}]\n"
+                 "자사 거점 주변에 새로 멈춘 급속충전기가 없습니다. 알림을 만들지 않았습니다.")
+    run_id = deps.session_store.save_job_run(
+        "daily_watch", company, scope_id, state.get("started_at", ""),
+        "error" if "error" in summary else "ok", state.get("llm_calls", 0), alert_id)
+    event = {"type": "JobSaved", "job_run_id": run_id, "alert_id": alert_id,
+             "alert_created": created, "llm_calls": state.get("llm_calls", 0)}
+    return {"final": final, "alert_id": alert_id, "job_run_id": run_id,
+            "events": state["events"] + [event]}
+
+
+def start_job(state: dict) -> dict:
+    """상시 작업 요청을 LLM 분류 없이 코드로 시작하는 함수 (Supervisor 의 작업 분기)"""
+    event = {"type": "RouteDecided", "route": "watch", "request_type": "watch",
+             "job": state["job"], "gu": state.get("gu")}
+    return {"route": "watch", "request_type": "watch",
+            "started_at": datetime.now().isoformat(timespec="seconds"),
+            "events": state.get("events", []) + [event]}
+
+
+def after_watch(state: dict) -> str:
+    return "analyst" if state.get("baseline", {}).get("alert_needed") else "watch_deliver"
 
 
 # ── 분기 ───────────────────────────────────────────────────────
@@ -341,4 +408,6 @@ def after_research(state: dict) -> str:
 
 def after_validate(state: dict) -> str:
     passed = state["validation"]["passed"]
-    return "finalize" if passed or state["rewrite_count"] > MAX_REWRITE else "energy_write"
+    if not passed and state["rewrite_count"] <= MAX_REWRITE:
+        return "energy_write"
+    return "watch_deliver" if state["request_type"] == "watch" else "finalize"

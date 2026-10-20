@@ -22,7 +22,8 @@ from energy.rules.cluster import review_cluster as _review_cluster
 from energy.rules.names import find_stations
 from energy.rules.score import district_baseline
 from energy.rules.simulate import simulate_fast_add
-from energy.store import load_snapshot
+from energy.rules.anomaly import detect_anomalies as _detect
+from energy.store import load_snapshot, load_status_history
 from energy.views import (criteria_resource, h2_status, map_pins, nearby_districts as _nearby,
                           search_stations as _search, station_card_view)
 
@@ -32,6 +33,7 @@ DATA_DIR = Path(__file__).parent / "data"
 
 # 스냅샷은 서버 시작 때 1번만 로드 — 요청마다 CSV를 읽으면 응답이 느려진다
 SNAPSHOT = load_snapshot()
+STATUS_HISTORY = load_status_history()
 STATIONS_SOURCE = "오피넷 반경 검색 + 환경공단 충전기 (seoul_stations.csv)"
 DEMAND_SOURCE = "서울시 OA-15640 자치구별 연료별 등록현황"
 CHARGER_SOURCE = "환경공단 충전기 API (서울 자치구 배정 급속 기준)"
@@ -143,6 +145,15 @@ def simulate(station_id: str, fast_add: int, kw: int = 100) -> dict:
         return _error("없는 주유소 번호", station_id=station_id)
     except ValueError as exc:
         return _error(str(exc), fast_add=fast_add)
+
+
+@mcp.tool()
+def detect_anomalies(company: str = "SK에너지", gu: str | None = None) -> dict:
+    """매일 감시 1차 감지: 자사 거점 반경 1km 급속이 최근 3회 연속 고장이고 24시간 안에 멈춘 것을 거점별로 묶습니다."""
+    if gu is not None and not _known_gu(gu):
+        return _error("없는 자치구", gu=gu)
+    return _with_meta(_detect(STATUS_HISTORY, SNAPSHOT.stations, company, gu),
+                      "환경공단 충전기 상태 (매시 수집 fast_status.csv)")
 
 
 @mcp.tool()

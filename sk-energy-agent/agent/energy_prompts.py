@@ -87,6 +87,15 @@ SCENARIO_JUDGE_SYSTEM = (
     '"ev_bottleneck_after": {"value": bool, "facts": [...], "reason": str}}'
 )
 
+WATCH_JUDGE_SYSTEM = (
+    "당신은 정유사 리테일 네트워크의 매일 감시 분석 에이전트다. 사실 [F]만 보고 판별하라.\n"
+    "- alert_needed: 오늘 관리자에게 알림을 보내야 하는가 (자사 거점 주변에 새로 멈춘 급속이 있는가)\n"
+    "- alert_stations: 알림 맨 위에 올릴 자사 거점 station_id 최대 3곳, 먼저 볼 순서대로\n"
+    "JSON 객체로만 답하라: "
+    '{"alert_needed": {"value": bool, "facts": ["F1"], "reason": str}, '
+    '"alert_stations": {"value": [station_id], "facts": [...], "reason": str}}'
+)
+
 _VERDICT = {"type": "object",
             "properties": {"value": {"type": "boolean"},
                            "facts": {"type": "array", "items": {"type": "string"}},
@@ -122,6 +131,19 @@ SCENARIO_JUDGE_SCHEMA = {
     "required": ["ev_bottleneck_before", "ev_bottleneck_after"],
 }
 
+WATCH_JUDGE_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "alert_needed": _VERDICT,
+        "alert_stations": {"type": "object",
+                           "properties": {"value": {"type": "array", "items": {"type": "string"}},
+                                          "facts": {"type": "array", "items": {"type": "string"}},
+                                          "reason": {"type": "string"}},
+                           "required": ["value", "facts", "reason"]},
+    },
+    "required": ["alert_needed", "alert_stations"],
+}
+
 SCENARIO_ITEMS = ("ev_bottleneck_before", "ev_bottleneck_after")
 DISTRICT_ITEMS = ("ev_bottleneck", "diesel_idle", "lpg_idle")
 
@@ -139,6 +161,8 @@ def judge_prompt(request_type: str, facts: list[dict]) -> tuple[str, str, dict]:
     """판별 프롬프트(system, user)와 출력 스키마를 고르는 함수"""
     if request_type == "scenario":
         return SCENARIO_JUDGE_SYSTEM, render_facts(facts), SCENARIO_JUDGE_SCHEMA
+    if request_type == "watch":
+        return WATCH_JUDGE_SYSTEM, render_facts(facts), WATCH_JUDGE_SCHEMA
     return JUDGE_SYSTEM, render_facts(facts), JUDGE_SCHEMA
 
 
@@ -162,6 +186,12 @@ def normalize_judgement(content: str, request_type: str, facts: list[dict]) -> d
     """
     raw = _load_json(content)
     known = {f["id"] for f in facts}
+    if request_type == "watch":
+        stations = {f["station_id"] for f in facts if f["key"].startswith("new_failures:")}
+        top = raw.get("alert_stations") if isinstance(raw.get("alert_stations"), dict) else {}
+        chosen = [s for s in top.get("value", []) or [] if s in stations][:3]
+        return {"alert_needed": _clean_verdict(raw.get("alert_needed"), known),
+                "alert_stations": {**_clean_verdict(top, known), "value": chosen, "reasons": {}}}
     if request_type == "scenario":
         return {item: _clean_verdict(raw.get(item), known) for item in SCENARIO_ITEMS}
 

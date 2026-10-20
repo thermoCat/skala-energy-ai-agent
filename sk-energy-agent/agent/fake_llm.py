@@ -204,6 +204,18 @@ class QualityLLM(FakeLLM):
         def ids(*keys):
             return [by_key[k]["id"] for k in keys if k in by_key]
 
+        if request_type == "watch":
+            hits = sorted((f for k, f in by_key.items() if k.startswith("new_failures:")),
+                          key=lambda f: (-f["value"], f["station_id"]))
+            top = [f["station_id"] for f in hits[:3]]
+            result = {
+                "alert_needed": {"value": bool(hits), "facts": ids("stations_affected"),
+                                 "reason": "주변에 새로 멈춘 급속이 있는 자사 거점이 있음"},
+                "alert_stations": {"value": top, "facts": [f["id"] for f in hits[:3]],
+                                   "reason": "새 고장이 많은 순", "reasons": {}},
+            }
+            return result, self._usage(str(facts), str(result))
+
         if request_type == "scenario":
             result = {}
             for when, word in (("before", "추가 전"), ("after", "추가 후")):

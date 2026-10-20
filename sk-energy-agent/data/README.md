@@ -40,6 +40,18 @@ data/
 | `seoul_fuel_balance.csv` | 자치구 × 5개 연료 수급표 | `build_supply.py` | 커밋 |
 | `seoul_ev_bottleneck_rank.csv` | 전기 병목 순위 (예시) | ⚠️ 생성 스크립트 없음 | 커밋 |
 
+## snapshots/<날짜>T<시>/ — 매시 수집 (매일 감시용)
+
+| 폴더 | 수집 시각 | 내용 |
+|---|---|---|
+| `2026-10-20T19/` | 2026-10-20 19:54 | `fast_status.csv`, `h2_wait.csv` |
+| `2026-10-20T20/` | 2026-10-20 20:55 | `fast_status.csv`, `h2_wait.csv` |
+
+- `fast_status.csv`: 서울 급속충전기 상태만 (`collected_at, statId, chgerId, busiNm, zscode, lat, lng, stat, statUpdDt, output`). `build_fast_status.py` 로 만들고 커밋 (약 590KB). `2026-10-19/` 에도 같은 파일이 있습니다.
+- 매시 원본 `ev_chargers_z11.csv`(약 18MB)는 **git 제외** — 다시 받을 수 없으므로 로컬에 보관합니다.
+- 매일 감시 기준: 최근 3회 수집 연속 고장(`stat` 1·4·5) + 고장으로 바뀐 지(`statUpdDt`) 24시간 이내 (`energy/criteria.py`).
+- ⚠️ 첫 3회 간격이 고르지 않습니다(약 32시간 → 1시간). 시연 전 1시간 간격으로 더 모을 예정입니다.
+
 ## 급속충전기 숫자 기준
 
 자치구 단위 급속충전기 수는 **서울 자치구가 배정된 급속 ID 6,045개** 한 가지 기준으로 계산합니다 (`energy/store.py`).

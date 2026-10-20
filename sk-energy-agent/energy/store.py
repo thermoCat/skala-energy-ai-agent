@@ -147,6 +147,27 @@ def add_fast_nearby(stations: pd.DataFrame, fast: pd.DataFrame,
     return out
 
 
+def load_status_history(limit: int = 3) -> list[pd.DataFrame]:
+    """최근 스냅샷들의 서울 급속 상태 표를 오래된 순으로 반환하는 함수 (매일 감시용)
+
+    Args:
+        limit: 최근 몇 개를 읽을지
+    Returns:
+        fast_status.csv 표 목록 (key = "statId-chgerId" 컬럼 포함)
+    """
+    files = [p / "fast_status.csv" for p in SNAPSHOT_DIR.iterdir()
+             if (p / "fast_status.csv").exists()]
+    frames = []
+    for path in files:
+        df = _read_csv(path, dtype=str)
+        df["key"] = df["statId"] + "-" + df["chgerId"]
+        df["lat"] = pd.to_numeric(df["lat"], errors="coerce")
+        df["lng"] = pd.to_numeric(df["lng"], errors="coerce")
+        frames.append(df)
+    frames.sort(key=lambda df: df["collected_at"].iloc[0])
+    return frames[-limit:]
+
+
 @lru_cache(maxsize=4)
 def load_snapshot(name: str | None = None) -> Snapshot:
     """스냅샷 폴더를 읽어 Snapshot 으로 반환하는 함수

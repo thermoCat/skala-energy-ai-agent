@@ -77,6 +77,7 @@ def fuel_signals(district: dict, own: pd.DataFrame) -> list[dict]:
         signals.append({
             "fuel": fuel,
             "item": item,
+            "prodcd": prodcd,
             "idle": idle,
             "label": criteria.FUEL_IDLE_LABEL if idle else None,
             "rate_pct": district[rate_key],
