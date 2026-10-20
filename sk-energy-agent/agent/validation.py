@@ -3,6 +3,7 @@ import re
 
 NUMBER = re.compile(r"[-+]?\d+(?:\.\d+)?")
 CITATION = re.compile(r"\[([FJ]\d+)\]")
+STATION_ID = re.compile(r"\b[A-Z]\d{7,}\b")   # 오피넷 주유소 번호 (예: A0009172)
 LIST_MARKER = re.compile(r"(?m)^\s*\d+\)")
 TOLERANCE = 0.051   # 소수 첫째 자리 반올림 차이까지 허용
 
@@ -30,6 +31,7 @@ def allowed_numbers(facts: list[dict], extra: tuple = ()) -> list[float]:
 
 def _strip_known_text(draft: str, facts: list[dict]) -> str:
     text = CITATION.sub("", draft)
+    text = STATION_ID.sub("", text)
     text = LIST_MARKER.sub("", text)
     # 상호에 숫자가 들어 있는 경우가 있어("재정제2주유소") 거점 이름은 빼고 본다
     names = {f["name"] for f in facts if f.get("name")}

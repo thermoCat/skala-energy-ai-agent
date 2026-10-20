@@ -26,6 +26,8 @@ from pathlib import Path
 import httpx
 from langsmith import traceable
 
+from .energy_llm import EnergyFastMixin, EnergyQualityMixin
+
 OPENAI_URL = "https://api.openai.com/v1/chat/completions"
 
 
@@ -104,8 +106,19 @@ class OpenAILLM:
                  "usd": round(tokens / 1000 * self.usd_per_1k, 6)}
         return content, usage
 
+    # 에너지 메서드용 — JSON 모드는 스키마를 강제하지 않아 형식은 energy_prompts 가 다듬는다
+    def _json_call(self, system: str, user: str, schema: dict) -> tuple[str, dict]:
+        return self._chat(system, user, json_mode=True)
 
-class OpenAIFastLLM(OpenAILLM):
+    async def _text_stream(self, system: str, user: str, on_token=None) -> tuple[str, dict]:
+        content, usage = self._chat(system, user)
+        usage["prompt"] = f"[SYSTEM]\n{system}\n\n[USER]\n{user}"
+        if on_token is not None:
+            on_token(content)
+        return content, usage
+
+
+class OpenAIFastLLM(EnergyFastMixin, OpenAILLM):
     """분류·계획·단순 대화 전담 (저비용 모델, 기본 gpt-4o-mini)."""
 
     @traceable(run_type="llm", name="openai_fast.route")
@@ -205,7 +218,7 @@ class OpenAIFastLLM(OpenAILLM):
         return content, usage
 
 
-class OpenAIQualityLLM(OpenAILLM):
+class OpenAIQualityLLM(EnergyQualityMixin, OpenAILLM):
     """최종 답변 작성 전담 (고품질 모델, 기본 gpt-4o)."""
 
     @traceable(run_type="llm", name="openai_quality.write")

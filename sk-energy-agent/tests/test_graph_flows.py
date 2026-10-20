@@ -105,7 +105,7 @@ def test_check_answer_unit():
               "value": 317.1, "unit": "ID", "source": "s"},
              {"id": "F2", "key": "fast_1km:A1", "label": "재정제2주유소 반경 1km 급속 ID",
               "value": 12, "unit": "ID", "source": "s", "name": "재정제2주유소"}]
-    assert check_answer("1) 밀도 317.1[F1], 재정제2주유소 반경 1km 12[F2]", facts, {}) == []
+    assert check_answer("1) 밀도 317.1[F1], 재정제2주유소(A0009143) 반경 1km 12[F2]", facts, {}) == []
     issues = check_answer("밀도 320.0[F1] [F9]", facts, {})
     assert "근거 없는 숫자: 320.0" in issues and "없는 인용 번호: F9" in issues
 

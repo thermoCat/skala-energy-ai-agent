@@ -99,11 +99,9 @@ def _cost(state: AgentState, usage: dict) -> float:
 @traceable(name="route_node")
 async def route_node(state: AgentState, deps: SupervisorDeps) -> dict:
     """Wave 5 — 모든 쿼리가 무거운 파이프라인을 탈 필요는 없다."""
-    # 에너지 프롬프트가 아직 없는 백엔드(ollama·openai)는 기존 경로만 탄다
-    if hasattr(deps.fast_llm, "classify_energy"):
-        routed = energy.energy_route(state, deps)
-        if routed is not None:
-            return routed
+    routed = energy.energy_route(state, deps)
+    if routed is not None:
+        return routed
     result, usage = deps.fast_llm.route(state["query"])
     event = {"type": "RouteDecided", "route": result["route"]}
     return {"route": result["route"], "needs_analysis": result["needs_analysis"],

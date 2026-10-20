@@ -10,7 +10,7 @@
 # web_chat.html 내부만 바닐라 JS 대신 Vue 3(CDN 글로벌 빌드, 빌드 단계 없음)로
 # 되어 있다는 점이 all_total과 다르다.
 #
-# ⚠️ 먼저 run_agent_openai.sh / run_agent_ollma.sh / run.sh 등으로 백엔드(8100)를
+# ⚠️ 먼저 run_agent_fake.sh / run_agent_ollma.sh / run_agent_openai.sh 로 백엔드(8100)를
 # 띄워둔 상태여야 한다 — 백엔드 없이 이 스크립트만 띄우면 채팅 화면은 열리지만
 # 메시지를 보내면 전부 에러가 난다.
 #
@@ -29,7 +29,7 @@ if ! curl -s --max-time 2 http://127.0.0.1:8100/health >/dev/null 2>&1; then
     echo "  먼저 다른 터미널에서 아래 중 하나로 백엔드를 띄우세요:"
     echo "    ./sh/run_agent_openai.sh   (실제 OpenAI API, 과금)"
     echo "    ./sh/run_agent_ollma.sh    (로컬 Ollama)"
-    echo "    ./sh/run.sh                (fake 모드, 통합 테스트)"
+    echo "    ./sh/run_agent_fake.sh     (fake 모드, 결정론 시연)"
     exit 1
 fi
 
