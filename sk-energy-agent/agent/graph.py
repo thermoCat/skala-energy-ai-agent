@@ -105,7 +105,7 @@ def _cost(state: AgentState, usage: dict) -> float:
 @traceable(name="route_node")
 async def route_node(state: AgentState, deps: SupervisorDeps) -> dict:
     """Wave 5 — 모든 쿼리가 무거운 파이프라인을 탈 필요는 없다."""
-    if state.get("job") == "daily_watch":
+    if state.get("job") in energy.JOBS:
         return energy.start_job(state)
     routed = energy.energy_route(state, deps)
     if routed is not None:
@@ -332,7 +332,7 @@ async def finalize_node(state: AgentState, deps: SupervisorDeps) -> dict:
 
 def _after_route(state: AgentState) -> str:
     return {"chat": "chat_answer", "energy": "energy_research", "resolve": "resolve",
-            "watch": "watch"}.get(state["route"], "plan")
+            "job": "job_check"}.get(state["route"], "plan")
 
 
 def _after_replan_check(state: AgentState) -> str:
@@ -365,17 +365,20 @@ def build_graph(deps: SupervisorDeps):
     g.add_node("authority_gate", node(energy.authority_gate_node))
     g.add_node("energy_write", node(energy.energy_write_node))
     g.add_node("energy_validate", node(energy.energy_validate_node))
-    g.add_node("watch", node(energy.watch_node))
-    g.add_node("watch_deliver", node(energy.watch_deliver_node))
+    g.add_node("job_check", node(energy.job_check_node))
+    g.add_node("policy", node(energy.policy_node))
+    g.add_node("job_deliver", node(energy.job_deliver_node))
 
     g.set_entry_point("route")
     g.add_conditional_edges("route", _after_route,
                             {"chat_answer": "chat_answer", "plan": "plan",
                              "resolve": "resolve", "energy_research": "energy_research",
-                             "watch": "watch"})
-    g.add_conditional_edges("watch", energy.after_watch,
-                            {"analyst": "analyst", "watch_deliver": "watch_deliver"})
-    g.add_edge("watch_deliver", END)
+                             "job_check": "job_check"})
+    g.add_conditional_edges("job_check", energy.after_job_check,
+                            {"analyst": "analyst", "policy": "policy",
+                             "job_deliver": "job_deliver"})
+    g.add_edge("policy", "authority_gate")
+    g.add_edge("job_deliver", END)
     g.add_conditional_edges("resolve", energy.after_resolve,
                             {"energy_research": "energy_research", "ask_user": "ask_user"})
     g.add_edge("ask_user", END)
@@ -388,7 +391,7 @@ def build_graph(deps: SupervisorDeps):
     g.add_edge("energy_write", "energy_validate")
     g.add_conditional_edges("energy_validate", energy.after_validate,
                             {"energy_write": "energy_write", "finalize": "finalize",
-                             "watch_deliver": "watch_deliver"})
+                             "job_deliver": "job_deliver"})
     g.add_edge("chat_answer", END)
     g.add_edge("plan", "gate")
     g.add_edge("gate", "research")

@@ -121,6 +121,26 @@ class FastLLM(FakeLLM):
                   "kw": int(kw.group(1)) if kw else None}
         return result, self._usage(query, str(result))
 
+    @traceable(run_type="llm", name="fast_llm.judge_competition")
+    def judge_competition(self, facts: list[dict]) -> tuple[dict, dict]:
+        """정책·경쟁 에이전트 판별(fake) — 자사 거점 1km 안 변화가 있으면 보고, 가까운 순으로 거점을 고르는 함수
+
+        Args:
+            facts: 번호 붙은 사실 목록
+        Returns:
+            ({"report_needed", "watch_competitors"}, 사용량)
+        """
+        distances = sorted((f for f in facts if f["key"].startswith("distance:")),
+                           key=lambda f: f["value"])
+        stations = list(dict.fromkeys(f["station_id"] for f in distances))[:3]
+        result = {
+            "report_needed": {"value": bool(distances), "facts": [f["id"] for f in distances],
+                              "reason": "자사 거점 1km 안에 급속 신설·철거가 있음"},
+            "watch_competitors": {"value": stations, "facts": [f["id"] for f in distances[:3]],
+                                  "reason": "변화가 가까운 순", "reasons": {}},
+        }
+        return result, self._usage(str(facts), str(result))
+
     @traceable(run_type="llm", name="fast_llm.judge_answer")
     def judge_answer(self, draft: str, request_type: str, is_own: bool) -> tuple[dict, dict]:
         """검증 에이전트 LLM-as-Judge(fake) — 근거 표기·현장 확인·투자 결정 아님 문구를 보는 함수

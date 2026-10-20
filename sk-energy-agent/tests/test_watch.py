@@ -28,7 +28,7 @@ def test_quiet_district_and_short_history():
 
 def test_watch_job_makes_one_alert_with_llm(ask, store):
     result = ask("매일 감시", job="daily_watch")
-    assert event_types(result) == ["RouteDecided", "WatchChecked", "Judged", "Judged",
+    assert event_types(result) == ["RouteDecided", "JobChecked", "Judged", "Judged",
                                    "DraftWritten", "Validation", "JobSaved"]
     assert result["alert_id"] is not None and result["llm_calls"] == 3
     assert "광호주유소" in result["final"] and result["validation"]["passed"] is True
@@ -39,7 +39,7 @@ def test_watch_job_makes_one_alert_with_llm(ask, store):
 
 def test_quiet_watch_uses_no_llm(ask, store):
     result = ask("매일 감시", job="daily_watch", gu="광진구")
-    assert event_types(result) == ["RouteDecided", "WatchChecked", "JobSaved"]
+    assert event_types(result) == ["RouteDecided", "JobChecked", "JobSaved"]
     assert result.get("llm_calls", 0) == 0 and result.get("alert_id") is None
     row = store.conn.execute("SELECT llm_calls, alert_id FROM job_run").fetchone()
     assert row == (0, None)

@@ -271,6 +271,12 @@ async def api_simulate(station_id: str, fast_add: int = Query(ge=1), kw: int = 1
     return await _tool("simulate", {"station_id": station_id, "fast_add": fast_add, "kw": kw})
 
 
+@app.get("/api/stations/{station_id}/competition")
+async def api_competition(station_id: str):
+    """주유소 반경 1km 급속 운영사 현황 (공개 데이터 — 타사 거점도 조회 가능)"""
+    return await _tool("get_nearby_competition", {"station_id": station_id})
+
+
 @app.get("/api/districts/{gu}")
 async def api_district(gu: str, company: str = "SK에너지"):
     """자치구 패널 — 5개 연료 수요, 충전 공급, 수소 대기, 자사 거점 목록"""
@@ -323,8 +329,8 @@ async def api_decisions(company: str = "SK에너지", station_id: str | None = N
 
 @app.post("/api/jobs/{job}/run")
 async def api_run_job(job: str, company: str = "SK에너지", gu: str | None = None):
-    """상시 작업 수동 실행 (시연용) — 지금은 매일 감시(daily_watch)만"""
-    if job != "daily_watch":
+    """상시 작업 수동 실행 (시연용) — 매일 감시(daily_watch) · 주간 경쟁(weekly)"""
+    if job not in ("daily_watch", "weekly"):
         raise HTTPException(status_code=404, detail={"message": f"없는 작업: {job}"})
     result = await app.state.graph.ainvoke(
         {"query": "매일 감시", "job": job, "thread_id": f"job-{job}", "history": [],

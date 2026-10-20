@@ -90,7 +90,8 @@
     <b>{{ company }} 에너지 허브 대시보드</b>
     <span class="muted">{{ backendLabel }}</span>
     <button type="button" class="hbtn" @click="showAlerts">🔔 알림 {{ unread }}</button>
-    <button type="button" class="hbtn" :disabled="watching" @click="runWatch">{{ watching ? '감시 중…' : '매일 감시 실행' }}</button>
+    <button type="button" class="hbtn" :disabled="watching" @click="runJob('daily_watch')">{{ watching ? '실행 중…' : '매일 감시 실행' }}</button>
+    <button type="button" class="hbtn" :disabled="watching" @click="runJob('weekly')">주간 경쟁 실행</button>
     <label><input type="checkbox" v-model="ownOnly" /> 자사 핀만</label>
     <label><input type="checkbox" v-model="showDistricts" /> 자치구 신호 (빨강 전기 병목 · 파랑 테두리 유휴 위험)</label>
   </header>
@@ -166,8 +167,11 @@
           <div v-for="a in panel.alerts" :key="a.id" class="alert" :class="{ unread: !a.read }">
             <div>{{ a.message }}</div>
             <div class="stations note">
-              <div v-for="s in a.payload.stations" :key="s.station_id" @click="openAlertStation(a, s.station_id)">
+              <div v-for="s in a.payload.stations || []" :key="s.station_id" @click="openAlertStation(a, s.station_id)">
                 {{ s.name }} ({{ s.gu }}) — 새 고장 {{ s.new_failures }}개
+              </div>
+              <div v-for="c in a.payload.changes || []" :key="c.charger" @click="openAlertStation(a, c.station_id)">
+                {{ c.name }} ({{ c.gu }}) — {{ c.change }} · {{ c.operator }}{{ c.own_operator ? ' (자사·계열)' : ' (타사)' }} · {{ c.distance_m }}m
               </div>
             </div>
           </div>
@@ -374,14 +378,15 @@ createApp({
       Object.assign(panel, { kind: 'alerts', alerts: data.alerts });
     }
 
-    async function runWatch() {
+    async function runJob(job) {
+      const title = job === 'weekly' ? '주간 경쟁' : '매일 감시';
       watching.value = true;
       try {
-        const r = await fetch(`/api/jobs/daily_watch/run?company=${encodeURIComponent(company)}`, { method: 'POST' });
+        const r = await fetch(`/api/jobs/${job}/run?company=${encodeURIComponent(company)}`, { method: 'POST' });
         const res = await r.json();
         panel.runInfo = res.alert_id
-          ? `매일 감시 실행: 알림 1건 (LLM ${res.llm_calls}회)`
-          : `매일 감시 실행: 새 고장 없음 → 알림 없음 (LLM ${res.llm_calls}회)`;
+          ? `${title} 실행: 알림 1건 (LLM ${res.llm_calls}회)`
+          : `${title} 실행: 변화 없음 → 알림 없음 (LLM ${res.llm_calls}회)`;
         await refreshUnread();
         await showAlerts();
       } finally {
@@ -505,7 +510,7 @@ createApp({
 
     return { company, backendLabel, ownOnly, showDistricts, panel, decision, log, input, sending, logEl,
              target, suggestions, signed, targetPrefix, focusStation, clearTarget, onSubmit, saveDecision,
-             unread, watching, showAlerts, runWatch, openAlertStation };
+             unread, watching, showAlerts, runJob, openAlertStation };
   },
 }).mount('#app');
 </script>

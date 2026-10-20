@@ -14,7 +14,7 @@ from energy import criteria
 from energy.seoul import BRAND_ALIASES, SEOUL_GU
 
 from .deps import SupervisorDeps
-from .facts import build_facts, build_watch_facts
+from .facts import build_competition_facts, build_facts, build_watch_facts
 from .retry import with_retry
 from .validation import check_answer
 
@@ -166,6 +166,8 @@ async def energy_research_node(state: dict, deps: SupervisorDeps) -> dict:
              "supply": ("get_ev_supply", {"gu": gu}),
              "h2": ("get_h2_status", {"gu": gu}),
              "own": ("search_stations", {"gu": gu, "brand": company})}
+    if request_type == "station":   # 공개 정보라 타사 거점도 경쟁 현황은 보여준다
+        tasks["competition"] = ("get_nearby_competition", {"station_id": state["station_id"]})
     if is_own:   # 타사 거점은 판별하지 않으므로 기준 판정·시나리오도 부르지 않는다
         tasks["district"] = ("score_district", {"gu": gu})
         tasks["cluster"] = ("review_cluster", {"gu": gu, "brand": company})
@@ -271,12 +273,13 @@ async def authority_gate_node(state: dict, deps: SupervisorDeps) -> dict:
                        "facts": cited})
 
     request_type = state["request_type"]
-    scope_type = {"station": "station", "scenario": "station", "watch": "watch"}.get(
-        request_type, "gu")
+    scope_type = {"station": "station", "scenario": "station", "watch": "watch",
+                  "weekly": "weekly"}.get(request_type, "gu")
+    job_scope = state.get("gu") or _company(state)
     scope_id = {"station": state.get("station_id"), "scenario": state.get("station_id"),
-                "watch": state.get("gu") or _company(state)}.get(request_type, state.get("gu"))
+                "watch": job_scope, "weekly": job_scope}.get(request_type, state.get("gu"))
     results = state["tool_results"]
-    source = results.get("district") or results.get("simulate") or results.get("watch") or {}
+    source = results.get("district") or results.get("simulate") or results.get("job") or {}
     deps.session_store.log_decision(
         company=_company(state), scope_type=scope_type, scope_id=scope_id,
         snapshot=source.get("snapshot", ""), rule_version=criteria.RULE_VERSION,
@@ -330,49 +333,84 @@ async def energy_validate_node(state: dict, deps: SupervisorDeps) -> dict:
                                           "verdict": verdict, "issues": issues}]}
 
 
-# ── 매일 감시 (상시 작업) ─────────────────────────────────────────
+# ── 상시 작업 (매일 감시 · 주간 경쟁) ─────────────────────────────
 
-@traceable(name="watch_node")
-async def watch_node(state: dict, deps: SupervisorDeps) -> dict:
-    """매일 감시 1차 감지(코드) — 자사 거점 주변 새 고장을 찾고, 없으면 LLM 없이 끝낸다"""
-    company = _company(state)
-    args = {"company": company, **({"gu": state["gu"]} if state.get("gu") else {})}
-    summary = await call_tool(deps, "detect_anomalies", args)
+JOBS = {
+    "daily_watch": {"request_type": "watch", "tool": "detect_anomalies", "needed": "alert_needed",
+                    "kind": "new_charger_failure", "title": "매일 감시",
+                    "quiet": "자사 거점 주변에 새로 멈춘 급속충전기가 없습니다. 알림을 만들지 않았습니다."},
+    "weekly": {"request_type": "weekly", "tool": "diff_competitors", "needed": "report_needed",
+               "kind": "weekly_competition", "title": "주간 경쟁",
+               "quiet": "자사 거점 반경 1km에 새로 생기거나 없어진 급속충전기가 없습니다. "
+                        "보고를 만들지 않았습니다."},
+}
+
+
+def _job_baseline(job: str, summary: dict) -> dict:
+    if job == "daily_watch":
+        top = [s["station_id"] for s in summary["stations"][:criteria.ALERT_TOP_STATIONS]]
+        return {"alert_needed": summary["alert_needed"], "alert_stations": top}
+    stations = []
+    for c in sorted(summary["changes"], key=lambda c: c["distance_m"]):
+        if c["station_id"] not in stations:
+            stations.append(c["station_id"])
+    return {"report_needed": summary["report_needed"],
+            "watch_competitors": stations[:criteria.ALERT_TOP_STATIONS]}
+
+
+@traceable(name="job_check_node")
+async def job_check_node(state: dict, deps: SupervisorDeps) -> dict:
+    """상시 작업 1차 감지(코드) — 변화가 없으면 LLM 없이 끝낸다"""
+    job, company = state["job"], _company(state)
+    args = {"company": company}
+    if job == "daily_watch" and state.get("gu"):
+        args["gu"] = state["gu"]
+    summary = await call_tool(deps, JOBS[job]["tool"], args)
     if "error" in summary:
-        return {"tool_results": {"watch": summary}, "facts": [], "baseline": {},
-                "errors": [{"tool": "detect_anomalies", **summary["error"]}],
-                "events": state["events"] + [{"type": "WatchChecked", "ok": False}]}
-    top = [s["station_id"] for s in summary["stations"][:criteria.ALERT_TOP_STATIONS]]
-    event = {"type": "WatchChecked", "ok": True, "new_failures": summary["new_failures"],
-             "stations": len(summary["stations"]), "alert_needed": summary["alert_needed"]}
-    return {"tool_results": {"watch": summary}, "is_own": True,
-            "facts": build_watch_facts(summary, criteria.ALERT_TOP_STATIONS),
-            "baseline": {"alert_needed": summary["alert_needed"], "alert_stations": top},
-            "events": state["events"] + [event]}
+        return {"tool_results": {"job": summary}, "facts": [], "baseline": {},
+                "errors": [{"tool": JOBS[job]["tool"], **summary["error"]}],
+                "events": state["events"] + [{"type": "JobChecked", "job": job, "ok": False}]}
+    facts = (build_watch_facts(summary, criteria.ALERT_TOP_STATIONS) if job == "daily_watch"
+             else build_competition_facts(summary))
+    needed = summary[JOBS[job]["needed"]]
+    event = {"type": "JobChecked", "job": job, "ok": True, "needed": needed,
+             "count": len(summary.get("stations") or summary.get("changes") or [])}
+    return {"tool_results": {"job": summary}, "is_own": True, "facts": facts,
+            "baseline": _job_baseline(job, summary), "events": state["events"] + [event]}
 
 
-@traceable(name="watch_deliver_node")
-async def watch_deliver_node(state: dict, deps: SupervisorDeps) -> dict:
-    """매일 감시 결과를 알림함(이상 있을 때 1건)과 작업 실행 기록에 저장하는 노드"""
-    company = _company(state)
-    summary = state["tool_results"].get("watch", {})
+@traceable(name="policy_node")
+async def policy_node(state: dict, deps: SupervisorDeps) -> dict:
+    """정책·경쟁 에이전트 — 경쟁 변화 사실만 보고 보고할 변화와 먼저 볼 거점을 판별하는 노드 (fast 모델)"""
+    verdicts, usage = deps.fast_llm.judge_competition(state["facts"])
+    summary = {item: v.get("value") for item, v in verdicts.items()}
+    return {"llm_verdicts": verdicts, **_spend(state, usage),
+            "events": state["events"] + [{"type": "Judged", "by": "policy", **summary}]}
+
+
+@traceable(name="job_deliver_node")
+async def job_deliver_node(state: dict, deps: SupervisorDeps) -> dict:
+    """상시 작업 결과를 알림함(변화가 있을 때 1건)과 작업 실행 기록에 저장하는 노드"""
+    job, company = state["job"], _company(state)
+    config = JOBS[job]
+    summary = state["tool_results"].get("job", {})
     scope_id = state.get("gu") or company
     alert_id, created = None, False
-    if state.get("verdicts", {}).get("alert_needed", {}).get("value"):
+    if state.get("verdicts", {}).get(config["needed"], {}).get("value"):
         alert_id, created = deps.session_store.save_alert(
-            company, "daily_watch", "new_charger_failure", scope_id,
-            " → ".join(summary.get("window", [])), state["draft"], summary)
+            company, job, config["kind"], scope_id, " → ".join(summary.get("window", [])),
+            state["draft"], summary)
         final = state["draft"]
     elif "error" in summary:
-        final = "매일 감시 데이터를 읽지 못했습니다. 수집 상태를 확인해 주세요."
+        final = f"{config['title']} 데이터를 읽지 못했습니다. 수집 상태를 확인해 주세요."
     else:
         window = " → ".join(w[:16].replace("T", " ") for w in summary.get("window", []))
-        final = (f"[{company} · {state.get('gu') or '서울 전체'} 매일 감시 · {window}]\n"
-                 "자사 거점 주변에 새로 멈춘 급속충전기가 없습니다. 알림을 만들지 않았습니다.")
+        final = (f"[{company} · {state.get('gu') or '서울 전체'} {config['title']} · {window}]\n"
+                 + config["quiet"])
     run_id = deps.session_store.save_job_run(
-        "daily_watch", company, scope_id, state.get("started_at", ""),
+        job, company, scope_id, state.get("started_at", ""),
         "error" if "error" in summary else "ok", state.get("llm_calls", 0), alert_id)
-    event = {"type": "JobSaved", "job_run_id": run_id, "alert_id": alert_id,
+    event = {"type": "JobSaved", "job": job, "job_run_id": run_id, "alert_id": alert_id,
              "alert_created": created, "llm_calls": state.get("llm_calls", 0)}
     return {"final": final, "alert_id": alert_id, "job_run_id": run_id,
             "events": state["events"] + [event]}
@@ -380,15 +418,19 @@ async def watch_deliver_node(state: dict, deps: SupervisorDeps) -> dict:
 
 def start_job(state: dict) -> dict:
     """상시 작업 요청을 LLM 분류 없이 코드로 시작하는 함수 (Supervisor 의 작업 분기)"""
-    event = {"type": "RouteDecided", "route": "watch", "request_type": "watch",
+    request_type = JOBS[state["job"]]["request_type"]
+    event = {"type": "RouteDecided", "route": "job", "request_type": request_type,
              "job": state["job"], "gu": state.get("gu")}
-    return {"route": "watch", "request_type": "watch",
+    return {"route": "job", "request_type": request_type,
             "started_at": datetime.now().isoformat(timespec="seconds"),
             "events": state.get("events", []) + [event]}
 
 
-def after_watch(state: dict) -> str:
-    return "analyst" if state.get("baseline", {}).get("alert_needed") else "watch_deliver"
+def after_job_check(state: dict) -> str:
+    needed = JOBS[state["job"]]["needed"]
+    if not state.get("baseline", {}).get(needed):
+        return "job_deliver"
+    return "analyst" if state["job"] == "daily_watch" else "policy"
 
 
 # ── 분기 ───────────────────────────────────────────────────────
@@ -410,4 +452,4 @@ def after_validate(state: dict) -> str:
     passed = state["validation"]["passed"]
     if not passed and state["rewrite_count"] <= MAX_REWRITE:
         return "energy_write"
-    return "watch_deliver" if state["request_type"] == "watch" else "finalize"
+    return "job_deliver" if state.get("job") in JOBS else "finalize"

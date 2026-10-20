@@ -30,6 +30,15 @@ WATCH_CONSECUTIVE = 3
 NEW_FAILURE_HOURS = 24
 ALERT_TOP_STATIONS = 3              # 회사당 하루 알림 1건, 위에 올리는 거점 수
 
+# 주간 경쟁 추적: 자사·계열 충전 운영사 (busiNm). 나머지는 타사로 본다
+# SK일렉링크는 2025년 SK네트웍스가 경영권을 앵커PE에 넘겨 SK 계열이 아니다 (한국경제 2026.7.24)
+# GS차지비는 GS칼텍스의 충전 자회사다
+COMPANY_OPERATORS = {
+    "SK에너지": ("SK에너지",),
+    "GS칼텍스": ("GS칼텍스", "GS차지비"),
+}
+NEARBY_TOP_OPERATORS = 5            # 주변 경쟁 현황에 보여줄 운영사 수
+
 # 묶음 안 급속 후보: 반경 1km 급속 수가 묶음 중앙값 이하, 적은 순으로 최대 2곳
 FAST_CANDIDATE_MAX = 2
 
@@ -60,6 +69,8 @@ GATED_ITEMS = {
     "fast_candidates": "묶음 급속 후보",
     "ev_bottleneck_before": "급속 추가 전 전기 병목",
     "ev_bottleneck_after": "급속 추가 후 전기 병목",
+    "report_needed": "주간 보고에 올릴 변화",
+    "watch_competitors": "경쟁 변화를 볼 거점",
     "alert_needed": "알림 필요",
     "alert_stations": "알림 상단 거점",
 }

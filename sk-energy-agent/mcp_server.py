@@ -23,6 +23,7 @@ from energy.rules.names import find_stations
 from energy.rules.score import district_baseline
 from energy.rules.simulate import simulate_fast_add
 from energy.rules.anomaly import detect_anomalies as _detect
+from energy.rules.competitors import nearby_operators, weekly_competition
 from energy.store import load_snapshot, load_status_history
 from energy.views import (criteria_resource, h2_status, map_pins, nearby_districts as _nearby,
                           search_stations as _search, station_card_view)
@@ -154,6 +155,22 @@ def detect_anomalies(company: str = "SK에너지", gu: str | None = None) -> dic
         return _error("없는 자치구", gu=gu)
     return _with_meta(_detect(STATUS_HISTORY, SNAPSHOT.stations, company, gu),
                       "환경공단 충전기 상태 (매시 수집 fast_status.csv)")
+
+
+@mcp.tool()
+def get_nearby_competition(station_id: str) -> dict:
+    """거점 반경 1km 급속충전기를 운영사별로 셉니다 (공개 데이터, 타사 거점도 조회 가능)."""
+    result = nearby_operators(SNAPSHOT, station_id)
+    if result is None:
+        return _error("없는 주유소 번호", station_id=station_id)
+    return _with_meta(result, CHARGER_SOURCE)
+
+
+@mcp.tool()
+def diff_competitors(company: str = "SK에너지") -> dict:
+    """비교 구간 처음과 끝 수집 사이 자사 거점 반경 1km 급속 신설·철거를 운영사·거리와 함께 반환합니다."""
+    return _with_meta(weekly_competition(STATUS_HISTORY, SNAPSHOT.stations, company),
+                      "환경공단 충전기 정보 (수집 시점 비교)")
 
 
 @mcp.tool()

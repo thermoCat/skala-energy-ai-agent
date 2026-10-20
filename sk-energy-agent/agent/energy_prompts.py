@@ -96,6 +96,15 @@ WATCH_JUDGE_SYSTEM = (
     '"alert_stations": {"value": [station_id], "facts": [...], "reason": str}}'
 )
 
+COMPETITION_JUDGE_SYSTEM = (
+    "당신은 정유사의 정책·경쟁 에이전트다. 자사 거점 주변 급속충전기 신설·철거 사실 [F]만 보고 판별하라.\n"
+    "- report_needed: 이번 주 관리자에게 보고할 경쟁 변화가 있는가\n"
+    "- watch_competitors: 먼저 볼 자사 거점 station_id 최대 3곳 (타사 신설이 가까운 곳부터)\n"
+    "JSON 객체로만 답하라: "
+    '{"report_needed": {"value": bool, "facts": ["F1"], "reason": str}, '
+    '"watch_competitors": {"value": [station_id], "facts": [...], "reason": str}}'
+)
+
 _VERDICT = {"type": "object",
             "properties": {"value": {"type": "boolean"},
                            "facts": {"type": "array", "items": {"type": "string"}},
@@ -144,6 +153,13 @@ WATCH_JUDGE_SCHEMA = {
     "required": ["alert_needed", "alert_stations"],
 }
 
+COMPETITION_JUDGE_SCHEMA = {
+    "type": "object",
+    "properties": {"report_needed": _VERDICT,
+                   "watch_competitors": WATCH_JUDGE_SCHEMA["properties"]["alert_stations"]},
+    "required": ["report_needed", "watch_competitors"],
+}
+
 SCENARIO_ITEMS = ("ev_bottleneck_before", "ev_bottleneck_after")
 DISTRICT_ITEMS = ("ev_bottleneck", "diesel_idle", "lpg_idle")
 
@@ -163,6 +179,8 @@ def judge_prompt(request_type: str, facts: list[dict]) -> tuple[str, str, dict]:
         return SCENARIO_JUDGE_SYSTEM, render_facts(facts), SCENARIO_JUDGE_SCHEMA
     if request_type == "watch":
         return WATCH_JUDGE_SYSTEM, render_facts(facts), WATCH_JUDGE_SCHEMA
+    if request_type == "weekly":
+        return COMPETITION_JUDGE_SYSTEM, render_facts(facts), COMPETITION_JUDGE_SCHEMA
     return JUDGE_SYSTEM, render_facts(facts), JUDGE_SCHEMA
 
 
@@ -192,6 +210,12 @@ def normalize_judgement(content: str, request_type: str, facts: list[dict]) -> d
         chosen = [s for s in top.get("value", []) or [] if s in stations][:3]
         return {"alert_needed": _clean_verdict(raw.get("alert_needed"), known),
                 "alert_stations": {**_clean_verdict(top, known), "value": chosen, "reasons": {}}}
+    if request_type == "weekly":
+        stations = {f["station_id"] for f in facts if f["key"].startswith("distance:")}
+        top = raw.get("watch_competitors") if isinstance(raw.get("watch_competitors"), dict) else {}
+        chosen = [s for s in top.get("value", []) or [] if s in stations][:3]
+        return {"report_needed": _clean_verdict(raw.get("report_needed"), known),
+                "watch_competitors": {**_clean_verdict(top, known), "value": chosen, "reasons": {}}}
     if request_type == "scenario":
         return {item: _clean_verdict(raw.get(item), known) for item in SCENARIO_ITEMS}
 

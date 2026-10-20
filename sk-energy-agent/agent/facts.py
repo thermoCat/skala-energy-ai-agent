@@ -92,6 +92,14 @@ def _add_decisions(facts: FactList, log: dict, names: dict) -> None:
                   "", log["source"], station_id=sid, name=names.get(sid, sid))
 
 
+def _add_competition(facts: FactList, comp: dict) -> None:
+    src = comp["source"]
+    facts.add("nearby_operators", "반경 1km 급속 운영사 수", comp["operators"], "곳", src)
+    for i, row in enumerate(comp["top"], start=1):
+        facts.add(f"operator:{i}", f"반경 1km 급속 운영사 {row['operator']}", row["fast_ids"], "ID",
+                  src, name=row["operator"])
+
+
 def build_facts(results: dict, company: str) -> list[dict]:
     """조회 결과를 번호 붙은 사실 목록으로 만드는 함수 (실패한 Tool의 사실은 빠짐)
 
@@ -117,6 +125,8 @@ def build_facts(results: dict, company: str) -> list[dict]:
         _add_cluster(facts, results.get("cluster_cards", []), company)
     if _ok(results.get("simulate")):
         _add_scenario(facts, results["simulate"])
+    if _ok(results.get("competition")):
+        _add_competition(facts, results["competition"])
     if _ok(results.get("decisions")):
         names = {c["station_id"]: c["name"] for c in results.get("cluster_cards", []) if _ok(c)}
         _add_decisions(facts, results["decisions"], names)
@@ -149,4 +159,32 @@ def build_watch_facts(summary: dict, top: int) -> list[dict]:
     rest = len(summary["stations"]) - top
     if rest > 0:
         facts.add("stations_rest", "알림 위에 올리지 않은 나머지 거점", rest, "곳", src)
+    return facts.items
+
+
+def build_competition_facts(summary: dict) -> list[dict]:
+    """주간 경쟁 요약을 번호 붙은 사실 목록으로 만드는 함수
+
+    Args:
+        summary: diff_competitors 결과
+    Returns:
+        사실 목록 (범위·구간, 서울 신설·철거 수, 자사 거점 1km 안 변화별 운영사·거리)
+    """
+    facts = FactList()
+    src = summary["source"]
+    facts.add("watch_scope", "추적 범위", f"{summary['company']} · 서울 전체", "", src)
+    facts.add("watch_window", "비교 구간 (수집 시각)",
+              " → ".join(w[:16].replace("T", " ") for w in summary["window"]), "", src)
+    facts.add("seoul_added", "서울 급속 신설", summary["seoul_added"], "개", src)
+    facts.add("seoul_removed", "서울 급속 철거", summary["seoul_removed"], "개", src)
+    facts.add("near_changes", "자사 거점 반경 1km 안 변화", len(summary["changes"]), "건", src)
+    facts.add("competitor_new", "그중 타사 신설", summary["competitor_new"], "건", src)
+    for c in summary["changes"]:
+        who = "자사·계열" if c["own_operator"] else "타사"
+        facts.add(f"change:{c['charger']}", f"{c['name']} ({c['gu']}) 주변 변화",
+                  f"{c['change']} · {c['operator']}({who})", "", src,
+                  station_id=c["station_id"], name=c["name"], gu=c["gu"],
+                  competitor=not c["own_operator"] and c["change"] == "신설")
+        facts.add(f"distance:{c['charger']}", f"{c['name']} 에서 거리", c["distance_m"], "m", src,
+                  station_id=c["station_id"], name=c["name"], charger=c["charger"])
     return facts.items

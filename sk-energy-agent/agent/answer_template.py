@@ -99,6 +99,35 @@ class EnergyAnswer:
         return [f"※ 지난 결정 — {f['name']}: {f['value']}[{f['id']}] (이번 판정과 함께 검토하세요)"
                 for f in decisions]
 
+    def competition_line(self, number: str = "") -> list[str]:
+        ops = sorted((f for k, f in self.by_key.items() if k.startswith("operator:")),
+                     key=lambda f: f["key"])
+        if not ops:
+            return []
+        listed = ", ".join(f"{f['name']} {f['value']}[{f['id']}]" for f in ops)
+        return [f"{number}주변 경쟁: 반경 1km 급속 운영사 {self.cite('nearby_operators', '{}곳')} "
+                f"— 많은 순 {listed}"]
+
+    def weekly_lines(self) -> list[str]:
+        c = self.cite
+        lines = [f"서울 급속 신설 {c('seoul_added', '{}개')} · 철거 {c('seoul_removed', '{}개')} 중 "
+                 f"자사 거점 반경 1km 안 변화 {c('near_changes', '{}건')} "
+                 f"(타사 신설 {c('competitor_new', '{}건')}){self.j('report_needed')}."]
+        if not self.value("report_needed"):
+            return lines
+        marks = "①②③④⑤"
+        picks = []
+        for i, sid in enumerate(self.value("watch_competitors") or []):
+            for k, f in self.by_key.items():
+                if k.startswith("change:") and f["station_id"] == sid:
+                    charger = k.split(":", 1)[1]
+                    picks.append(f"{marks[len(picks) % 5]} {f['name']}({f['gu']}) — "
+                                 f"{f['value']}[{f['id']}], {c(f'distance:{charger}', '{}m')}")
+        lines.append(f"먼저 볼 거점{self.j('watch_competitors')}: " + "  ".join(picks))
+        lines.append("주변에 생긴 타사 급속은 같은 충전 수요를 나눠 가질 수 있어, 해당 거점의 급속 "
+                     "후보 판단과 함께 보세요.")
+        return lines
+
     def watch_lines(self) -> list[str]:
         c = self.cite
         if not self.value("alert_needed"):
@@ -135,10 +164,12 @@ class EnergyAnswer:
     def build(self, request_type, corrections, is_own, errors, site_checks, item_labels,
               replanned_from) -> list[str]:
         station = self.by_key.get("station", {}).get("value")
-        if request_type == "watch":
-            lines = [f"[{self.by_key['watch_scope']['value']} 매일 감시 · "
+        if request_type in ("watch", "weekly"):
+            title = "매일 감시" if request_type == "watch" else "주간 경쟁"
+            body = self.watch_lines() if request_type == "watch" else self.weekly_lines()
+            lines = [f"[{self.by_key['watch_scope']['value']} {title} · "
                      f"{self.by_key['watch_window']['value']}]"]
-            return lines + self.watch_lines() + self.correction_lines(corrections, item_labels)
+            return lines + body + self.correction_lines(corrections, item_labels)
         if request_type == "district":
             own = self.by_key.get("own_count", {})
             header = f"[{own.get('label', '').replace(' 거점 수', '')} 거점 {own.get('value', 0)}곳]"
@@ -156,6 +187,7 @@ class EnergyAnswer:
                       f"- 자치구 전기차 1년 {c('ev_growth_pct', '{:+.1f}%')} "
                       f"(서울 {c('seoul_ev_growth_pct', '{:+.1f}%')}), 전기차 1만 대당 급속 ID "
                       f"{c('fast_per_10k_ev', '{:.1f}')} (서울 {c('seoul_fast_per_10k_ev', '{:.1f}')})",
+                      *self.competition_line("- "),
                       "타사 거점이라 투자 판별은 하지 않습니다."]
             return lines
 
@@ -167,6 +199,7 @@ class EnergyAnswer:
             lines.append(self.district_verdicts())
             if request_type == "station":
                 lines.append(self.station_line(self.by_key["station"]["station_id"]))
+                lines += self.competition_line("5) ")
             else:
                 lines += self.cluster_lines()
         lines += self.decision_lines()

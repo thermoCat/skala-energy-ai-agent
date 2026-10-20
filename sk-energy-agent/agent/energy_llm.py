@@ -28,6 +28,19 @@ class EnergyFastMixin:
                                          p.CLASSIFY_SCHEMA)
         return p.normalize_classify(content, query, gu_names, BRAND_ALIASES), usage
 
+    @traceable(run_type="llm", name="energy.judge_competition")
+    def judge_competition(self, facts: list[dict]) -> tuple[dict, dict]:
+        """정책·경쟁 에이전트 — 경쟁 변화 사실만 보고 보고할 변화와 먼저 볼 거점을 판별하는 함수
+
+        Args:
+            facts: 번호 붙은 사실 목록
+        Returns:
+            ({"report_needed", "watch_competitors"}, 사용량)
+        """
+        system, user, schema = p.judge_prompt("weekly", facts)
+        content, usage = self._json_call(system, user, schema)
+        return p.normalize_judgement(content, "weekly", facts), usage
+
     @traceable(run_type="llm", name="energy.judge_answer")
     def judge_answer(self, draft: str, request_type: str, is_own: bool) -> tuple[dict, dict]:
         """답변이 근거 표기·현장 확인·투자 결정 아님 기준을 지켰는지 보는 함수
