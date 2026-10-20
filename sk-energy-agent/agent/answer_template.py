@@ -3,6 +3,7 @@
 TOOL_FUELS = {"get_fuel_demand": "5개 연료 수요", "get_ev_supply": "전기 공급",
               "get_h2_status": "수소", "search_stations": "자사 거점 목록"}
 YES_NO = {True: "예", False: "아니오"}
+ORDINALS = ("첫 번째", "두 번째", "세 번째", "네 번째")   # 숫자로 쓰면 근거 없는 숫자로 잡힘
 
 
 class EnergyAnswer:
@@ -55,23 +56,43 @@ class EnergyAnswer:
                 f" / 경유 {idle.get(self.value('diesel_idle'), '판별 불가')}{self.j('diesel_idle')}"
                 f" / LPG {idle.get(self.value('lpg_idle'), '판별 불가')}{self.j('lpg_idle')}")
 
+    def priority(self) -> dict:
+        return self.verdicts.get("fast_candidates", {}).get("priority") or {}
+
     def station_line(self, station_id: str) -> str:
         c = self.cite
-        candidate = station_id in (self.value("fast_candidates") or [])
+        chosen = self.value("fast_candidates") or []
+        candidate = station_id in chosen
         verdict = "⚡ 급속 후보입니다" if candidate else "이번 기준으로는 급속 후보가 아닙니다"
-        return (f"4) 이 주유소: 주유소 안 급속 {c('in_station_fast_ids', '{}개')}, "
+        line = (f"4) 이 주유소: 주유소 안 급속 {c('in_station_fast_ids', '{}개')}, "
                 f"반경 1km 급속 ID {c('fast_1km')} (묶음 중앙값 {c('cluster_median_fast_1km')}) "
                 f"→ {verdict}{self.j('fast_candidates')}")
+        pri = self.priority()
+        if candidate and pri.get("by") == "llm":
+            ordinal = ORDINALS[chosen.index(station_id)]
+            line += (f" — 묶음 후보 {len(chosen)}곳 중 {ordinal}로 볼 곳 (AI 판단: "
+                     f"{pri['reasons'][station_id]['text']})")
+        return line
 
     def cluster_lines(self) -> list[str]:
         chosen = self.value("fast_candidates") or []
         if not chosen:
             return [f"4) 급속 후보{self.j('fast_candidates')}: 없음 (전기 병목 자치구가 아님)"]
         marks = "①②③④"
-        picks = [f"{marks[i]} {self.name(sid)} — 반경 1km 급속 ID {self.cite(f'fast_1km:{sid}')}, "
-                 f"주유소 안 급속 {self.cite(f'in_station_fast:{sid}', '{}개')}"
-                 for i, sid in enumerate(chosen)]
-        return [f"4) 급속 후보{self.j('fast_candidates')}: " + "  ".join(picks),
+        pri = self.priority()
+        if pri.get("by") == "llm":
+            picks = [f"{marks[i]} {self.name(sid)} — {pri['reasons'][sid]['text']}"
+                     for i, sid in enumerate(chosen)]
+            head = f"4) 급속 후보{self.j('fast_candidates')} — 먼저 볼 순서 (AI 판단): "
+        else:
+            picks = [f"{marks[i]} {self.name(sid)} — 반경 1km 급속 ID {self.cite(f'fast_1km:{sid}')}, "
+                     f"주유소 안 급속 {self.cite(f'in_station_fast:{sid}', '{}개')}"
+                     for i, sid in enumerate(chosen)]
+            head = f"4) 급속 후보{self.j('fast_candidates')}: "
+            if pri.get("by") == "fallback":
+                head = (f"4) 급속 후보{self.j('fast_candidates')} — AI 우선순위 판단이 검사를 "
+                        "통과하지 못해 반경 급속이 적은 순: ")
+        return [head + "  ".join(picks),
                 f"   나머지 거점은 유지 (묶음 반경 1km 급속 ID 중앙값 "
                 f"{self.cite('cluster_median_fast_1km')})"]
 

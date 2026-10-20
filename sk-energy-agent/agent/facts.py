@@ -5,12 +5,14 @@ from statistics import median
 class FactList:
     """번호를 차례로 붙이며 사실을 모으는 목록"""
 
-    def __init__(self):
+    def __init__(self, start: int = 0):
+        self.start = start            # 이미 있는 사실 뒤에 이어 붙일 때 번호가 겹치지 않게
         self.items: list[dict] = []
 
     def add(self, key: str, label: str, value, unit: str, source: str, **extra) -> None:
-        self.items.append({"id": f"F{len(self.items) + 1}", "key": key, "label": label,
-                           "value": value, "unit": unit, "source": source, **extra})
+        self.items.append({"id": f"F{self.start + len(self.items) + 1}", "key": key,
+                           "label": label, "value": value, "unit": unit, "source": source,
+                           **extra})
 
 
 def _ok(result: dict | None) -> bool:
@@ -67,6 +69,10 @@ def _add_cluster(facts: FactList, cards: list[dict], company: str) -> None:
         facts.add(f"in_station_fast:{c['station_id']}",
                   f"{c['name']} ({c['facility']}) 주유소 안 급속 ID", c["in_station_fast_ids"],
                   "개", src, **tag)
+        if c.get("fast_1km_busy_pct") is not None:
+            facts.add(f"busy_1km:{c['station_id']}",
+                      f"{c['name']} 반경 1km 급속 충전 중 비율 (한 시점, 대리 지표)",
+                      c["fast_1km_busy_pct"], "%", src, **tag)
 
 
 def _add_scenario(facts: FactList, sim: dict) -> None:
@@ -191,4 +197,43 @@ def build_competition_facts(summary: dict) -> list[dict]:
                   competitor=not c["own_operator"] and c["change"] == "신설")
         facts.add(f"distance:{c['charger']}", f"{c['name']} 에서 거리", c["distance_m"], "m", src,
                   station_id=c["station_id"], name=c["name"], charger=c["charger"])
+    return facts.items
+
+
+def build_priority_facts(start: int, candidates: list[str], names: dict, competition: dict,
+                         watch: dict, weekly: dict) -> list[dict]:
+    """급속 후보마다 우선순위 판단에 쓸 신호(주변 운영사·새 고장·타사 신설)를 사실로 만드는 함수
+
+    Args:
+        start: 이미 있는 사실 수 (번호를 이어 붙임)
+        candidates: 확정된 급속 후보 주유소 번호
+        names: 주유소 번호 → 이름
+        competition: 주유소 번호 → get_nearby_competition 결과
+        watch: detect_anomalies 결과 (자치구 범위)
+        weekly: diff_competitors 결과
+    Returns:
+        새 사실 목록 (조회에 실패한 신호는 빠짐)
+    """
+    facts = FactList(start)
+    failures = {s["station_id"]: s["new_failures"] for s in watch.get("stations", [])} \
+        if _ok(watch) else None
+    rivals = {}
+    if _ok(weekly):
+        for c in weekly["changes"]:
+            if c["change"] == "신설" and not c["own_operator"]:
+                rivals[c["station_id"]] = rivals.get(c["station_id"], 0) + 1
+    for sid in candidates:
+        tag = {"station_id": sid, "name": names.get(sid, sid)}
+        name = names.get(sid, sid)
+        comp = competition.get(sid)
+        if _ok(comp):
+            facts.add(f"operators_1km:{sid}", f"{name} 반경 1km 급속 운영사 수", comp["operators"],
+                      "곳", comp["source"], **tag)
+        if failures is not None:
+            facts.add(f"new_failures_near:{sid}",
+                      f"{name} 반경 1km 새로 멈춘 급속 (최근 3회 연속 고장 + 24시간 이내)",
+                      failures.get(sid, 0), "개", watch["source"], **tag)
+        if _ok(weekly):
+            facts.add(f"competitor_new_near:{sid}", f"{name} 반경 1km 타사 급속 신설 (비교 구간)",
+                      rivals.get(sid, 0), "건", weekly["source"], **tag)
     return facts.items

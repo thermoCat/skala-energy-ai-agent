@@ -14,12 +14,14 @@ from energy import criteria
 from energy.seoul import BRAND_ALIASES, SEOUL_GU
 
 from .deps import SupervisorDeps
-from .facts import build_competition_facts, build_facts, build_watch_facts
+from .facts import (build_competition_facts, build_facts, build_priority_facts,
+                    build_watch_facts)
 from .retry import with_retry
-from .validation import check_answer
+from .validation import check_answer, check_priority
 
 JUDGED_TYPES = ("station", "district", "scenario")
-GATE_REASON = "기준에 따라 확정 (분석 에이전트 판별과 달라 교정)"   # 판별·게이트를 거치는 요청
+GATE_REASON = "기준에 따라 확정 (분석 에이전트 판별과 달라 교정)"
+PRIORITY_ONLY_FACTS = ("busy_1km:",)   # 판별·게이트를 거치는 요청
 MAX_REPLAN = 1
 MAX_REWRITE = 1
 
@@ -172,9 +174,8 @@ async def energy_research_node(state: dict, deps: SupervisorDeps) -> dict:
     if is_own:   # 타사 거점은 판별하지 않으므로 기준 판정·시나리오도 부르지 않는다
         tasks["district"] = ("score_district", {"gu": gu})
         tasks["cluster"] = ("review_cluster", {"gu": gu, "brand": company})
-        scope = ({"station_id": state["station_id"]} if state.get("station_id")
-                 else {"gu": gu})
-        tasks["decisions"] = ("get_decision_log", {"company": company, **scope})
+        # 우선순위 판단에 묶음 전체의 지난 결정이 필요해 주유소 질문도 자치구 단위로 읽는다
+        tasks["decisions"] = ("get_decision_log", {"company": company, "gu": gu})
         if request_type == "scenario":
             tasks["simulate"] = ("simulate", {"station_id": state["station_id"],
                                               "fast_add": state["fast_add"],
@@ -226,7 +227,9 @@ async def replan_node(state: dict, deps: SupervisorDeps) -> dict:
 @traceable(name="analyst_node")
 async def analyst_node(state: dict, deps: SupervisorDeps) -> dict:
     """분석 에이전트 — 사실 [F]만 보고 판별하는 노드 (기준 판정은 넘기지 않음)"""
-    verdicts, usage = deps.quality_llm.judge_energy(state["request_type"], state["facts"])
+    # 거점별 충전 중 비율은 우선순위 판단용 — 판별 입력에 섞으면 길어져 판별이 흐려졌다 (일치율 88.9 → 77.8%)
+    facts = [f for f in state["facts"] if not f["key"].startswith(PRIORITY_ONLY_FACTS)]
+    verdicts, usage = deps.quality_llm.judge_energy(state["request_type"], facts)
     summary = {item: v.get("value") for item, v in verdicts.items()}
     return {"llm_verdicts": verdicts, **_spend(state, usage),
             "events": state["events"] + [{"type": "Judged", "by": "analyst", **summary}]}
@@ -304,6 +307,49 @@ async def authority_gate_node(state: dict, deps: SupervisorDeps) -> dict:
     return {"verdicts": verdicts, "gate_corrections": corrections, "events": events}
 
 
+# ── 분석 에이전트: 어디부터, 왜 (기준 없는 판단) ──────────────────────
+
+@traceable(name="prioritize_node")
+async def prioritize_node(state: dict, deps: SupervisorDeps) -> dict:
+    """확정된 급속 후보가 2곳 이상일 때 어디부터 볼지 순서와 이유를 AI가 판단하는 노드
+
+    후보 자격은 게이트가 정했고, 순서·이유에는 정답 규칙이 없어 AI 판단을 채택한다.
+    코드는 확정 후보만 썼는지, 이유가 그 거점의 사실을 인용했는지만 확인하고,
+    어기면 반경 급속이 적은 기본 순서로 돌아가며 그 사실을 남긴다.
+    """
+    company, gu = _company(state), state["gu"]
+    candidates = list(state["verdicts"]["fast_candidates"]["value"])
+    watch, weekly, *competition = await asyncio.gather(
+        call_tool(deps, "detect_anomalies", {"company": company, "gu": gu}),
+        call_tool(deps, "diff_competitors", {"company": company}),
+        *(call_tool(deps, "get_nearby_competition", {"station_id": sid}) for sid in candidates))
+    names = {f["station_id"]: f["name"] for f in state["facts"]
+             if f["key"].startswith("fast_1km:")}
+    facts = state["facts"] + build_priority_facts(
+        len(state["facts"]), candidates, names, dict(zip(candidates, competition)), watch, weekly)
+    candidate_facts = [f for f in facts if f.get("station_id") in candidates]
+
+    result, usage = deps.quality_llm.prioritize(candidate_facts, candidates)
+    issues = check_priority(result, candidates, facts)
+    if issues:
+        priority = {"by": "fallback", "order": candidates, "reasons": {}, "summary": None,
+                    "issues": issues}
+    else:
+        priority = {"by": "llm", "order": result["order"], "reasons": result["reasons"],
+                    "summary": result.get("summary"), "issues": []}
+    event = {"type": "Prioritized", "by": priority["by"], "order": priority["order"],
+             "issues": issues}
+    return {"facts": facts, "priority": priority, **_spend(state, usage),
+            "events": state["events"] + [event]}
+
+
+def after_gate(state: dict) -> str:
+    fast = state.get("verdicts", {}).get("fast_candidates", {}).get("value") or []
+    if state["request_type"] in ("station", "district") and len(fast) >= 2:
+        return "prioritize"
+    return "energy_write"
+
+
 # ── 작성 에이전트 ⇄ 검증 에이전트 ────────────────────────────────
 
 @traceable(name="energy_write_node")
@@ -315,8 +361,13 @@ async def energy_write_node(state: dict, deps: SupervisorDeps) -> dict:
         return {"draft": draft, "events": state["events"] + [
             {"type": "DraftWritten", "attempt": attempt, "length": len(draft)}]}
     writer = get_stream_writer()
+    verdicts = dict(state.get("verdicts", {}))
+    if state.get("priority"):   # 확정 판정은 그대로 두고 작성용으로만 순서·이유를 얹는다
+        verdicts["fast_candidates"] = {**verdicts["fast_candidates"],
+                                       "value": state["priority"]["order"],
+                                       "priority": state["priority"]}
     draft, usage = await deps.quality_llm.write_energy(
-        state["request_type"], state["facts"], state.get("verdicts", {}),
+        state["request_type"], state["facts"], verdicts,
         state.get("gate_corrections", []), state.get("is_own", False),
         state.get("errors", []), criteria.SITE_CHECK_ITEMS, criteria.GATED_ITEMS,
         replanned_from=state.get("replanned_from"),

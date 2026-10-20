@@ -3,7 +3,7 @@
   "cases": 18,
   "kind_ok": 18,
   "number_accuracy_pct": 100.0,
-  "numbers": 297,
+  "numbers": 309,
   "unbacked": 0,
   "expected_found": 31,
   "expected_total": 31,
@@ -11,15 +11,21 @@
   "judged_items": 54,
   "gate_corrections": 8,
   "validation_passed": 18,
-  "median_seconds": 0.03
+  "median_seconds": 0.04,
+  "priority_cases": 4,
+  "priority_llm": 4,
+  "priority_same_order": 2,
+  "priority_repeat_cases": 2,
+  "priority_repeat_llm": 6,
+  "priority_repeat_runs": 6
  },
  "rows": [
   {
    "name": "풍한주유소 진단",
-   "seconds": 0.36,
+   "seconds": 0.39,
    "kind": "station",
    "kind_ok": true,
-   "numbers": 23,
+   "numbers": 28,
    "unbacked": [],
    "expected_found": [
     "+57.0%",
@@ -30,7 +36,12 @@
    "llm_agree": 3,
    "gate_corrections": 1,
    "validation": true,
-   "llm_calls": 4
+   "llm_calls": 5,
+   "priority_by": "llm",
+   "priority_order": [
+    "A0009172",
+    "A0009248"
+   ]
   },
   {
    "name": "박미주유소 진단",
@@ -48,14 +59,16 @@
    "llm_agree": 3,
    "gate_corrections": 1,
    "validation": true,
-   "llm_calls": 4
+   "llm_calls": 4,
+   "priority_by": null,
+   "priority_order": null
   },
   {
    "name": "미래주유소 진단",
-   "seconds": 0.03,
+   "seconds": 0.05,
    "kind": "station",
    "kind_ok": true,
-   "numbers": 21,
+   "numbers": 25,
    "unbacked": [],
    "expected_found": [
     "+47.8%",
@@ -66,7 +79,12 @@
    "llm_agree": 3,
    "gate_corrections": 1,
    "validation": true,
-   "llm_calls": 4
+   "llm_calls": 5,
+   "priority_by": "llm",
+   "priority_order": [
+    "A0009413",
+    "A0006762"
+   ]
   },
   {
    "name": "광호주유소 진단",
@@ -84,7 +102,9 @@
    "llm_agree": 3,
    "gate_corrections": 1,
    "validation": true,
-   "llm_calls": 4
+   "llm_calls": 4,
+   "priority_by": null,
+   "priority_order": null
   },
   {
    "name": "수서지점 진단",
@@ -102,14 +122,16 @@
    "llm_agree": 4,
    "gate_corrections": 0,
    "validation": true,
-   "llm_calls": 4
+   "llm_calls": 4,
+   "priority_by": null,
+   "priority_order": null
   },
   {
    "name": "동대문구 묶음",
-   "seconds": 0.03,
+   "seconds": 0.05,
    "kind": "district",
    "kind_ok": true,
-   "numbers": 21,
+   "numbers": 22,
    "unbacked": [],
    "expected_found": [
     "+57.0%",
@@ -120,11 +142,16 @@
    "llm_agree": 3,
    "gate_corrections": 1,
    "validation": true,
-   "llm_calls": 4
+   "llm_calls": 5,
+   "priority_by": "llm",
+   "priority_order": [
+    "A0009172",
+    "A0009248"
+   ]
   },
   {
    "name": "강남구 묶음",
-   "seconds": 0.04,
+   "seconds": 0.03,
    "kind": "district",
    "kind_ok": true,
    "numbers": 13,
@@ -138,14 +165,16 @@
    "llm_agree": 4,
    "gate_corrections": 0,
    "validation": true,
-   "llm_calls": 4
+   "llm_calls": 4,
+   "priority_by": null,
+   "priority_order": null
   },
   {
    "name": "성북구 묶음",
-   "seconds": 0.03,
+   "seconds": 0.04,
    "kind": "district",
    "kind_ok": true,
-   "numbers": 21,
+   "numbers": 23,
    "unbacked": [],
    "expected_found": [
     "+47.9%",
@@ -156,7 +185,12 @@
    "llm_agree": 3,
    "gate_corrections": 1,
    "validation": true,
-   "llm_calls": 4
+   "llm_calls": 5,
+   "priority_by": "llm",
+   "priority_order": [
+    "A0009490",
+    "A0009502"
+   ]
   },
   {
    "name": "양천구 묶음",
@@ -174,11 +208,13 @@
    "llm_agree": 4,
    "gate_corrections": 0,
    "validation": true,
-   "llm_calls": 4
+   "llm_calls": 4,
+   "priority_by": null,
+   "priority_order": null
   },
   {
    "name": "금천구 묶음",
-   "seconds": 0.03,
+   "seconds": 0.02,
    "kind": "district",
    "kind_ok": true,
    "numbers": 13,
@@ -192,7 +228,9 @@
    "llm_agree": 3,
    "gate_corrections": 1,
    "validation": true,
-   "llm_calls": 4
+   "llm_calls": 4,
+   "priority_by": null,
+   "priority_order": null
   },
   {
    "name": "용산구 (문장만)",
@@ -210,7 +248,9 @@
    "llm_agree": 4,
    "gate_corrections": 0,
    "validation": true,
-   "llm_calls": 4
+   "llm_calls": 4,
+   "priority_by": null,
+   "priority_order": null
   },
   {
    "name": "풍한 +2기",
@@ -228,7 +268,9 @@
    "llm_agree": 2,
    "gate_corrections": 0,
    "validation": true,
-   "llm_calls": 4
+   "llm_calls": 4,
+   "priority_by": null,
+   "priority_order": null
   },
   {
    "name": "살피재 +3기",
@@ -246,7 +288,9 @@
    "llm_agree": 2,
    "gate_corrections": 0,
    "validation": true,
-   "llm_calls": 4
+   "llm_calls": 4,
+   "priority_by": null,
+   "priority_order": null
   },
   {
    "name": "박미 +2기 (이름)",
@@ -264,7 +308,9 @@
    "llm_agree": 2,
    "gate_corrections": 0,
    "validation": true,
-   "llm_calls": 4
+   "llm_calls": 4,
+   "priority_by": null,
+   "priority_order": null
   },
   {
    "name": "홍능주유소 (타사)",
@@ -281,7 +327,9 @@
    "llm_agree": 0,
    "gate_corrections": 0,
    "validation": true,
-   "llm_calls": 3
+   "llm_calls": 3,
+   "priority_by": null,
+   "priority_order": null
   },
   {
    "name": "신성주유소 (동명)",
@@ -296,7 +344,9 @@
    "llm_agree": 0,
    "gate_corrections": 0,
    "validation": null,
-   "llm_calls": 1
+   "llm_calls": 1,
+   "priority_by": null,
+   "priority_order": null
   },
   {
    "name": "S-OIL 신성주유소",
@@ -311,7 +361,9 @@
    "llm_agree": 0,
    "gate_corrections": 0,
    "validation": true,
-   "llm_calls": 3
+   "llm_calls": 3,
+   "priority_by": null,
+   "priority_order": null
   },
   {
    "name": "GS 동작구 (재계획)",
@@ -329,7 +381,65 @@
    "llm_agree": 3,
    "gate_corrections": 1,
    "validation": true,
-   "llm_calls": 4
+   "llm_calls": 4,
+   "priority_by": null,
+   "priority_order": null
+  }
+ ],
+ "consistency": [
+  {
+   "name": "동대문구 묶음",
+   "runs": [
+    {
+     "by": "llm",
+     "order": [
+      "A0009172",
+      "A0009248"
+     ]
+    },
+    {
+     "by": "llm",
+     "order": [
+      "A0009172",
+      "A0009248"
+     ]
+    },
+    {
+     "by": "llm",
+     "order": [
+      "A0009172",
+      "A0009248"
+     ]
+    }
+   ],
+   "same_order": true
+  },
+  {
+   "name": "광진구 묶음",
+   "runs": [
+    {
+     "by": "llm",
+     "order": [
+      "A0009413",
+      "A0006762"
+     ]
+    },
+    {
+     "by": "llm",
+     "order": [
+      "A0009413",
+      "A0006762"
+     ]
+    },
+    {
+     "by": "llm",
+     "order": [
+      "A0009413",
+      "A0006762"
+     ]
+    }
+   ],
+   "same_order": true
   }
  ]
 }

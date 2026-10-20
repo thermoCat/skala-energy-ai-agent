@@ -85,3 +85,37 @@ def check_answer(draft: str, facts: list[dict], verdicts: dict) -> list[str]:
     issues = [f"근거 없는 숫자: {n}" for n in unbacked_numbers(draft, facts, (len(candidates),))]
     issues += [f"없는 인용 번호: {c}" for c in unknown_citations(draft, facts, verdicts)]
     return issues
+
+
+def check_priority(result: dict, candidates: list[str], facts: list[dict]) -> list[str]:
+    """AI의 급속 후보 우선순위 판단이 쓸 수 있는지 코드로 확인하는 함수
+
+    순서·이유 자체는 기준이 없어 고치지 않는다. 확정 후보만 썼는지, 이유가 그 거점의 사실을
+    인용했는지, 이유에 근거 없는 숫자가 없는지만 본다.
+
+    Args:
+        result: {"order", "reasons": {station_id: {"text", "facts"}}}
+        candidates: 권위 게이트가 확정한 급속 후보
+        facts: 번호 붙은 사실 목록
+    Returns:
+        문제 목록 (비어 있으면 채택)
+    """
+    issues = []
+    if sorted(result.get("order") or []) != sorted(candidates):
+        issues.append("순서가 확정 후보와 다름")
+    by_id = {f["id"]: f for f in facts}
+    for sid in candidates:
+        reason = (result.get("reasons") or {}).get(sid) or {}
+        text = reason.get("text") or ""
+        if not text:
+            issues.append(f"{sid} 이유 없음")
+            continue
+        if not any(by_id.get(x, {}).get("station_id") == sid for x in reason.get("facts", [])):
+            issues.append(f"{sid} 이유에 그 거점의 사실 인용 없음")
+        bad = unbacked_numbers(text, facts)
+        if bad:
+            issues.append(f"{sid} 이유에 근거 없는 숫자 {bad}")
+        unknown = unknown_citations(text, facts, {})
+        if unknown:
+            issues.append(f"{sid} 이유에 없는 인용 {unknown}")
+    return issues

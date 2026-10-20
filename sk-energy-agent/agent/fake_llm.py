@@ -198,6 +198,48 @@ class QualityLLM(FakeLLM):
         result["fast_candidates"] = self._fast_candidates(by_key, bool(ev))
         return result, self._usage(str(facts), str(result))
 
+    @traceable(run_type="llm", name="quality_llm.prioritize")
+    def prioritize(self, facts: list[dict], candidates: list[str]) -> tuple[dict, dict]:
+        """급속 후보 우선순위 판단(fake) — 보류 결정은 뒤로, 충전 중 비율이 높고 주변 급속이 적은 곳부터
+
+        Args:
+            facts: 후보 거점들의 사실
+            candidates: 확정된 급속 후보
+        Returns:
+            ({"order", "reasons", "summary"}, 사용량)
+        """
+        by = {(f["key"].split(":")[0], f["station_id"]): f for f in facts if f.get("station_id")}
+
+        def value(kind, sid, default=0):
+            return by[(kind, sid)]["value"] if (kind, sid) in by else default
+
+        def held(sid):
+            return "보류" in str(value("decision", sid, ""))
+
+        order = sorted(candidates, key=lambda s: (held(s), -value("busy_1km", s),
+                                                  value("fast_1km", s), s))
+        reasons = {}
+        for sid in candidates:
+            cited = [by[(k, sid)] for k in ("fast_1km", "busy_1km", "new_failures_near",
+                                            "competitor_new_near", "decision") if (k, sid) in by]
+            parts = []
+            for f in cited:
+                kind = f["key"].split(":")[0]
+                if kind == "fast_1km":
+                    parts.append(f"반경 1km 급속 {f['value']}개[{f['id']}]")
+                elif kind == "busy_1km":
+                    parts.append(f"충전 중 비율 {f['value']}%[{f['id']}]")
+                elif kind == "new_failures_near" and f["value"]:
+                    parts.append(f"주변 새 고장 {f['value']}개[{f['id']}]")
+                elif kind == "competitor_new_near" and f["value"]:
+                    parts.append(f"타사 신설 {f['value']}건[{f['id']}]")
+                elif kind == "decision":
+                    parts.append(f"지난 결정 있음[{f['id']}]")
+            reasons[sid] = {"text": ", ".join(parts), "facts": [f["id"] for f in cited]}
+        result = {"order": order, "reasons": reasons,
+                  "summary": "충전 중 비율로 수요가 확인되고 주변 급속이 적은 곳부터, 보류 결정이 있는 곳은 뒤로"}
+        return result, self._usage(str(facts), str(result))
+
     @staticmethod
     def _fast_candidates(by_key: dict, ev_bottleneck: bool) -> dict:
         if not ev_bottleneck or "cluster_median_fast_1km" not in by_key:

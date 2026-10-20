@@ -261,6 +261,55 @@ def normalize_judgement(content: str, request_type: str, facts: list[dict]) -> d
     return result
 
 
+# ── 분석 에이전트: 어디부터, 왜 ─────────────────────────────────────
+
+PRIORITY_SYSTEM = (
+    "당신은 정유사 투자 검토를 돕는 분석 에이전트다. 아래 급속 후보 거점들은 이미 기준으로 자격이 확정됐다. "
+    "어느 거점부터 현장 검토할지 순서와 이유를 정하라. 정답 규칙은 없다 — 사실을 저울질하는 것이 당신의 일이다.\n"
+    "고려할 신호: 반경 1km 급속 수(적을수록 새 수요를 흡수할 여지), 충전 중 비율(높을수록 수요 확인, 한 시점 대리 지표), "
+    "주변 새로 멈춘 급속(대체 수요가 생김), 타사 신설(경쟁이 세짐), 지난 사람 결정(보류면 사유 해소 전엔 뒤로).\n"
+    "규칙: 후보 station_id 만 쓰고 모두 한 번씩 순서에 넣는다. 거점마다 이유 한두 문장을 한국어로 쓰고, "
+    "숫자는 사실 값 그대로 쓰며 숫자 바로 뒤에 [F번호]를 붙인다. 그 거점의 사실 번호를 facts 에 넣는다. "
+    "판매량·부지·전력처럼 사실에 없는 정보는 쓰지 않는다.\n"
+    'JSON 객체로만 답하라: {"order": [station_id], "reasons": [{"station_id": str, "text": str, '
+    '"facts": ["F1"]}], "summary": str}'
+)
+
+PRIORITY_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "order": {"type": "array", "items": {"type": "string"}},
+        "reasons": {"type": "array", "items": {
+            "type": "object",
+            "properties": {"station_id": {"type": "string"}, "text": {"type": "string"},
+                           "facts": {"type": "array", "items": {"type": "string"}}},
+            "required": ["station_id", "text", "facts"]}},
+        "summary": {"type": "string"},
+    },
+    "required": ["order", "reasons", "summary"],
+}
+
+
+def priority_user(facts: list[dict], candidates: list[str]) -> str:
+    """우선순위 판단 프롬프트의 사용자 메시지를 만드는 함수"""
+    names = {f["station_id"]: f.get("name", f["station_id"]) for f in facts if f.get("station_id")}
+    listed = "\n".join(f"- {sid} {names.get(sid, '')}" for sid in candidates)
+    return f"## 확정된 급속 후보\n{listed}\n\n## 후보 거점 사실\n{render_facts(facts)}"
+
+
+def normalize_priority(content: str, candidates: list[str]) -> dict:
+    """우선순위 출력의 형식만 다듬는 함수 (순서·이유를 고치지는 않음 — 검사는 check_priority)"""
+    raw = _load_json(content)
+    order = [s for s in dict.fromkeys(raw.get("order") or []) if isinstance(s, str)]
+    reasons = {}
+    for r in raw.get("reasons") or []:
+        if isinstance(r, dict) and r.get("station_id") in candidates:
+            reasons[r["station_id"]] = {"text": str(r.get("text") or "").strip(),
+                                        "facts": [x for x in r.get("facts") or []
+                                                  if isinstance(x, str)]}
+    return {"order": order, "reasons": reasons, "summary": str(raw.get("summary") or "")}
+
+
 # ── 작성 에이전트 ────────────────────────────────────────────────
 
 WRITE_SYSTEM = (

@@ -458,6 +458,9 @@ createApp({
         case 'EvidenceCard': return {
           text: `근거 카드 ⚡ ${pinsById[e.station_id]?.name || e.station_id} — ${e.picked_by === 'gate' ? '게이트가 기준으로 추가(교정됨)' : `AI 선택 (${e.facts.join(', ')})`} · 눌러서 지도 이동`,
           stationId: e.station_id, warn: e.picked_by === 'gate' };
+        case 'Prioritized': return e.by === 'llm'
+          ? { text: `어디부터 (AI 판단): ${e.order.map((id, i) => '①②③④'[i] + ' ' + (pinsById[id]?.name || id)).join(' ')}` }
+          : { text: `AI 우선순위 판단 검사 불통과 → 기본 순서: ${(e.issues || []).join(', ')}`, warn: true };
         case 'DraftWritten': return { text: `답변 작성 (시도 ${e.attempt})` };
         case 'Validation': return e.verdict === '합격' || e.verdict === '생략'
           ? { text: '검증 통과 (숫자·근거 대조)' }

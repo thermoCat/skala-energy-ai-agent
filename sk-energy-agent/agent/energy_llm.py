@@ -76,6 +76,20 @@ class EnergyQualityMixin:
         content, usage = self._json_call(system, user, schema, think=True)
         return p.normalize_judgement(content, request_type, facts), usage
 
+    @traceable(run_type="llm", name="energy.prioritize")
+    def prioritize(self, facts: list[dict], candidates: list[str]) -> tuple[dict, dict]:
+        """확정된 급속 후보 중 어디부터 볼지 순서와 이유를 판단하는 함수 (기준 없는 판단)
+
+        Args:
+            facts: 후보 거점들의 사실
+            candidates: 확정된 급속 후보
+        Returns:
+            ({"order", "reasons", "summary"}, 사용량)
+        """
+        content, usage = self._json_call(p.PRIORITY_SYSTEM, p.priority_user(facts, candidates),
+                                         p.PRIORITY_SCHEMA, think=True)
+        return p.normalize_priority(content, candidates), usage
+
     @traceable(run_type="llm", name="energy.write")
     async def write_energy(self, request_type: str, facts: list[dict], verdicts: dict,
                            corrections: list[dict], is_own: bool, errors: list[dict],

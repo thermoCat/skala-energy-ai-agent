@@ -40,6 +40,13 @@ def _scenario_numbers(station_id: str, n: int) -> list[str]:
     return [str(sim["after"]["fast_ids"]), str(sim["cars_per_hour"])]
 
 
+# 같은 질문을 3번 물어 AI 우선순위 판단(기준 없음)이 흔들리는지 보는 질문
+CONSISTENCY_CASES = [
+    ("동대문구 묶음", {"query": "동대문구 SK 거점 8곳을 어떻게 나눠 써야 해?", "gu": "동대문구"}),
+    ("광진구 묶음", {"query": "광진구 SK 거점 어떻게 나눠 써야 해?", "gu": "광진구"}),
+]
+REPEAT = 3
+
 # (이름, 요청, 답에 꼭 있어야 할 숫자, 기대 종류)
 CASES = [
     ("풍한주유소 진단", {"query": "이 주유소에 무엇을 더해야 해?", "station_id": "A0009172"},
@@ -110,6 +117,8 @@ def score_case(name: str, expect_numbers: list[str], expect_kind: str, r: dict, 
         "gate_corrections": len(r.get("gate_corrections", [])),
         "validation": (r.get("validation") or {}).get("passed"),
         "llm_calls": r.get("llm_calls", 0),
+        "priority_by": (r.get("priority") or {}).get("by"),
+        "priority_order": (r.get("priority") or {}).get("order"),
     }
 
 
@@ -128,12 +137,24 @@ async def run(backend: str) -> list[dict]:
             result = await graph.ainvoke(state)
             rows.append(score_case(name, numbers, kind, result, time.perf_counter() - started))
             print(f"{name}: {rows[-1]}", flush=True)
+        consistency = []
+        for name, request in CONSISTENCY_CASES:
+            orders = []
+            for i in range(REPEAT):
+                state = {"thread_id": f"rep-{name}-{i}", "history": [], "company": "SK에너지",
+                         "events": [], "cost_usd": 0.0, **request}
+                result = await graph.ainvoke(state)
+                priority = result.get("priority") or {}
+                orders.append({"by": priority.get("by"), "order": priority.get("order")})
+            consistency.append({"name": name, "runs": orders,
+                                "same_order": len({str(o["order"]) for o in orders}) == 1})
+            print(f"반복 {name}: {consistency[-1]}", flush=True)
     finally:
         await mcp.stop()
-    return rows
+    return rows, consistency
 
 
-def summarize(rows: list[dict]) -> dict:
+def summarize(rows: list[dict], consistency: list[dict]) -> dict:
     """질문별 지표를 합쳐 발표용 요약을 만드는 함수"""
     numbers = sum(r["numbers"] for r in rows)
     unbacked = sum(len(r["unbacked"]) for r in rows)
@@ -150,6 +171,12 @@ def summarize(rows: list[dict]) -> dict:
         "judged_items": judged, "gate_corrections": sum(r["gate_corrections"] for r in rows),
         "validation_passed": sum(1 for r in rows if r["validation"] in (True, None)),
         "median_seconds": sorted(r["seconds"] for r in rows)[len(rows) // 2],
+        "priority_cases": sum(1 for r in rows if r["priority_by"]),
+        "priority_llm": sum(1 for r in rows if r["priority_by"] == "llm"),
+        "priority_same_order": sum(c["same_order"] for c in consistency),
+        "priority_repeat_cases": len(consistency),
+        "priority_repeat_llm": sum(o["by"] == "llm" for c in consistency for o in c["runs"]),
+        "priority_repeat_runs": sum(len(c["runs"]) for c in consistency),
     }
 
 
@@ -162,23 +189,29 @@ def to_markdown(backend: str, rows: list[dict], summary: dict) -> str:
              f"- LLM 판별 일치율(게이트 교정 전) {summary['llm_agreement_pct']}% "
              f"(판별 항목 {summary['judged_items']}개, 게이트 교정 {summary['gate_corrections']}건)",
              f"- 검증 합격 {summary['validation_passed']}/{summary['cases']}, "
-             f"응답 시간 중앙값 {summary['median_seconds']}초", "",
-             "| 질문 | 종류 | 숫자 | 근거 없음 | 정답 숫자 | 판별 일치 | 교정 | 검증 | 초 |",
-             "|---|---|---|---|---|---|---|---|---|"]
+             f"응답 시간 중앙값 {summary['median_seconds']}초",
+             f"- 급속 후보 우선순위(AI 판단, 기준 없음): 검사 통과해 채택 {summary['priority_llm']}/"
+             f"{summary['priority_cases']}, 반복 {REPEAT}회 같은 순서 {summary['priority_same_order']}/"
+             f"{summary['priority_repeat_cases']} (반복 실행 채택 {summary['priority_repeat_llm']}/"
+             f"{summary['priority_repeat_runs']})", "",
+             "| 질문 | 종류 | 숫자 | 근거 없음 | 정답 숫자 | 판별 일치 | 교정 | 검증 | 우선순위 | 초 |",
+             "|---|---|---|---|---|---|---|---|---|---|"]
     for r in rows:
         exp = f"{len(r['expected_found'])}/{len(r['expected_found']) + len(r['expected_missing'])}"
         lines.append(f"| {r['name']} | {r['kind']}{'' if r['kind_ok'] else ' ✗'} | {r['numbers']} | "
                      f"{len(r['unbacked'])} | {exp} | {r['llm_agree']}/{r['judged_items']} | "
-                     f"{r['gate_corrections']} | {r['validation']} | {r['seconds']} |")
+                     f"{r['gate_corrections']} | {r['validation']} | {r['priority_by'] or '-'} | "
+                     f"{r['seconds']} |")
     return "\n".join(lines) + "\n"
 
 
 if __name__ == "__main__":
     backend = sys.argv[1] if len(sys.argv) > 1 else "fake"
-    rows = asyncio.run(run(backend))
-    summary = summarize(rows)
+    rows, consistency = asyncio.run(run(backend))
+    summary = summarize(rows, consistency)
     out = ROOT / "eval"
     (out / f"results_{backend}.json").write_text(
-        json.dumps({"summary": summary, "rows": rows}, ensure_ascii=False, indent=1), encoding="utf-8")
+        json.dumps({"summary": summary, "rows": rows, "consistency": consistency},
+                   ensure_ascii=False, indent=1), encoding="utf-8")
     (out / f"results_{backend}.md").write_text(to_markdown(backend, rows, summary), encoding="utf-8")
     print(json.dumps(summary, ensure_ascii=False))

@@ -3,7 +3,7 @@
 route(Supervisor) ─┬─ 일반 대화 → chat_answer
                    ├─ 이름만 말함 → resolve ─(같은 이름 여러 곳)→ ask_user
                    ├─ 주유소·자치구·시나리오 → energy_research ⇄ replan → analyst → authority_gate
-                   │                            → energy_write ⇄ energy_validate → finalize
+                   │       → (후보 2곳 이상) prioritize → energy_write ⇄ energy_validate → finalize
                    └─ 상시 작업 → job_check ─(변화 없음, LLM 0회)→ job_deliver
                                             └→ analyst | policy → authority_gate → … → job_deliver
 
@@ -53,6 +53,7 @@ class AgentState(TypedDict, total=False):
     baseline: dict               # 코드 기준 판정 (게이트 전용, 분석 에이전트에게 주지 않음)
     verdicts: dict               # 확정 판정 (gate 노드만 씀)
     gate_corrections: list[dict]
+    priority: dict               # 급속 후보 순서·이유 (AI 판단, 기준 없음)
     validation: dict             # {"passed", "issues"}
     rewrite_count: int
     # 상시 작업
@@ -117,6 +118,7 @@ def build_graph(deps: SupervisorDeps):
     g.add_node("analyst", node(energy.analyst_node))
     g.add_node("policy", node(energy.policy_node))
     g.add_node("authority_gate", node(energy.authority_gate_node))
+    g.add_node("prioritize", node(energy.prioritize_node))
     g.add_node("energy_write", node(energy.energy_write_node))
     g.add_node("energy_validate", node(energy.energy_validate_node))
     g.add_node("finalize", node(finalize_node))
@@ -140,7 +142,9 @@ def build_graph(deps: SupervisorDeps):
                              "job_deliver": "job_deliver"})
     g.add_edge("analyst", "authority_gate")
     g.add_edge("policy", "authority_gate")
-    g.add_edge("authority_gate", "energy_write")
+    g.add_conditional_edges("authority_gate", energy.after_gate,
+                            {"prioritize": "prioritize", "energy_write": "energy_write"})
+    g.add_edge("prioritize", "energy_write")
     g.add_edge("energy_write", "energy_validate")
     g.add_conditional_edges("energy_validate", energy.after_validate,
                             {"energy_write": "energy_write", "finalize": "finalize",
