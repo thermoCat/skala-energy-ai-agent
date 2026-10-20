@@ -1,9 +1,17 @@
 """스냅샷에서 화면·답변에 쓰는 숫자를 계산하는 함수 모음 (판별은 하지 않음)"""
+import math
+
+import pandas as pd
+
 from energy import criteria
 from energy.store import Snapshot
 
 FUELS = ("휘발유", "경유", "LPG", "전기", "수소")
 FACILITY_NAMES = {"B027": "주유소", "K015": "LPG 충전소"}
+STAT_NAMES = {"1": "통신이상", "2": "충전대기", "3": "충전중",
+              "4": "운영중지", "5": "점검중", "9": "상태미확인"}
+ABNORMAL_STATS = ("1", "4", "5", "9")
+MAX_SESSION_MIN = 24 * 60
 
 
 def change_rate(before, after):
@@ -60,9 +68,16 @@ def station_card(snap: Snapshot, station_id: str) -> dict | None:
         "gu": r["자치구"],
         "lat": float(r["lat"]),
         "lng": float(r["lng"]),
+        "gu_assignment": r["자치구_판정"],
         "in_station_charger": bool(r["주유소내_충전기"]),
         "in_station_fast_ids": int(r["주유소내_급속ID"]),
+        "fast_1km": int(r["fast_1km"]),
+        "fast_1km_busy_pct": _none_if_nan(r["fast_1km_busy_pct"]),
     }
+
+
+def _none_if_nan(value):
+    return None if value is None or math.isnan(value) else float(value)
 
 
 def fuel_demand(snap: Snapshot, gu: str) -> dict:
@@ -89,6 +104,35 @@ def fuel_demand(snap: Snapshot, gu: str) -> dict:
     return {"gu": gu, "months": [base, cur], "fuels": fuels}
 
 
+def busy_pct(fast: pd.DataFrame) -> float | None:
+    """급속충전기 중 충전 중 비율(%)을 계산하는 함수
+
+    Args:
+        fast: 급속충전기 행
+    Returns:
+        충전중 ÷ (충전대기 + 충전중) × 100, 상태가 유효한 충전기가 없으면 None
+    """
+    valid = fast[fast["stat"].isin(["2", "3"])]
+    if valid.empty:
+        return None
+    return round(float((valid["stat"] == "3").mean() * 100), 1)
+
+
+def fast_per_10k_ev_by_gu(snap: Snapshot) -> pd.Series:
+    """25개 자치구의 전기차 1만 대당 급속 ID 수를 반환하는 함수 (반올림 안 함)
+
+    Args:
+        snap: 스냅샷
+    Returns:
+        자치구 → 1만 대당 급속 ID Series
+    """
+    fast_ids = snap.chargers[snap.chargers["fast"]].groupby("gu").size()
+    m = snap.monthly
+    ev = m[(m["기준월"] == criteria.CURRENT_MONTH) & (m["연료"] == "전기")]
+    ev_count = ev.groupby("자치구")["대수"].sum()
+    return fast_density(fast_ids, ev_count)
+
+
 def ev_supply(snap: Snapshot, gu: str) -> dict:
     """자치구의 전기 충전 공급 지표를 반환하는 함수
 
@@ -97,15 +141,67 @@ def ev_supply(snap: Snapshot, gu: str) -> dict:
         gu: 자치구 이름
     Returns:
         급속·완속 ID 수, 급속 충전 중 비율, 전기차 1만 대당 급속 ID(자치구·서울) dict
+    Raises:
+        KeyError: 충전기가 배정되지 않은 자치구 이름일 때
     """
-    b = snap.balance
-    row = b.loc[gu]
+    ch = snap.chargers
+    mine = ch[ch["gu"] == gu]
+    if mine.empty:
+        raise KeyError(gu)
+    fast = mine[mine["fast"]]
+    seoul_density = fast_density(int(ch["fast"].sum()),
+                                 _count(snap, criteria.CURRENT_MONTH, "전기"))
     return {
         "gu": gu,
-        "fast_ids": int(row["급속충전기ID"]),
-        "slow_ids": int(row["완속충전기ID"]),
-        "fast_busy_pct": float(row["급속_충전중비율%"]),
-        "fast_per_10k_ev": round(fast_density(row["급속충전기ID"], row["전기"]), 1),
-        "seoul_fast_per_10k_ev": round(
-            fast_density(b["급속충전기ID"].sum(), b["전기"].sum()), 1),
+        "fast_ids": len(fast),
+        "slow_ids": int((~mine["fast"]).sum()),
+        "fast_busy_pct": busy_pct(fast),
+        "fast_per_10k_ev": round(float(fast_per_10k_ev_by_gu(snap)[gu]), 1),
+        "seoul_fast_per_10k_ev": round(seoul_density, 1),
     }
+
+
+def fast_status(snap: Snapshot, gu: str | None = None) -> dict:
+    """급속충전기 상태 분포와 비정상(통신이상·운영중지·점검중·상태미확인) 비율을 반환하는 함수
+
+    Args:
+        snap: 스냅샷
+        gu: 자치구 이름. 없으면 서울 전체
+    Returns:
+        상태별 ID 수, 비정상 ID 수와 비율 dict
+    """
+    fast = snap.chargers[snap.chargers["fast"]]
+    if gu is not None:
+        fast = fast[fast["gu"] == gu]
+    counts = fast["stat"].value_counts()
+    abnormal = int(fast["stat"].isin(ABNORMAL_STATS).sum())
+    return {
+        "gu": gu,
+        "fast_ids": len(fast),
+        "by_status": {STAT_NAMES[k]: int(counts.get(k, 0)) for k in STAT_NAMES},
+        "abnormal_ids": abnormal,
+        "abnormal_pct": round(abnormal / len(fast) * 100, 1) if len(fast) else None,
+    }
+
+
+def session_minutes(snap: Snapshot, min_kw: float | None = None,
+                    max_kw: float | None = None) -> pd.Series:
+    """급속충전기별 마지막 1회 충전 시간(분)을 반환하는 함수
+
+    Args:
+        snap: 스냅샷
+        min_kw: 이 출력 이상만 (없으면 제한 없음)
+        max_kw: 이 출력 미만만 (없으면 제한 없음)
+    Returns:
+        0분 초과 24시간 미만인 충전 시간 Series
+    """
+    fast = snap.chargers[snap.chargers["fast"]]
+    if min_kw is not None:
+        fast = fast[fast["output_kw"] >= min_kw]
+    if max_kw is not None:
+        fast = fast[fast["output_kw"] < max_kw]
+    # API가 충전기마다 마지막 시작·종료 시각만 주므로 마지막 1회만 쓸 수 있다
+    start = pd.to_datetime(fast["lastTsdt"], format="%Y%m%d%H%M%S", errors="coerce")
+    end = pd.to_datetime(fast["lastTedt"], format="%Y%m%d%H%M%S", errors="coerce")
+    minutes = (end - start).dt.total_seconds() / 60
+    return minutes[(minutes > 0) & (minutes < MAX_SESSION_MIN)]

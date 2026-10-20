@@ -93,7 +93,7 @@ def main(snap, demand_csv, month):
     st = assign_zscode(st, ev)
     st = st[st["zscode"].str.startswith("11", na=False)].copy()
     st["자치구"] = st["zscode"].map(names)
-    st["판정"] = np.where(st["nearest_charger_m"] > FAR_M, "불확실", "확정")
+    st["자치구_판정"] = np.where(st["nearest_charger_m"] > FAR_M, "불확실", "확정")
 
     # 주유소 안 충전기: 시설구분 '주유소'(E007) 충전기가 반경 150m 안에 있으면 있다고 본다
     ev_st = ev[ev["kindDetail"] == "E007"]
@@ -105,7 +105,7 @@ def main(snap, demand_csv, month):
         has_ev.append(bool(m.any())); fast_n.append(int(ev_st["fast"].to_numpy()[m].sum()))
     st["주유소내_충전기"] = has_ev
     st["주유소내_급속ID"] = fast_n
-    cols = ["UNI_ID", "prodcd", "brand", "POLL_DIV_CD", "OS_NM", "PRICE", "lat", "lng", "자치구", "zscode", "nearest_charger_m", "판정", "주유소내_충전기", "주유소내_급속ID"]
+    cols = ["UNI_ID", "prodcd", "brand", "POLL_DIV_CD", "OS_NM", "PRICE", "lat", "lng", "자치구", "zscode", "nearest_charger_m", "자치구_판정", "주유소내_충전기", "주유소내_급속ID"]
     st[cols].to_csv(Path(snap) / "seoul_stations.csv", index=False, encoding="utf-8-sig")
 
     # 공급 집계
@@ -142,7 +142,7 @@ def main(snap, demand_csv, month):
     bal = bal.round(0).astype({c: int for c in ["휘발유", "경유", "LPG", "전기", "수소", "주유소", "SK주유소", "LPG충전소", "급속충전기ID", "완속충전기ID", "수소충전소", "수소_대기차량"]})
     bal.to_csv(Path(snap) / "seoul_fuel_balance.csv", encoding="utf-8-sig")
 
-    print(f"서울 주유소 {len(gas)}곳 (SK {int((gas['POLL_DIV_CD'] == 'SKE').sum())}곳), LPG 충전소 {len(lpg)}곳, 판정 불확실 {int((st['판정'] == '불확실').sum())}곳")
+    print(f"서울 주유소 {len(gas)}곳 (SK {int((gas['POLL_DIV_CD'] == 'SKE').sum())}곳), LPG 충전소 {len(lpg)}곳, 자치구 판정 불확실 {int((st['자치구_판정'] == '불확실').sum())}곳")
     print(f"서울 급속충전기 ID {len(fast)}개, 완속 {int((~seoul_ev['fast']).sum())}개, 수소충전소 {len(h2)}곳 (대기 {int(h2['wait'].sum())}대)")
     print(f"SK 주유소 중 주유소 안 충전기 있음: {int(gas[(gas['POLL_DIV_CD'] == 'SKE')]['주유소내_충전기'].sum())}곳")
     return bal

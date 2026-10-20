@@ -1,20 +1,32 @@
-"""스냅샷 CSV를 한 번 읽어 메모리에 들고 있는 데이터 계층"""
+"""스냅샷 CSV를 한 번 읽어 메모리에 들고 있는 데이터 계층
+
+자치구 단위 급속충전기 수는 모든 계산에서 "서울 자치구가 배정된 급속 ID" 한 가지 기준만 쓴다.
+거점 반경 급속 수만 경계 너머 경기·인천 급속을 더한다 — 운전자는 시 경계를 가리지 않으므로.
+"""
 from dataclasses import dataclass
 from functools import lru_cache
 from pathlib import Path
 
+import numpy as np
 import pandas as pd
 
 DATA_DIR = Path(__file__).resolve().parent.parent / "data"
 SNAPSHOT_DIR = DATA_DIR / "snapshots"
 MONTHLY_CSV = DATA_DIR / "derived" / "seoul_fuel_monthly.csv"
 
+NEAR_RADIUS_M = 1000          # 거점 주변 급속 수를 세는 반경
+METERS_PER_DEGREE = 111_000.0
+CHARGER_COLUMNS = ["statId", "chgerId", "chgerType", "addr", "lat", "lng", "busiNm",
+                   "stat", "lastTsdt", "lastTedt", "output", "zscode", "kindDetail", "delYn"]
+
 
 @dataclass(frozen=True)
 class Snapshot:
     """한 시점 스냅샷의 표 묶음"""
     name: str                  # 스냅샷 폴더 이름 (예: "2026-10-19")
-    stations: pd.DataFrame     # 주유소·LPG 470곳
+    stations: pd.DataFrame     # 주유소·LPG 470곳 (+ fast_1km)
+    chargers: pd.DataFrame     # 서울 자치구가 배정된 충전기 (급속·완속)
+    border_fast: pd.DataFrame  # 서울 거점 2km 안 경기·인천 급속 (반경 계산에만 사용)
     balance: pd.DataFrame      # 자치구 수급표 (index = 자치구)
     monthly: pd.DataFrame      # 기준월 × 자치구 × 연료 등록 대수
 
@@ -31,9 +43,84 @@ def latest_snapshot_name() -> str:
     return names[-1]
 
 
-def _read_csv(path: Path) -> pd.DataFrame:
-    return pd.read_csv(path, encoding="utf-8-sig",
-                       dtype={"UNI_ID": str, "기준월": str})
+def _read_csv(path: Path, **kwargs) -> pd.DataFrame:
+    return pd.read_csv(path, encoding="utf-8-sig", **kwargs)
+
+
+def load_chargers(folder: Path) -> pd.DataFrame:
+    """서울 충전기 원본에서 자치구가 배정된 충전기만 골라 반환하는 함수
+
+    Args:
+        folder: 스냅샷 폴더
+    Returns:
+        statId·chgerId·gu·lat·lng·fast·stat·output_kw 등이 담긴 표
+    """
+    ev = _read_csv(folder / "ev_chargers_z11.csv", dtype=str, usecols=CHARGER_COLUMNS)
+    ev = ev[ev["delYn"] != "Y"].copy()   # 삭제 표시된 충전기가 섞이면 급속 수가 부풀려진다
+    ev["lat"] = pd.to_numeric(ev["lat"], errors="coerce")
+    ev["lng"] = pd.to_numeric(ev["lng"], errors="coerce")
+    ev = ev.dropna(subset=["lat", "lng"])
+    # 좌표가 수도권 밖으로 잘못 입력된 행 제외
+    ev = ev[ev["lat"].between(36.8, 38.4) & ev["lng"].between(126.0, 127.9)]
+    ev = ev[ev["zscode"].str.startswith("11", na=False)].copy()
+    ev["gu"] = ev["zscode"].map(_gu_names(ev))
+    ev["fast"] = ev["chgerType"] != "02"   # 02 = AC 완속
+    ev["output_kw"] = pd.to_numeric(ev["output"], errors="coerce")
+    return ev.drop(columns=["delYn", "chgerType", "output"]).reset_index(drop=True)
+
+
+def load_border_fast(folder: Path) -> pd.DataFrame:
+    """서울 거점 가까이 있는 경기·인천 급속충전기를 반환하는 함수
+
+    Args:
+        folder: 스냅샷 폴더
+    Returns:
+        lat·lng·stat 표. 파일이 없는 예전 스냅샷이면 빈 표
+    """
+    path = folder / "ev_fast_border.csv"
+    if not path.exists():
+        return pd.DataFrame(columns=["lat", "lng", "stat"])
+    border = _read_csv(path, dtype={"stat": str, "zscode": str})
+    border["fast"] = True
+    return border
+
+
+def _gu_names(ev: pd.DataFrame) -> dict:
+    # 시군구 코드 → 자치구 이름. 주소 두 번째 단어의 최빈값 (data_prep/build_supply.py 와 같은 규칙)
+    token = ev["addr"].str.split().str[1]
+    return token.groupby(ev["zscode"]).agg(lambda s: s.value_counts().index[0]).to_dict()
+
+
+def _to_meters(lat, lng, lat0: float = 37.55):
+    return lat * METERS_PER_DEGREE, lng * METERS_PER_DEGREE * np.cos(np.radians(lat0))
+
+
+def add_fast_nearby(stations: pd.DataFrame, fast: pd.DataFrame,
+                    radius_m: int = NEAR_RADIUS_M) -> pd.DataFrame:
+    """거점마다 반경 안 급속 ID 수와 급속 충전 중 비율을 붙여 반환하는 함수
+
+    Args:
+        stations: 주유소·LPG 표 (lat, lng)
+        fast: 급속충전기 표 (lat, lng, stat)
+        radius_m: 반경 (m)
+    Returns:
+        fast_1km, fast_1km_busy_pct 컬럼이 추가된 표
+    """
+    sy, sx = _to_meters(stations["lat"].to_numpy()[:, None], stations["lng"].to_numpy()[:, None])
+    cy, cx = _to_meters(fast["lat"].to_numpy()[None, :], fast["lng"].to_numpy()[None, :])
+    near = np.hypot(sy - cy, sx - cx) <= radius_m          # 거점 × 급속 ID 행렬
+
+    # 충전 중 비율은 충전대기(2)·충전중(3) 상태만 분모로 — 자치구 수급표와 같은 정의
+    valid = fast["stat"].isin(["2", "3"]).to_numpy()
+    busy = (fast["stat"] == "3").to_numpy()
+    valid_n = (near & valid).sum(axis=1)
+    busy_n = (near & busy).sum(axis=1)
+
+    out = stations.copy()
+    out["fast_1km"] = near.sum(axis=1)
+    out["fast_1km_busy_pct"] = np.where(
+        valid_n > 0, np.round(busy_n / np.maximum(valid_n, 1) * 100, 1), np.nan)
+    return out
 
 
 @lru_cache(maxsize=4)
@@ -47,9 +134,18 @@ def load_snapshot(name: str | None = None) -> Snapshot:
     """
     name = name or latest_snapshot_name()
     folder = SNAPSHOT_DIR / name
+    chargers = load_chargers(folder)
+    border_fast = load_border_fast(folder)
+    stations = _read_csv(folder / "seoul_stations.csv", dtype={"UNI_ID": str})
+    # '판정'은 자치구 배정 신뢰도라 투자 판정과 헷갈리지 않게 이름을 바꿔 쓴다 (예전 스냅샷 호환)
+    stations = stations.rename(columns={"판정": "자치구_판정"})
+    nearby_fast = pd.concat([chargers.loc[chargers["fast"], ["lat", "lng", "stat"]],
+                             border_fast[["lat", "lng", "stat"]]], ignore_index=True)
     return Snapshot(
         name=name,
-        stations=_read_csv(folder / "seoul_stations.csv"),
+        stations=add_fast_nearby(stations, nearby_fast),
+        chargers=chargers,
+        border_fast=border_fast,
         balance=_read_csv(folder / "seoul_fuel_balance.csv").set_index("자치구"),
-        monthly=_read_csv(MONTHLY_CSV),
+        monthly=_read_csv(MONTHLY_CSV, dtype={"기준월": str}),
     )

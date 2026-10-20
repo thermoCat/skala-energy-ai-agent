@@ -2,7 +2,7 @@
 import pandas as pd
 
 from energy import criteria
-from energy.indicators import change_rate, fast_density
+from energy.indicators import change_rate, fast_per_10k_ev_by_gu
 from energy.store import Snapshot
 
 
@@ -21,8 +21,7 @@ def score_districts(snap: Snapshot) -> pd.DataFrame:
     # 다른 순위를 받으면 사람이 손으로 검산할 수 없다
     table = pd.DataFrame({
         "ev_growth_pct": change_rate(counts[("전기", base)], counts[("전기", cur)]).round(1),
-        "fast_per_10k_ev": fast_density(snap.balance["급속충전기ID"],
-                                        snap.balance["전기"]).round(1),
+        "fast_per_10k_ev": fast_per_10k_ev_by_gu(snap).round(1),
     })
     table["rank_growth"] = table["ev_growth_pct"].rank(ascending=False, method="min")
     table["rank_density"] = table["fast_per_10k_ev"].rank(method="min")

@@ -32,12 +32,26 @@ data/
 |---|---|---|---|
 | `ev_chargers_z11.csv` | 서울 충전기 76,203 ID (정보·상태) | `collect.py ev 11` | 커밋 (17MB, 실행에 필요) |
 | `ev_chargers_z28.csv` / `ev_chargers_z41.csv` | 인천 / 경기 충전기 (자치구 경계 판정용) | `collect.py ev 28` / `41` | **제외** (8MB / 36MB, 다시 수집 가능) |
+| `ev_fast_border.csv` | 서울 거점 2km 안의 경기·인천 급속충전기 693 ID (경계 근처 거점의 반경 1km 급속 수용) | `build_border_chargers.py` | 커밋 (119KB) |
 | `h2_wait.csv` | 수소충전소 대기 차량, 전국 247곳 | `collect.py h2` | 커밋 |
 | `opinet/opinet_around_{B027,K015}_*.json` | 오피넷 반경 검색 원문 (주유소 18원 + LPG 18원) | `collect.py opinet-around` | 커밋 (다시 받으면 한도 소모) |
 | `opinet/grid_plan*.json` | 반경 검색 원 배치 계산 결과 | `plan_grid.py` | 커밋 |
-| `seoul_stations.csv` | 서울 주유소 397 + LPG 73 = 470곳 (좌표·자치구·상표·주유소 안 충전기) | `build_supply.py` | 커밋 |
+| `seoul_stations.csv` | 서울 주유소 397 + LPG 73 = 470곳 (좌표·자치구·상표·주유소 안 충전기). 자치구 배정 신뢰도 컬럼 `판정` 은 코드에서 `자치구_판정` 으로 읽음 (다음 스냅샷부터 파일에도 `자치구_판정`) | `build_supply.py` | 커밋 |
 | `seoul_fuel_balance.csv` | 자치구 × 5개 연료 수급표 | `build_supply.py` | 커밋 |
 | `seoul_ev_bottleneck_rank.csv` | 전기 병목 순위 (예시) | ⚠️ 생성 스크립트 없음 | 커밋 |
+
+## 급속충전기 숫자 기준
+
+자치구 단위 급속충전기 수는 **서울 자치구가 배정된 급속 ID 6,045개** 한 가지 기준으로 계산합니다 (`energy/store.py`).
+
+| 숫자 | 6,045 기준 값 | 예전 값 (다른 기준) |
+|---|---|---|
+| 급속 ID | 6,045 | 6,078 — 삭제 표시(`delYn=Y`) 33 ID 포함 |
+| 비정상 상태 (통신이상·운영중지·점검중·상태미확인) | 535 ID (8.9%) | 568 ID (약 9%) |
+| 마지막 1회 충전 시간이 유효한 ID | 5,203 | 5,234 |
+| 충전 시간 중앙값 (전체 / 100kW 이상 / 100kW 미만) | 35.1 / 30.5 / 46.0분 | 35.1 / 30.5 / 45.9분 |
+
+거점 반경 1km 급속 수(`fast_1km`)만 경계 너머 경기·인천 급속(`ev_fast_border.csv`)을 더합니다. 서울 데이터만 쓰면 경계 근처 59곳(SK 13곳)이 적게 세어집니다 (예: 금천구 박미주유소 20 → 45).
 
 ## derived/
 
