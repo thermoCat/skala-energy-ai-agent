@@ -118,6 +118,44 @@ def busy_pct(fast: pd.DataFrame) -> float | None:
     return round(float((valid["stat"] == "3").mean() * 100), 1)
 
 
+def busy_pct_by_gu(snap: Snapshot) -> pd.Series:
+    """25개 자치구의 급속 충전 중 비율(%)을 반환하는 함수
+
+    Args:
+        snap: 스냅샷
+    Returns:
+        자치구 → 충전 중 비율 Series
+    """
+    fast = snap.chargers[snap.chargers["fast"]]
+    return fast.groupby("gu").apply(busy_pct).astype(float)
+
+
+def fast_ids_by_gu(snap: Snapshot) -> pd.Series:
+    """25개 자치구의 급속충전기 ID 수를 반환하는 함수
+
+    Args:
+        snap: 스냅샷
+    Returns:
+        자치구 → 급속 ID 수 Series
+    """
+    return snap.chargers[snap.chargers["fast"]].groupby("gu").size()
+
+
+def fuel_count_by_gu(snap: Snapshot, fuel: str, month: str) -> pd.Series:
+    """25개 자치구의 한 연료 등록 대수를 반환하는 함수
+
+    Args:
+        snap: 스냅샷
+        fuel: 연료 이름 (예: "전기")
+        month: 기준월 (예: "2026.09")
+    Returns:
+        자치구 → 등록 대수 Series
+    """
+    m = snap.monthly
+    rows = m[(m["기준월"] == month) & (m["연료"] == fuel)]
+    return rows.groupby("자치구")["대수"].sum()
+
+
 def fast_per_10k_ev_by_gu(snap: Snapshot) -> pd.Series:
     """25개 자치구의 전기차 1만 대당 급속 ID 수를 반환하는 함수 (반올림 안 함)
 
@@ -126,11 +164,8 @@ def fast_per_10k_ev_by_gu(snap: Snapshot) -> pd.Series:
     Returns:
         자치구 → 1만 대당 급속 ID Series
     """
-    fast_ids = snap.chargers[snap.chargers["fast"]].groupby("gu").size()
-    m = snap.monthly
-    ev = m[(m["기준월"] == criteria.CURRENT_MONTH) & (m["연료"] == "전기")]
-    ev_count = ev.groupby("자치구")["대수"].sum()
-    return fast_density(fast_ids, ev_count)
+    return fast_density(fast_ids_by_gu(snap),
+                        fuel_count_by_gu(snap, "전기", criteria.CURRENT_MONTH))
 
 
 def ev_supply(snap: Snapshot, gu: str) -> dict:

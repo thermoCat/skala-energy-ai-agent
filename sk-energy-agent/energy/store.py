@@ -27,6 +27,7 @@ class Snapshot:
     stations: pd.DataFrame     # 주유소·LPG 470곳 (+ fast_1km)
     chargers: pd.DataFrame     # 서울 자치구가 배정된 충전기 (급속·완속)
     border_fast: pd.DataFrame  # 서울 거점 2km 안 경기·인천 급속 (반경 계산에만 사용)
+    h2: pd.DataFrame           # 서울 수소충전소 대기 차량 (수집 시각별)
     balance: pd.DataFrame      # 자치구 수급표 (index = 자치구)
     monthly: pd.DataFrame      # 기준월 × 자치구 × 연료 등록 대수
 
@@ -64,6 +65,7 @@ def load_chargers(folder: Path) -> pd.DataFrame:
     ev = ev[ev["lat"].between(36.8, 38.4) & ev["lng"].between(126.0, 127.9)]
     ev = ev[ev["zscode"].str.startswith("11", na=False)].copy()
     ev["gu"] = ev["zscode"].map(_gu_names(ev))
+    ev["zscode"] = ev["zscode"].astype(str)
     ev["fast"] = ev["chgerType"] != "02"   # 02 = AC 완속
     ev["output_kw"] = pd.to_numeric(ev["output"], errors="coerce")
     return ev.drop(columns=["delYn", "chgerType", "output"]).reset_index(drop=True)
@@ -83,6 +85,28 @@ def load_border_fast(folder: Path) -> pd.DataFrame:
     border = _read_csv(path, dtype={"stat": str, "zscode": str})
     border["fast"] = True
     return border
+
+
+def load_h2(folder: Path, gu_names: dict) -> pd.DataFrame:
+    """서울 수소충전소 대기 차량 기록을 반환하는 함수
+
+    Args:
+        folder: 스냅샷 폴더
+        gu_names: 시군구 코드 → 자치구 이름
+    Returns:
+        collected_at·station·code·gu·wait 표 (수집 시각 × 충전소마다 1행)
+    """
+    h2 = _read_csv(folder / "h2_wait.csv", dtype=str)
+    h2 = h2[h2["chrstn_mno"].str[:2] == "11"]
+    # 같은 수집 시각에 같은 충전소가 여러 번 들어 있어 1행만 남긴다
+    h2 = h2.drop_duplicates(subset=["collected_at", "chrstn_mno"])
+    return pd.DataFrame({
+        "collected_at": pd.to_datetime(h2["collected_at"]),
+        "station": h2["chrstn_nm"],
+        "code": h2["chrstn_mno"],
+        "gu": h2["chrstn_mno"].str[:5].map(gu_names),
+        "wait": pd.to_numeric(h2["wait_vhcle_alge"], errors="coerce").fillna(0).astype(int),
+    }).reset_index(drop=True)
 
 
 def _gu_names(ev: pd.DataFrame) -> dict:
@@ -146,6 +170,7 @@ def load_snapshot(name: str | None = None) -> Snapshot:
         stations=add_fast_nearby(stations, nearby_fast),
         chargers=chargers,
         border_fast=border_fast,
+        h2=load_h2(folder, dict(zip(chargers["zscode"], chargers["gu"]))),
         balance=_read_csv(folder / "seoul_fuel_balance.csv").set_index("자치구"),
         monthly=_read_csv(MONTHLY_CSV, dtype={"기준월": str}),
     )
