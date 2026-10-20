@@ -1,0 +1,101 @@
+{
+ "collected_at": "2026-10-19T11:38:58",
+ "params": {
+  "prodcd": "K015",
+  "x": "317857",
+  "y": "551262",
+  "radius": "5000"
+ },
+ "OIL": [
+  {
+   "UNI_ID": "A0009320",
+   "POLL_DIV_CD": "HDO",
+   "OS_NM": "중곡충전소",
+   "PRICE": 1206,
+   "DISTANCE": 501.2,
+   "GIS_X_COOR": 318358.0,
+   "GIS_Y_COOR": 551275.0
+  },
+  {
+   "UNI_ID": "A0009243",
+   "POLL_DIV_CD": "E1G",
+   "OS_NM": "장안동가스충전소",
+   "PRICE": 1204,
+   "DISTANCE": 884.7,
+   "GIS_X_COOR": 317038.6,
+   "GIS_Y_COOR": 551599.6
+  },
+  {
+   "UNI_ID": "A0009415",
+   "POLL_DIV_CD": "SKE",
+   "OS_NM": "한양에너지(주)충전소",
+   "PRICE": 1206,
+   "DISTANCE": 940.6,
+   "GIS_X_COOR": 318620.6,
+   "GIS_Y_COOR": 551812.6
+  },
+  {
+   "UNI_ID": "A0009371",
+   "POLL_DIV_CD": "GSC",
+   "OS_NM": "대성산업㈜동부가스충전소",
+   "PRICE": 1205,
+   "DISTANCE": 1745.1,
+   "GIS_X_COOR": 316452.0,
+   "GIS_Y_COOR": 550227.0
+  },
+  {
+   "UNI_ID": "A0009165",
+   "POLL_DIV_CD": "SKG",
+   "OS_NM": "복지장안충전소 ㈜서울개인택시복지법인",
+   "PRICE": 1204,
+   "DISTANCE": 1809.0,
+   "GIS_X_COOR": 317796.0,
+   "GIS_Y_COOR": 553070.0
+  },
+  {
+   "UNI_ID": "A0010084",
+   "POLL_DIV_CD": "GSC",
+   "OS_NM": "(주)풍림에너지",
+   "PRICE": 1207,
+   "DISTANCE": 2397.0,
+   "GIS_X_COOR": 318873.4,
+   "GIS_Y_COOR": 553433.5
+  },
+  {
+   "UNI_ID": "A0009416",
+   "POLL_DIV_CD": "SKE",
+   "OS_NM": "(주)해양가스",
+   "PRICE": 1206,
+   "DISTANCE": 3138.6,
+   "GIS_X_COOR": 319245.0,
+   "GIS_Y_COOR": 548447.0
+  },
+  {
+   "UNI_ID": "A0009153",
+   "POLL_DIV_CD": "SOL",
+   "OS_NM": "수도에너지(주)동서울충전소",
+   "PRICE": 1204,
+   "DISTANCE": 3376.0,
+   "GIS_X_COOR": 317130.8,
+   "GIS_Y_COOR": 554559.6
+  },
+  {
+   "UNI_ID": "A0010087",
+   "POLL_DIV_CD": "SKE",
+   "OS_NM": "동일석유㈜황금충전소",
+   "PRICE": 1206,
+   "DISTANCE": 3863.8,
+   "GIS_X_COOR": 318588.0,
+   "GIS_Y_COOR": 555056.0
+  },
+  {
+   "UNI_ID": "A0009251",
+   "POLL_DIV_CD": "SKE",
+   "OS_NM": "(주)홍릉가스",
+   "PRICE": 1207,
+   "DISTANCE": 4185.5,
+   "GIS_X_COOR": 315524.0,
+   "GIS_Y_COOR": 554737.0
+  }
+ ]
+}

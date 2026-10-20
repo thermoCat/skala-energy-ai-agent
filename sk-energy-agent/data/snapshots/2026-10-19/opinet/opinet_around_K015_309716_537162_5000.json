@@ -1,0 +1,47 @@
+{
+ "collected_at": "2026-10-19T11:38:57",
+ "params": {
+  "prodcd": "K015",
+  "x": "309716",
+  "y": "537162",
+  "radius": "5000"
+ },
+ "OIL": [
+  {
+   "UNI_ID": "A0008184",
+   "POLL_DIV_CD": "SKG",
+   "OS_NM": "SK행복충전 케이씨에너지충전소",
+   "PRICE": 1068,
+   "DISTANCE": 3110.9,
+   "GIS_X_COOR": 309789.4,
+   "GIS_Y_COOR": 534051.9
+  },
+  {
+   "UNI_ID": "A0008175",
+   "POLL_DIV_CD": "E1G",
+   "OS_NM": "상신가스충전소",
+   "PRICE": 1205,
+   "DISTANCE": 3867.9,
+   "GIS_X_COOR": 307576.0,
+   "GIS_Y_COOR": 533940.0
+  },
+  {
+   "UNI_ID": "A0001453",
+   "POLL_DIV_CD": "E1G",
+   "OS_NM": "과천LPG충전소",
+   "PRICE": 1198,
+   "DISTANCE": 3880.7,
+   "GIS_X_COOR": 312606.0,
+   "GIS_Y_COOR": 539752.0
+  },
+  {
+   "UNI_ID": "A0000904",
+   "POLL_DIV_CD": "SKE",
+   "OS_NM": "서초충전소",
+   "PRICE": 1205,
+   "DISTANCE": 4816.7,
+   "GIS_X_COOR": 311328.9,
+   "GIS_Y_COOR": 541701.9
+  }
+ ]
+}

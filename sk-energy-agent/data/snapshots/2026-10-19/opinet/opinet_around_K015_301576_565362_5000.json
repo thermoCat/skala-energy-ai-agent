@@ -1,0 +1,74 @@
+{
+ "collected_at": "2026-10-19T11:38:59",
+ "params": {
+  "prodcd": "K015",
+  "x": "301576",
+  "y": "565362",
+  "radius": "5000"
+ },
+ "OIL": [
+  {
+   "UNI_ID": "A0005201",
+   "POLL_DIV_CD": "SKE",
+   "OS_NM": "믿음LPG충전소",
+   "PRICE": 1117,
+   "DISTANCE": 2112.2,
+   "GIS_X_COOR": 303319.6,
+   "GIS_Y_COOR": 566555.3
+  },
+  {
+   "UNI_ID": "A0005453",
+   "POLL_DIV_CD": "SKE",
+   "OS_NM": "㈜원일석유 명성충전소",
+   "PRICE": 1117,
+   "DISTANCE": 2266.5,
+   "GIS_X_COOR": 303441.9,
+   "GIS_Y_COOR": 566650.1
+  },
+  {
+   "UNI_ID": "A0011913",
+   "POLL_DIV_CD": "E1G",
+   "OS_NM": "원당오렌지충전소",
+   "PRICE": 1152,
+   "DISTANCE": 3092.7,
+   "GIS_X_COOR": 298949.0,
+   "GIS_Y_COOR": 563730.0
+  },
+  {
+   "UNI_ID": "A0032670",
+   "POLL_DIV_CD": "SKE",
+   "OS_NM": "KH에너지㈜직영 양주충전소(일산방향)",
+   "PRICE": 1237,
+   "DISTANCE": 3164.9,
+   "GIS_X_COOR": 304688.40467,
+   "GIS_Y_COOR": 564785.06065
+  },
+  {
+   "UNI_ID": "A0005413",
+   "POLL_DIV_CD": "E1G",
+   "OS_NM": "원당충전소",
+   "PRICE": 1152,
+   "DISTANCE": 3682.6,
+   "GIS_X_COOR": 298235.00297,
+   "GIS_Y_COOR": 563810.99532
+  },
+  {
+   "UNI_ID": "A0005338",
+   "POLL_DIV_CD": "SKG",
+   "OS_NM": "통일로내유가스충전소",
+   "PRICE": 1080,
+   "DISTANCE": 4823.1,
+   "GIS_X_COOR": 298722.0,
+   "GIS_Y_COOR": 569250.0
+  },
+  {
+   "UNI_ID": "A0005267",
+   "POLL_DIV_CD": "SKE",
+   "OS_NM": "그린필드충전소",
+   "PRICE": 1117,
+   "DISTANCE": 4916.2,
+   "GIS_X_COOR": 304958.2,
+   "GIS_Y_COOR": 568930.6
+  }
+ ]
+}

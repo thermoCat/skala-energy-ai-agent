@@ -1,0 +1,29 @@
+{
+ "collected_at": "2026-10-19T11:38:57",
+ "params": {
+  "prodcd": "K015",
+  "x": "317857",
+  "y": "537162",
+  "radius": "5000"
+ },
+ "OIL": [
+  {
+   "UNI_ID": "A0005742",
+   "POLL_DIV_CD": "SKG",
+   "OS_NM": "판교충전소",
+   "PRICE": 1124,
+   "DISTANCE": 3379.0,
+   "GIS_X_COOR": 320742.9,
+   "GIS_Y_COOR": 535403.0
+  },
+  {
+   "UNI_ID": "A0011826",
+   "POLL_DIV_CD": "GSC",
+   "OS_NM": "㈜에이치앤디이 만남의광장주유소",
+   "PRICE": 1232,
+   "DISTANCE": 3783.5,
+   "GIS_X_COOR": 315535.76499,
+   "GIS_Y_COOR": 540150.38545
+  }
+ ]
+}

@@ -1,0 +1,74 @@
+{
+ "collected_at": "2026-10-19T11:38:57",
+ "params": {
+  "prodcd": "K015",
+  "x": "305646",
+  "y": "544212",
+  "radius": "5000"
+ },
+ "OIL": [
+  {
+   "UNI_ID": "A0001049",
+   "POLL_DIV_CD": "SKE",
+   "OS_NM": "동일석유㈜동주충전소",
+   "PRICE": 1206,
+   "DISTANCE": 496.5,
+   "GIS_X_COOR": 305483.0,
+   "GIS_Y_COOR": 544681.0
+  },
+  {
+   "UNI_ID": "A0001123",
+   "POLL_DIV_CD": "HDO",
+   "OS_NM": "신림충전소",
+   "PRICE": 1207,
+   "DISTANCE": 2426.2,
+   "GIS_X_COOR": 305908.0,
+   "GIS_Y_COOR": 541800.0
+  },
+  {
+   "UNI_ID": "A0000774",
+   "POLL_DIV_CD": "SKG",
+   "OS_NM": "SK행복충전 명화가스충전소",
+   "PRICE": 1205,
+   "DISTANCE": 3111.5,
+   "GIS_X_COOR": 307619.2,
+   "GIS_Y_COOR": 541805.1
+  },
+  {
+   "UNI_ID": "A0000302",
+   "POLL_DIV_CD": "E1G",
+   "OS_NM": "(주)세지충전소",
+   "PRICE": 1206,
+   "DISTANCE": 4518.9,
+   "GIS_X_COOR": 301898.5,
+   "GIS_Y_COOR": 546738.4
+  },
+  {
+   "UNI_ID": "A0001135",
+   "POLL_DIV_CD": "SKE",
+   "OS_NM": "(주)중앙에너비스삼중가스지점",
+   "PRICE": 1206,
+   "DISTANCE": 4686.2,
+   "GIS_X_COOR": 302736.6,
+   "GIS_Y_COOR": 540537.2
+  },
+  {
+   "UNI_ID": "A0000834",
+   "POLL_DIV_CD": "SKG",
+   "OS_NM": "SK행복충전 한일가스산업충전소",
+   "PRICE": 1207,
+   "DISTANCE": 4743.3,
+   "GIS_X_COOR": 300968.4,
+   "GIS_Y_COOR": 545002.7
+  },
+  {
+   "UNI_ID": "A0000906",
+   "POLL_DIV_CD": "SOL",
+   "OS_NM": "수도석유(주)방배충전소",
+   "PRICE": 1206,
+   "DISTANCE": 4888.0,
+   "GIS_X_COOR": 310170.38979,
+   "GIS_Y_COOR": 542360.71841
+  }
+ ]
+}

@@ -1,0 +1,506 @@
+{
+ "collected_at": "2026-10-19T11:38:47",
+ "params": {
+  "prodcd": "B027",
+  "x": "313787",
+  "y": "544212",
+  "radius": "5000"
+ },
+ "OIL": [
+  {
+   "UNI_ID": "A0009913",
+   "POLL_DIV_CD": "HDO",
+   "OS_NM": "HD현대오일뱅크㈜직영 서초제일주유소",
+   "PRICE": 1898,
+   "DISTANCE": 608.4,
+   "GIS_X_COOR": 313763.5,
+   "GIS_Y_COOR": 543603.5
+  },
+  {
+   "UNI_ID": "A0009905",
+   "POLL_DIV_CD": "HDO",
+   "OS_NM": "HD현대오일뱅크㈜직영 사평로주유소",
+   "PRICE": 1898,
+   "DISTANCE": 810.0,
+   "GIS_X_COOR": 313680.7987,
+   "GIS_Y_COOR": 545015.7859
+  },
+  {
+   "UNI_ID": "A0009907",
+   "POLL_DIV_CD": "GSC",
+   "OS_NM": "에너지플러스허브 삼방주유소",
+   "PRICE": 1878,
+   "DISTANCE": 867.0,
+   "GIS_X_COOR": 313828.8172,
+   "GIS_Y_COOR": 545078.9899
+  },
+  {
+   "UNI_ID": "A0009861",
+   "POLL_DIV_CD": "SOL",
+   "OS_NM": "오토테크주유소",
+   "PRICE": 1870,
+   "DISTANCE": 1039.1,
+   "GIS_X_COOR": 313775.43118,
+   "GIS_Y_COOR": 543172.19675
+  },
+  {
+   "UNI_ID": "A0010207",
+   "POLL_DIV_CD": "SKE",
+   "OS_NM": "SK서광주유소",
+   "PRICE": 1890,
+   "DISTANCE": 1102.3,
+   "GIS_X_COOR": 314871.8,
+   "GIS_Y_COOR": 544012.0
+  },
+  {
+   "UNI_ID": "A0000866",
+   "POLL_DIV_CD": "GSC",
+   "OS_NM": "반포그린주유소",
+   "PRICE": 1865,
+   "DISTANCE": 1323.0,
+   "GIS_X_COOR": 312740.1944,
+   "GIS_Y_COOR": 545022.5152
+  },
+  {
+   "UNI_ID": "A0009917",
+   "POLL_DIV_CD": "SKE",
+   "OS_NM": "대신석유㈜서원주유소",
+   "PRICE": 1978,
+   "DISTANCE": 1396.0,
+   "GIS_X_COOR": 312438.0202,
+   "GIS_Y_COOR": 543848.0625
+  },
+  {
+   "UNI_ID": "A0009061",
+   "POLL_DIV_CD": "SOL",
+   "OS_NM": "(주)선진도곡주유소",
+   "PRICE": 1899,
+   "DISTANCE": 1406.4,
+   "GIS_X_COOR": 315081.0,
+   "GIS_Y_COOR": 543661.0
+  },
+  {
+   "UNI_ID": "A0009974",
+   "POLL_DIV_CD": "GSC",
+   "OS_NM": "지에스칼텍스㈜에너지플러스허브GS타워",
+   "PRICE": 1878,
+   "DISTANCE": 1410.2,
+   "GIS_X_COOR": 314996.159,
+   "GIS_Y_COOR": 544938.50758
+  },
+  {
+   "UNI_ID": "A0009912",
+   "POLL_DIV_CD": "GSC",
+   "OS_NM": "(주)한미석유 서초주유소",
+   "PRICE": 1865,
+   "DISTANCE": 1526.7,
+   "GIS_X_COOR": 312715.3,
+   "GIS_Y_COOR": 543123.3
+  },
+  {
+   "UNI_ID": "A0009901",
+   "POLL_DIV_CD": "GSC",
+   "OS_NM": "대성석유(주)연일주유소",
+   "PRICE": 1886,
+   "DISTANCE": 1541.2,
+   "GIS_X_COOR": 313392.9,
+   "GIS_Y_COOR": 542721.6
+  },
+  {
+   "UNI_ID": "A0009890",
+   "POLL_DIV_CD": "GSC",
+   "OS_NM": "서초꽃마을주유소",
+   "PRICE": 1865,
+   "DISTANCE": 1552.5,
+   "GIS_X_COOR": 312637.2199,
+   "GIS_Y_COOR": 543167.7559
+  },
+  {
+   "UNI_ID": "A0000915",
+   "POLL_DIV_CD": "GSC",
+   "OS_NM": "대성산업(주)직영 터미널(고속)주유소",
+   "PRICE": 1885,
+   "DISTANCE": 1713.4,
+   "GIS_X_COOR": 312563.0,
+   "GIS_Y_COOR": 545411.0
+  },
+  {
+   "UNI_ID": "A0010236",
+   "POLL_DIV_CD": "HDO",
+   "OS_NM": "HD현대오일뱅크㈜직영 강남셀프주유소",
+   "PRICE": 1899,
+   "DISTANCE": 1737.5,
+   "GIS_X_COOR": 315473.02426,
+   "GIS_Y_COOR": 543791.53026
+  },
+  {
+   "UNI_ID": "A0006039",
+   "POLL_DIV_CD": "SKE",
+   "OS_NM": "(유)동하석유 힐탑셀프주유소",
+   "PRICE": 1999,
+   "DISTANCE": 1851.2,
+   "GIS_X_COOR": 314681.8,
+   "GIS_Y_COOR": 545833.6
+  },
+  {
+   "UNI_ID": "A0009835",
+   "POLL_DIV_CD": "SKE",
+   "OS_NM": "오일프러스 셀프",
+   "PRICE": 1865,
+   "DISTANCE": 1873.8,
+   "GIS_X_COOR": 315268.3,
+   "GIS_Y_COOR": 543063.8
+  },
+  {
+   "UNI_ID": "A0010269",
+   "POLL_DIV_CD": "SOL",
+   "OS_NM": "극동유화㈜ 개나리주유소",
+   "PRICE": 1895,
+   "DISTANCE": 1876.4,
+   "GIS_X_COOR": 315589.0,
+   "GIS_Y_COOR": 544735.0
+  },
+  {
+   "UNI_ID": "A0009906",
+   "POLL_DIV_CD": "SOL",
+   "OS_NM": "극동유화(주) 전당앞주유소",
+   "PRICE": 1865,
+   "DISTANCE": 1980.8,
+   "GIS_X_COOR": 312816.7694,
+   "GIS_Y_COOR": 542484.5787
+  },
+  {
+   "UNI_ID": "A0009869",
+   "POLL_DIV_CD": "GSC",
+   "OS_NM": "말죽거리주유소",
+   "PRICE": 1866,
+   "DISTANCE": 1997.8,
+   "GIS_X_COOR": 315369.6315,
+   "GIS_Y_COOR": 542991.5574
+  },
+  {
+   "UNI_ID": "A0010232",
+   "POLL_DIV_CD": "SOL",
+   "OS_NM": "명품주유소",
+   "PRICE": 2348,
+   "DISTANCE": 2028.8,
+   "GIS_X_COOR": 315802.95466,
+   "GIS_Y_COOR": 543975.28409
+  },
+  {
+   "UNI_ID": "A0000916",
+   "POLL_DIV_CD": "GSC",
+   "OS_NM": "대성산업(주)직영 강남주유소",
+   "PRICE": 1875,
+   "DISTANCE": 2091.6,
+   "GIS_X_COOR": 311935.0,
+   "GIS_Y_COOR": 545184.0
+  },
+  {
+   "UNI_ID": "A0000919",
+   "POLL_DIV_CD": "HDO",
+   "OS_NM": "HD현대오일뱅크㈜직영 팔레스주유소",
+   "PRICE": 1888,
+   "DISTANCE": 2135.4,
+   "GIS_X_COOR": 311705.55831,
+   "GIS_Y_COOR": 544691.08724
+  },
+  {
+   "UNI_ID": "A0009738",
+   "POLL_DIV_CD": "HDO",
+   "OS_NM": "HD현대오일뱅크㈜직영 도곡셀프주유소",
+   "PRICE": 1899,
+   "DISTANCE": 2153.6,
+   "GIS_X_COOR": 315580.0,
+   "GIS_Y_COOR": 543019.0
+  },
+  {
+   "UNI_ID": "A0010229",
+   "POLL_DIV_CD": "HDO",
+   "OS_NM": "HD현대오일뱅크㈜직영 유진주유소",
+   "PRICE": 1899,
+   "DISTANCE": 2258.2,
+   "GIS_X_COOR": 315529.564,
+   "GIS_Y_COOR": 542774.1403
+  },
+  {
+   "UNI_ID": "A0000908",
+   "POLL_DIV_CD": "GSC",
+   "OS_NM": "지에스칼텍스(주)남서울주유소",
+   "PRICE": 1888,
+   "DISTANCE": 2259.3,
+   "GIS_X_COOR": 313469.56367,
+   "GIS_Y_COOR": 546449.1848
+  },
+  {
+   "UNI_ID": "A0009886",
+   "POLL_DIV_CD": "HDO",
+   "OS_NM": "(주)선문에너지 중앙주유소",
+   "PRICE": 2388,
+   "DISTANCE": 2353.8,
+   "GIS_X_COOR": 315487.0,
+   "GIS_Y_COOR": 542584.0
+  },
+  {
+   "UNI_ID": "A0011828",
+   "POLL_DIV_CD": "SKE",
+   "OS_NM": "양재주유소",
+   "PRICE": 1898,
+   "DISTANCE": 2482.1,
+   "GIS_X_COOR": 315246.1493,
+   "GIS_Y_COOR": 542203.6279
+  },
+  {
+   "UNI_ID": "A0000863",
+   "POLL_DIV_CD": "SKE",
+   "OS_NM": "신반포주유소",
+   "PRICE": 1878,
+   "DISTANCE": 2488.7,
+   "GIS_X_COOR": 311314.1,
+   "GIS_Y_COOR": 544500.6
+  },
+  {
+   "UNI_ID": "A0009710",
+   "POLL_DIV_CD": "SKE",
+   "OS_NM": "SK논현주유소",
+   "PRICE": 2498,
+   "DISTANCE": 2552.5,
+   "GIS_X_COOR": 314292.669,
+   "GIS_Y_COOR": 546714.2385
+  },
+  {
+   "UNI_ID": "A0009705",
+   "POLL_DIV_CD": "SKE",
+   "OS_NM": "대교셀프주유소",
+   "PRICE": 1899,
+   "DISTANCE": 2553.0,
+   "GIS_X_COOR": 313501.7,
+   "GIS_Y_COOR": 546749.8
+  },
+  {
+   "UNI_ID": "A0009725",
+   "POLL_DIV_CD": "HDO",
+   "OS_NM": "HD현대오일뱅크㈜직영 신사현대주유소",
+   "PRICE": 1914,
+   "DISTANCE": 2623.9,
+   "GIS_X_COOR": 314125.75795,
+   "GIS_Y_COOR": 546814.8516
+  },
+  {
+   "UNI_ID": "A0009707",
+   "POLL_DIV_CD": "HDO",
+   "OS_NM": "(주)제이제이네트웍스 제이제이주유소",
+   "PRICE": 2548,
+   "DISTANCE": 2658.8,
+   "GIS_X_COOR": 314956.10297,
+   "GIS_Y_COOR": 546600.19536
+  },
+  {
+   "UNI_ID": "A0009919",
+   "POLL_DIV_CD": "HDO",
+   "OS_NM": "HD현대오일뱅크㈜직영 양재현대주유소",
+   "PRICE": 1884,
+   "DISTANCE": 2908.1,
+   "GIS_X_COOR": 315259.13639,
+   "GIS_Y_COOR": 541703.85296
+  },
+  {
+   "UNI_ID": "A0011816",
+   "POLL_DIV_CD": "SKE",
+   "OS_NM": "태봉셀프주유소",
+   "PRICE": 1897,
+   "DISTANCE": 3112.0,
+   "GIS_X_COOR": 314232.7064,
+   "GIS_Y_COOR": 541131.9545
+  },
+  {
+   "UNI_ID": "A0001217",
+   "POLL_DIV_CD": "GSC",
+   "OS_NM": "(주)소모 쎈트럴주유소",
+   "PRICE": 2318,
+   "DISTANCE": 3268.0,
+   "GIS_X_COOR": 317006.0,
+   "GIS_Y_COOR": 544776.0
+  },
+  {
+   "UNI_ID": "A0009715",
+   "POLL_DIV_CD": "HDO",
+   "OS_NM": "㈜새서울석유 새서울주유소",
+   "PRICE": 2398,
+   "DISTANCE": 3332.5,
+   "GIS_X_COOR": 314138.9919,
+   "GIS_Y_COOR": 547526.5976
+  },
+  {
+   "UNI_ID": "A0009881",
+   "POLL_DIV_CD": "SOL",
+   "OS_NM": "양재최고주유소",
+   "PRICE": 1863,
+   "DISTANCE": 3374.5,
+   "GIS_X_COOR": 314806.0,
+   "GIS_Y_COOR": 540995.0
+  },
+  {
+   "UNI_ID": "A0009712",
+   "POLL_DIV_CD": "SKE",
+   "OS_NM": "대동석유 압구정주유소",
+   "PRICE": 1999,
+   "DISTANCE": 3394.7,
+   "GIS_X_COOR": 314797.5,
+   "GIS_Y_COOR": 547453.2
+  },
+  {
+   "UNI_ID": "A0000890",
+   "POLL_DIV_CD": "GSC",
+   "OS_NM": "지에스칼텍스(주)선천주유소",
+   "PRICE": 1854,
+   "DISTANCE": 3504.9,
+   "GIS_X_COOR": 310282.04464,
+   "GIS_Y_COOR": 544132.64623
+  },
+  {
+   "UNI_ID": "A0000917",
+   "POLL_DIV_CD": "HDO",
+   "OS_NM": "방배주유소",
+   "PRICE": 1849,
+   "DISTANCE": 3522.3,
+   "GIS_X_COOR": 310279.0,
+   "GIS_Y_COOR": 543895.0
+  },
+  {
+   "UNI_ID": "A0000206",
+   "POLL_DIV_CD": "SKE",
+   "OS_NM": "(주)남경주유소",
+   "PRICE": 2248,
+   "DISTANCE": 3597.9,
+   "GIS_X_COOR": 311736.0,
+   "GIS_Y_COOR": 547168.0
+  },
+  {
+   "UNI_ID": "A0000894",
+   "POLL_DIV_CD": "SOL",
+   "OS_NM": "㈜방배동주유소",
+   "PRICE": 1863,
+   "DISTANCE": 3681.3,
+   "GIS_X_COOR": 310668.2,
+   "GIS_Y_COOR": 542255.0
+  },
+  {
+   "UNI_ID": "A0009724",
+   "POLL_DIV_CD": "RTO",
+   "OS_NM": "한양주유소",
+   "PRICE": 1899,
+   "DISTANCE": 3778.2,
+   "GIS_X_COOR": 314821.0,
+   "GIS_Y_COOR": 547846.0
+  },
+  {
+   "UNI_ID": "A0000426",
+   "POLL_DIV_CD": "HDO",
+   "OS_NM": "HD현대오일뱅크㈜직영 사당셀프주유소",
+   "PRICE": 1908,
+   "DISTANCE": 3908.1,
+   "GIS_X_COOR": 310135.54433,
+   "GIS_Y_COOR": 542817.02921
+  },
+  {
+   "UNI_ID": "A0009916",
+   "POLL_DIV_CD": "SKE",
+   "OS_NM": "대신석유(주)대우주유소",
+   "PRICE": 1847,
+   "DISTANCE": 3929.0,
+   "GIS_X_COOR": 315069.06196,
+   "GIS_Y_COOR": 540497.58276
+  },
+  {
+   "UNI_ID": "A0001185",
+   "POLL_DIV_CD": "GSC",
+   "OS_NM": "지에스칼텍스㈜ 은마주유소",
+   "PRICE": 1898,
+   "DISTANCE": 3958.0,
+   "GIS_X_COOR": 317724.7,
+   "GIS_Y_COOR": 544619.0
+  },
+  {
+   "UNI_ID": "A0001214",
+   "POLL_DIV_CD": "HDO",
+   "OS_NM": "삼성동주유소",
+   "PRICE": 2095,
+   "DISTANCE": 4042.6,
+   "GIS_X_COOR": 317543.6403,
+   "GIS_Y_COOR": 545707.2162
+  },
+  {
+   "UNI_ID": "A0009918",
+   "POLL_DIV_CD": "SOL",
+   "OS_NM": "서초우면산주유소",
+   "PRICE": 1898,
+   "DISTANCE": 4309.8,
+   "GIS_X_COOR": 313166.51729,
+   "GIS_Y_COOR": 539946.23857
+  },
+  {
+   "UNI_ID": "A0001157",
+   "POLL_DIV_CD": "HDO",
+   "OS_NM": "㈜CW창원사당",
+   "PRICE": 1829,
+   "DISTANCE": 4407.2,
+   "GIS_X_COOR": 310169.34427,
+   "GIS_Y_COOR": 541693.21359
+  },
+  {
+   "UNI_ID": "A0011826",
+   "POLL_DIV_CD": "RTX",
+   "OS_NM": "㈜에이치앤디이 만남의광장주유소",
+   "PRICE": 1864,
+   "DISTANCE": 4421.2,
+   "GIS_X_COOR": 315535.76499,
+   "GIS_Y_COOR": 540150.38545
+  },
+  {
+   "UNI_ID": "A0000928",
+   "POLL_DIV_CD": "SKE",
+   "OS_NM": "(주)대농석유 남태령주유소",
+   "PRICE": 1829,
+   "DISTANCE": 4475.6,
+   "GIS_X_COOR": 310659.3,
+   "GIS_Y_COOR": 541009.5
+  },
+  {
+   "UNI_ID": "A0000238",
+   "POLL_DIV_CD": "SKE",
+   "OS_NM": "한남지점",
+   "PRICE": 2297,
+   "DISTANCE": 4544.5,
+   "GIS_X_COOR": 312355.0,
+   "GIS_Y_COOR": 548525.0
+  },
+  {
+   "UNI_ID": "A0008210",
+   "POLL_DIV_CD": "HDO",
+   "OS_NM": "HD현대오일뱅크㈜직영 선암셀프주유소",
+   "PRICE": 1883,
+   "DISTANCE": 4573.6,
+   "GIS_X_COOR": 312645.9465,
+   "GIS_Y_COOR": 539782.7742
+  },
+  {
+   "UNI_ID": "A0000228",
+   "POLL_DIV_CD": "SKE",
+   "OS_NM": "에너비스",
+   "PRICE": 2297,
+   "DISTANCE": 4676.4,
+   "GIS_X_COOR": 312359.0,
+   "GIS_Y_COOR": 548665.0
+  },
+  {
+   "UNI_ID": "A0010172",
+   "POLL_DIV_CD": "GSC",
+   "OS_NM": "㈜삼표에너지 아시아주유소",
+   "PRICE": 1839,
+   "DISTANCE": 4917.1,
+   "GIS_X_COOR": 318621.2,
+   "GIS_Y_COOR": 545112.4
+  }
+ ]
+}

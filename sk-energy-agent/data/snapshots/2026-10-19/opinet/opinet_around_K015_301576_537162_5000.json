@@ -1,0 +1,65 @@
+{
+ "collected_at": "2026-10-19T11:38:56",
+ "params": {
+  "prodcd": "K015",
+  "x": "301576",
+  "y": "537162",
+  "radius": "5000"
+ },
+ "OIL": [
+  {
+   "UNI_ID": "A0009968",
+   "POLL_DIV_CD": "SKG",
+   "OS_NM": "㈜조은에너지",
+   "PRICE": 1194,
+   "DISTANCE": 2223.9,
+   "GIS_X_COOR": 303412.0,
+   "GIS_Y_COOR": 535907.0
+  },
+  {
+   "UNI_ID": "A0006872",
+   "POLL_DIV_CD": "SKE",
+   "OS_NM": "극동실업(주)충전소",
+   "PRICE": 1195,
+   "DISTANCE": 3075.3,
+   "GIS_X_COOR": 299874.5,
+   "GIS_Y_COOR": 539724.0
+  },
+  {
+   "UNI_ID": "A0001135",
+   "POLL_DIV_CD": "SKE",
+   "OS_NM": "(주)중앙에너비스삼중가스지점",
+   "PRICE": 1206,
+   "DISTANCE": 3568.8,
+   "GIS_X_COOR": 302736.6,
+   "GIS_Y_COOR": 540537.2
+  },
+  {
+   "UNI_ID": "A0001870",
+   "POLL_DIV_CD": "SKG",
+   "OS_NM": "SK행복충전 가학충전소",
+   "PRICE": 1175,
+   "DISTANCE": 3656.3,
+   "GIS_X_COOR": 298338.7,
+   "GIS_Y_COOR": 535461.9
+  },
+  {
+   "UNI_ID": "A0008373",
+   "POLL_DIV_CD": "E1G",
+   "OS_NM": "목감LPG충전소",
+   "PRICE": 1170,
+   "DISTANCE": 4399.1,
+   "GIS_X_COOR": 298438.2,
+   "GIS_Y_COOR": 534077.6
+  },
+  {
+   "UNI_ID": "A0008343",
+   "POLL_DIV_CD": "HDO",
+   "OS_NM": "다원FNC 광명충전소",
+   "PRICE": 1192,
+   "DISTANCE": 4862.7,
+   "GIS_X_COOR": 298010.0,
+   "GIS_Y_COOR": 540468.0
+  }
+ ]
+}

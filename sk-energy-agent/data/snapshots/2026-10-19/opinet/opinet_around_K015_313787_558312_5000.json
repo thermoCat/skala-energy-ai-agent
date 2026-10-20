@@ -1,0 +1,110 @@
+{
+ "collected_at": "2026-10-19T11:38:59",
+ "params": {
+  "prodcd": "K015",
+  "x": "313787",
+  "y": "558312",
+  "radius": "5000"
+ },
+ "OIL": [
+  {
+   "UNI_ID": "A0009625",
+   "POLL_DIV_CD": "SKE",
+   "OS_NM": "국제가스공업(주)",
+   "PRICE": 1203,
+   "DISTANCE": 1246.4,
+   "GIS_X_COOR": 313864.0,
+   "GIS_Y_COOR": 559556.0
+  },
+  {
+   "UNI_ID": "A0009627",
+   "POLL_DIV_CD": "SKG",
+   "OS_NM": "SK행복충전 서울와사공업충전소",
+   "PRICE": 1203,
+   "DISTANCE": 1489.5,
+   "GIS_X_COOR": 314101.6,
+   "GIS_Y_COOR": 559768.7
+  },
+  {
+   "UNI_ID": "A0009252",
+   "POLL_DIV_CD": "GSC",
+   "OS_NM": "우일에너지(주)성북충전소",
+   "PRICE": 1206,
+   "DISTANCE": 1867.4,
+   "GIS_X_COOR": 314592.0,
+   "GIS_Y_COOR": 556627.0
+  },
+  {
+   "UNI_ID": "A0009630",
+   "POLL_DIV_CD": "SKG",
+   "OS_NM": "SK행복충전 청학에너지충전소",
+   "PRICE": 1203,
+   "DISTANCE": 2095.6,
+   "GIS_X_COOR": 315808.2,
+   "GIS_Y_COOR": 558866.3
+  },
+  {
+   "UNI_ID": "A0001874",
+   "POLL_DIV_CD": "GSC",
+   "OS_NM": "복지강북충전소 ㈜서울개인택시복지법인",
+   "PRICE": 1203,
+   "DISTANCE": 2561.1,
+   "GIS_X_COOR": 314819.0,
+   "GIS_Y_COOR": 560656.0
+  },
+  {
+   "UNI_ID": "A0009491",
+   "POLL_DIV_CD": "SKG",
+   "OS_NM": "SK행복충전 장위가스충전소",
+   "PRICE": 1203,
+   "DISTANCE": 3648.5,
+   "GIS_X_COOR": 317260.0,
+   "GIS_Y_COOR": 557194.0
+  },
+  {
+   "UNI_ID": "A0009251",
+   "POLL_DIV_CD": "SKE",
+   "OS_NM": "(주)홍릉가스",
+   "PRICE": 1207,
+   "DISTANCE": 3974.6,
+   "GIS_X_COOR": 315524.0,
+   "GIS_Y_COOR": 554737.0
+  },
+  {
+   "UNI_ID": "A0009628",
+   "POLL_DIV_CD": "SKG",
+   "OS_NM": "공릉동충전소",
+   "PRICE": 1205,
+   "DISTANCE": 4436.1,
+   "GIS_X_COOR": 318179.8,
+   "GIS_Y_COOR": 558936.8
+  },
+  {
+   "UNI_ID": "A0009683",
+   "POLL_DIV_CD": "GSC",
+   "OS_NM": "한영가스충전소",
+   "PRICE": 1201,
+   "DISTANCE": 4527.8,
+   "GIS_X_COOR": 315616.83397,
+   "GIS_Y_COOR": 562454.54833
+  },
+  {
+   "UNI_ID": "A0010082",
+   "POLL_DIV_CD": "SOL",
+   "OS_NM": "태능가스(주)",
+   "PRICE": 1201,
+   "DISTANCE": 4586.5,
+   "GIS_X_COOR": 318316.0,
+   "GIS_Y_COOR": 557588.0
+  },
+  {
+   "UNI_ID": "A0010145",
+   "POLL_DIV_CD": "E1G",
+   "OS_NM": "(주)평안에너지 상계충전소",
+   "PRICE": 1201,
+   "DISTANCE": 4986.3,
+   "GIS_X_COOR": 317868.0,
+   "GIS_Y_COOR": 561177.0
+  }
+ ]
+}

@@ -4,5 +4,11 @@ session.db
 __pycache__/
 *.log
 
+# 데이터: 용량이 크고 다시 받을 수 있는 원본 (data/README.md 참고)
+data/raw/keco_ev_charger_20221027.csv
+data/snapshots/*/ev_chargers_z28.csv
+data/snapshots/*/ev_chargers_z41.csv
+.DS_Store
+
 # 강의 베이스코드 설명서 (로컬 참고용, 저장소에 올리지 않음)
 doc/

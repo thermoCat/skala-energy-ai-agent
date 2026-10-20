@@ -1,0 +1,74 @@
+{
+ "collected_at": "2026-10-19T11:38:57",
+ "params": {
+  "prodcd": "K015",
+  "x": "313787",
+  "y": "544212",
+  "radius": "5000"
+ },
+ "OIL": [
+  {
+   "UNI_ID": "A0009839",
+   "POLL_DIV_CD": "SKE",
+   "OS_NM": "(주)진양가스",
+   "PRICE": 1208,
+   "DISTANCE": 1309.4,
+   "GIS_X_COOR": 314931.0,
+   "GIS_Y_COOR": 543575.0
+  },
+  {
+   "UNI_ID": "A0000904",
+   "POLL_DIV_CD": "SKE",
+   "OS_NM": "서초충전소",
+   "PRICE": 1205,
+   "DISTANCE": 3513.1,
+   "GIS_X_COOR": 311328.9,
+   "GIS_Y_COOR": 541701.9
+  },
+  {
+   "UNI_ID": "A0000906",
+   "POLL_DIV_CD": "SOL",
+   "OS_NM": "수도석유(주)방배충전소",
+   "PRICE": 1206,
+   "DISTANCE": 4062.2,
+   "GIS_X_COOR": 310170.38979,
+   "GIS_Y_COOR": 542360.71841
+  },
+  {
+   "UNI_ID": "A0011826",
+   "POLL_DIV_CD": "GSC",
+   "OS_NM": "㈜에이치앤디이 만남의광장주유소",
+   "PRICE": 1232,
+   "DISTANCE": 4421.2,
+   "GIS_X_COOR": 315535.76499,
+   "GIS_Y_COOR": 540150.38545
+  },
+  {
+   "UNI_ID": "A0001453",
+   "POLL_DIV_CD": "E1G",
+   "OS_NM": "과천LPG충전소",
+   "PRICE": 1198,
+   "DISTANCE": 4613.7,
+   "GIS_X_COOR": 312606.0,
+   "GIS_Y_COOR": 539752.0
+  },
+  {
+   "UNI_ID": "A0001201",
+   "POLL_DIV_CD": "GSC",
+   "OS_NM": "남서울가스(주)",
+   "PRICE": 1209,
+   "DISTANCE": 4670.3,
+   "GIS_X_COOR": 318455.7,
+   "GIS_Y_COOR": 544359.4
+  },
+  {
+   "UNI_ID": "A0001227",
+   "POLL_DIV_CD": "HDO",
+   "OS_NM": "대치에너지",
+   "PRICE": 1209,
+   "DISTANCE": 4903.2,
+   "GIS_X_COOR": 318680.0,
+   "GIS_Y_COOR": 544528.0
+  }
+ ]
+}

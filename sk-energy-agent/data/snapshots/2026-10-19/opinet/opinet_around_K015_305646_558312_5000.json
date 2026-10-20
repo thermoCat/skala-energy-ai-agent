@@ -1,0 +1,20 @@
+{
+ "collected_at": "2026-10-19T11:38:59",
+ "params": {
+  "prodcd": "K015",
+  "x": "305646",
+  "y": "558312",
+  "radius": "5000"
+ },
+ "OIL": [
+  {
+   "UNI_ID": "A0000628",
+   "POLL_DIV_CD": "SKG",
+   "OS_NM": "은평서부충전소",
+   "PRICE": 1209,
+   "DISTANCE": 3104.0,
+   "GIS_X_COOR": 303980.0,
+   "GIS_Y_COOR": 560931.0
+  }
+ ]
+}

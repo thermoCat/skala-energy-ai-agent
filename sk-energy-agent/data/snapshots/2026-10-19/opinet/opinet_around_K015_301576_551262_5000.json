@@ -1,0 +1,119 @@
+{
+ "collected_at": "2026-10-19T11:38:58",
+ "params": {
+  "prodcd": "K015",
+  "x": "301576",
+  "y": "551262",
+  "radius": "5000"
+ },
+ "OIL": [
+  {
+   "UNI_ID": "A0000450",
+   "POLL_DIV_CD": "E1G",
+   "OS_NM": "대양가스충전소",
+   "PRICE": 1205,
+   "DISTANCE": 2032.5,
+   "GIS_X_COOR": 299543.4,
+   "GIS_Y_COOR": 551309.3
+  },
+  {
+   "UNI_ID": "A0000499",
+   "POLL_DIV_CD": "GSC",
+   "OS_NM": "복지공항로충전소 ㈜서울개인택시복지법인",
+   "PRICE": 1205,
+   "DISTANCE": 2293.2,
+   "GIS_X_COOR": 299342.65674,
+   "GIS_Y_COOR": 550739.77225
+  },
+  {
+   "UNI_ID": "A0000743",
+   "POLL_DIV_CD": "SOL",
+   "OS_NM": "연일가스산업(주)",
+   "PRICE": 1214,
+   "DISTANCE": 2617.1,
+   "GIS_X_COOR": 303581.0,
+   "GIS_Y_COOR": 552944.0
+  },
+  {
+   "UNI_ID": "A0000742",
+   "POLL_DIV_CD": "SKG",
+   "OS_NM": "SK행복충전 신흥에너지산업",
+   "PRICE": 1214,
+   "DISTANCE": 2702.8,
+   "GIS_X_COOR": 303060.2,
+   "GIS_Y_COOR": 553521.1
+  },
+  {
+   "UNI_ID": "A0009489",
+   "POLL_DIV_CD": "SKE",
+   "OS_NM": "기린에너지",
+   "PRICE": 1207,
+   "DISTANCE": 2812.9,
+   "GIS_X_COOR": 302894.0,
+   "GIS_Y_COOR": 548777.0
+  },
+  {
+   "UNI_ID": "A0005458",
+   "POLL_DIV_CD": "GSC",
+   "OS_NM": "(주)상암에너지",
+   "PRICE": 1151,
+   "DISTANCE": 3163.3,
+   "GIS_X_COOR": 299453.2,
+   "GIS_Y_COOR": 553608.1
+  },
+  {
+   "UNI_ID": "A0000291",
+   "POLL_DIV_CD": "SKG",
+   "OS_NM": "양평동충전소",
+   "PRICE": 1192,
+   "DISTANCE": 3430.1,
+   "GIS_X_COOR": 302183.00295,
+   "GIS_Y_COOR": 547885.99534
+  },
+  {
+   "UNI_ID": "A0005461",
+   "POLL_DIV_CD": "SKE",
+   "OS_NM": "주)서강이엔한강LPG충전소",
+   "PRICE": 1141,
+   "DISTANCE": 3632.5,
+   "GIS_X_COOR": 299062.5,
+   "GIS_Y_COOR": 553885.4
+  },
+  {
+   "UNI_ID": "A0000988",
+   "POLL_DIV_CD": "SKE",
+   "OS_NM": "목동충전소",
+   "PRICE": 1225,
+   "DISTANCE": 4028.1,
+   "GIS_X_COOR": 299794.95335,
+   "GIS_Y_COOR": 547648.11579
+  },
+  {
+   "UNI_ID": "A0000532",
+   "POLL_DIV_CD": "E1G",
+   "OS_NM": "대흥에너지산업(주)",
+   "PRICE": 1205,
+   "DISTANCE": 4527.2,
+   "GIS_X_COOR": 298308.3,
+   "GIS_Y_COOR": 548127.2
+  },
+  {
+   "UNI_ID": "A0000302",
+   "POLL_DIV_CD": "E1G",
+   "OS_NM": "(주)세지충전소",
+   "PRICE": 1206,
+   "DISTANCE": 4534.4,
+   "GIS_X_COOR": 301898.5,
+   "GIS_Y_COOR": 546738.4
+  },
+  {
+   "UNI_ID": "A0032948",
+   "POLL_DIV_CD": "SKE",
+   "OS_NM": "대영가스충전소",
+   "PRICE": 1204,
+   "DISTANCE": 4878.5,
+   "GIS_X_COOR": 296974.59686,
+   "GIS_Y_COOR": 552884.01417
+  }
+ ]
+}

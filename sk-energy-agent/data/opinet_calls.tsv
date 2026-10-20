@@ -1,0 +1,43 @@
+# 오피넷 호출 기록 (총 300건 한도로 관리). 형식: 시각<TAB>엔드포인트<TAB>파라미터<TAB>메모
+2026-10-19T00:00:01	aroundAll.do	x=309901&y=552051&radius=5000&sort=2&prodcd=B027	key param 'code' (wrong) - empty
+2026-10-19T00:00:02	avgAllPrice.do	-	key param 'code' (wrong) - empty
+2026-10-19T00:00:03	avgAllPrice.do	-	key param 'code' (wrong, http) - empty
+2026-10-19T00:00:04	avgAllPrice.do	-	key param 'code' (wrong, xml) - empty
+2026-10-19T00:00:05	detailById.do	id=A0010207	certkey - OK
+# 참고: 사용자가 터미널에서 직접 호출한 건수는 이 기록에 포함되지 않음
+2026-10-19T11:29:58	aroundAll.do	x=314213&y=544414&radius=5000&sort=2&prodcd=B027	around
+2026-10-19T11:38:46	aroundAll.do	x=301576&y=537162&radius=5000&sort=2&prodcd=B027	around
+2026-10-19T11:38:46	aroundAll.do	x=309716&y=537162&radius=5000&sort=2&prodcd=B027	around
+2026-10-19T11:38:46	aroundAll.do	x=317857&y=537162&radius=5000&sort=2&prodcd=B027	around
+2026-10-19T11:38:47	aroundAll.do	x=297505&y=544212&radius=5000&sort=2&prodcd=B027	around
+2026-10-19T11:38:47	aroundAll.do	x=305646&y=544212&radius=5000&sort=2&prodcd=B027	around
+2026-10-19T11:38:47	aroundAll.do	x=313787&y=544212&radius=5000&sort=2&prodcd=B027	around
+2026-10-19T11:38:47	aroundAll.do	x=321927&y=544212&radius=5000&sort=2&prodcd=B027	around
+2026-10-19T11:38:48	aroundAll.do	x=293435&y=551262&radius=5000&sort=2&prodcd=B027	around
+2026-10-19T11:38:48	aroundAll.do	x=301576&y=551262&radius=5000&sort=2&prodcd=B027	around
+2026-10-19T11:38:48	aroundAll.do	x=309716&y=551262&radius=5000&sort=2&prodcd=B027	around
+2026-10-19T11:38:49	aroundAll.do	x=317857&y=551262&radius=5000&sort=2&prodcd=B027	around
+2026-10-19T11:38:49	aroundAll.do	x=325998&y=551262&radius=5000&sort=2&prodcd=B027	around
+2026-10-19T11:38:49	aroundAll.do	x=305646&y=558312&radius=5000&sort=2&prodcd=B027	around
+2026-10-19T11:38:50	aroundAll.do	x=313787&y=558312&radius=5000&sort=2&prodcd=B027	around
+2026-10-19T11:38:50	aroundAll.do	x=321927&y=558312&radius=5000&sort=2&prodcd=B027	around
+2026-10-19T11:38:50	aroundAll.do	x=301576&y=565362&radius=5000&sort=2&prodcd=B027	around
+2026-10-19T11:38:51	aroundAll.do	x=317857&y=565362&radius=5000&sort=2&prodcd=B027	around
+2026-10-19T11:38:56	aroundAll.do	x=314213&y=544414&radius=5000&sort=2&prodcd=K015	around
+2026-10-19T11:38:56	aroundAll.do	x=301576&y=537162&radius=5000&sort=2&prodcd=K015	around
+2026-10-19T11:38:57	aroundAll.do	x=309716&y=537162&radius=5000&sort=2&prodcd=K015	around
+2026-10-19T11:38:57	aroundAll.do	x=317857&y=537162&radius=5000&sort=2&prodcd=K015	around
+2026-10-19T11:38:57	aroundAll.do	x=297505&y=544212&radius=5000&sort=2&prodcd=K015	around
+2026-10-19T11:38:57	aroundAll.do	x=305646&y=544212&radius=5000&sort=2&prodcd=K015	around
+2026-10-19T11:38:57	aroundAll.do	x=313787&y=544212&radius=5000&sort=2&prodcd=K015	around
+2026-10-19T11:38:57	aroundAll.do	x=321927&y=544212&radius=5000&sort=2&prodcd=K015	around
+2026-10-19T11:38:58	aroundAll.do	x=293435&y=551262&radius=5000&sort=2&prodcd=K015	around
+2026-10-19T11:38:58	aroundAll.do	x=301576&y=551262&radius=5000&sort=2&prodcd=K015	around
+2026-10-19T11:38:58	aroundAll.do	x=309716&y=551262&radius=5000&sort=2&prodcd=K015	around
+2026-10-19T11:38:58	aroundAll.do	x=317857&y=551262&radius=5000&sort=2&prodcd=K015	around
+2026-10-19T11:38:58	aroundAll.do	x=325998&y=551262&radius=5000&sort=2&prodcd=K015	around
+2026-10-19T11:38:59	aroundAll.do	x=305646&y=558312&radius=5000&sort=2&prodcd=K015	around
+2026-10-19T11:38:59	aroundAll.do	x=313787&y=558312&radius=5000&sort=2&prodcd=K015	around
+2026-10-19T11:38:59	aroundAll.do	x=321927&y=558312&radius=5000&sort=2&prodcd=K015	around
+2026-10-19T11:38:59	aroundAll.do	x=301576&y=565362&radius=5000&sort=2&prodcd=K015	around
+2026-10-19T11:38:59	aroundAll.do	x=317857&y=565362&radius=5000&sort=2&prodcd=K015	around

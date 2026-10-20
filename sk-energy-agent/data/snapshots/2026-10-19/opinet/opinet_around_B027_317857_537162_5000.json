@@ -1,0 +1,128 @@
+{
+ "collected_at": "2026-10-19T11:38:46",
+ "params": {
+  "prodcd": "B027",
+  "x": "317857",
+  "y": "537162",
+  "radius": "5000"
+ },
+ "OIL": [
+  {
+   "UNI_ID": "A0005640",
+   "POLL_DIV_CD": "GSC",
+   "OS_NM": "청계산주유소",
+   "PRICE": 1904,
+   "DISTANCE": 407.6,
+   "GIS_X_COOR": 318165.5,
+   "GIS_Y_COOR": 536894.4
+  },
+  {
+   "UNI_ID": "A0009889",
+   "POLL_DIV_CD": "GSC",
+   "OS_NM": "에너지 플러스 허브 내곡",
+   "PRICE": 1869,
+   "DISTANCE": 2542.1,
+   "GIS_X_COOR": 317276.98658,
+   "GIS_Y_COOR": 539637.37185
+  },
+  {
+   "UNI_ID": "A0009920",
+   "POLL_DIV_CD": "SOL",
+   "OS_NM": "씨앤에스유통㈜ 내곡드림주유소",
+   "PRICE": 1868,
+   "DISTANCE": 2851.5,
+   "GIS_X_COOR": 317047.0,
+   "GIS_Y_COOR": 539896.0
+  },
+  {
+   "UNI_ID": "A0005789",
+   "POLL_DIV_CD": "HDO",
+   "OS_NM": "(주)새서울석유 동판교주유소",
+   "PRICE": 1898,
+   "DISTANCE": 2904.9,
+   "GIS_X_COOR": 320736.18302,
+   "GIS_Y_COOR": 536774.97217
+  },
+  {
+   "UNI_ID": "A0005791",
+   "POLL_DIV_CD": "HDO",
+   "OS_NM": "(주)새서울석유 세종",
+   "PRICE": 1927,
+   "DISTANCE": 3205.2,
+   "GIS_X_COOR": 320816.49656,
+   "GIS_Y_COOR": 535929.97306
+  },
+  {
+   "UNI_ID": "A0005615",
+   "POLL_DIV_CD": "SOL",
+   "OS_NM": "분당제일에너지",
+   "PRICE": 1897,
+   "DISTANCE": 3406.1,
+   "GIS_X_COOR": 321034.0,
+   "GIS_Y_COOR": 535934.0
+  },
+  {
+   "UNI_ID": "A0011826",
+   "POLL_DIV_CD": "RTX",
+   "OS_NM": "㈜에이치앤디이 만남의광장주유소",
+   "PRICE": 1864,
+   "DISTANCE": 3783.5,
+   "GIS_X_COOR": 315535.76499,
+   "GIS_Y_COOR": 540150.38545
+  },
+  {
+   "UNI_ID": "A0009916",
+   "POLL_DIV_CD": "SKE",
+   "OS_NM": "대신석유(주)대우주유소",
+   "PRICE": 1847,
+   "DISTANCE": 4346.2,
+   "GIS_X_COOR": 315069.06196,
+   "GIS_Y_COOR": 540497.58276
+  },
+  {
+   "UNI_ID": "A0005792",
+   "POLL_DIV_CD": "SKE",
+   "OS_NM": "한강에너지(주)",
+   "PRICE": 1833,
+   "DISTANCE": 4483.5,
+   "GIS_X_COOR": 322169.96926,
+   "GIS_Y_COOR": 535933.69748
+  },
+  {
+   "UNI_ID": "A0005719",
+   "POLL_DIV_CD": "GSC",
+   "OS_NM": "판교서일주유소",
+   "PRICE": 1884,
+   "DISTANCE": 4776.6,
+   "GIS_X_COOR": 321319.0,
+   "GIS_Y_COOR": 533871.0
+  },
+  {
+   "UNI_ID": "A0033120",
+   "POLL_DIV_CD": "RTX",
+   "OS_NM": "대보건설(주) 성남(구리방향)주유소",
+   "PRICE": 1804,
+   "DISTANCE": 4805.4,
+   "GIS_X_COOR": 322653.8428,
+   "GIS_Y_COOR": 537462.64782
+  },
+  {
+   "UNI_ID": "A0005711",
+   "POLL_DIV_CD": "GSC",
+   "OS_NM": "주유소티파니블루",
+   "PRICE": 1886,
+   "DISTANCE": 4886.9,
+   "GIS_X_COOR": 319185.0,
+   "GIS_Y_COOR": 532459.0
+  },
+  {
+   "UNI_ID": "A0009881",
+   "POLL_DIV_CD": "SOL",
+   "OS_NM": "양재최고주유소",
+   "PRICE": 1863,
+   "DISTANCE": 4899.0,
+   "GIS_X_COOR": 314806.0,
+   "GIS_Y_COOR": 540995.0
+  }
+ ]
+}

@@ -1,0 +1,164 @@
+{
+ "collected_at": "2026-10-19T11:38:58",
+ "params": {
+  "prodcd": "K015",
+  "x": "293435",
+  "y": "551262",
+  "radius": "5000"
+ },
+ "OIL": [
+  {
+   "UNI_ID": "A0001668",
+   "POLL_DIV_CD": "SKE",
+   "OS_NM": "계양에너지",
+   "PRICE": 1124,
+   "DISTANCE": 1964.2,
+   "GIS_X_COOR": 291535.0,
+   "GIS_Y_COOR": 551760.0
+  },
+  {
+   "UNI_ID": "A0000481",
+   "POLL_DIV_CD": "SKG",
+   "OS_NM": "강서충전소",
+   "PRICE": 1153,
+   "DISTANCE": 2041.9,
+   "GIS_X_COOR": 291406.00294,
+   "GIS_Y_COOR": 551023.99532
+  },
+  {
+   "UNI_ID": "A0000559",
+   "POLL_DIV_CD": "E1G",
+   "OS_NM": "오곡동충전소",
+   "PRICE": 1152,
+   "DISTANCE": 2077.7,
+   "GIS_X_COOR": 291362.00588,
+   "GIS_Y_COOR": 551107.99064
+  },
+  {
+   "UNI_ID": "A0000542",
+   "POLL_DIV_CD": "E1G",
+   "OS_NM": "복지개화충전소 ㈜서울개인택시복지법인",
+   "PRICE": 1205,
+   "DISTANCE": 2122.3,
+   "GIS_X_COOR": 294352.7,
+   "GIS_Y_COOR": 553176.8
+  },
+  {
+   "UNI_ID": "A0005953",
+   "POLL_DIV_CD": "SKE",
+   "OS_NM": "로안충전소",
+   "PRICE": 1152,
+   "DISTANCE": 2701.9,
+   "GIS_X_COOR": 291062.0,
+   "GIS_Y_COOR": 549970.0
+  },
+  {
+   "UNI_ID": "A0033308",
+   "POLL_DIV_CD": "SKG",
+   "OS_NM": "KH에너지㈜직영 활주로충전소",
+   "PRICE": 1204,
+   "DISTANCE": 2733.2,
+   "GIS_X_COOR": 295643.64917,
+   "GIS_Y_COOR": 549650.24818
+  },
+  {
+   "UNI_ID": "A0000563",
+   "POLL_DIV_CD": "SKG",
+   "OS_NM": "SK행복충전 고강충전소",
+   "PRICE": 1205,
+   "DISTANCE": 3023.4,
+   "GIS_X_COOR": 295275.0,
+   "GIS_Y_COOR": 548863.0
+  },
+  {
+   "UNI_ID": "A0033024",
+   "POLL_DIV_CD": "SKG",
+   "OS_NM": "워시랜드김포대로70충전소㈜",
+   "PRICE": 1123,
+   "DISTANCE": 3240.4,
+   "GIS_X_COOR": 293740.02227,
+   "GIS_Y_COOR": 554488.09028
+  },
+  {
+   "UNI_ID": "A0032953",
+   "POLL_DIV_CD": "SKE",
+   "OS_NM": "한경에너지",
+   "PRICE": 1123,
+   "DISTANCE": 3376.0,
+   "GIS_X_COOR": 294104.61392,
+   "GIS_Y_COOR": 554571.18999
+  },
+  {
+   "UNI_ID": "A0006066",
+   "POLL_DIV_CD": "SKE",
+   "OS_NM": "㈜한유에너지 공항가스",
+   "PRICE": 1204,
+   "DISTANCE": 3384.7,
+   "GIS_X_COOR": 295614.0,
+   "GIS_Y_COOR": 548672.0
+  },
+  {
+   "UNI_ID": "A0033046",
+   "POLL_DIV_CD": "GSC",
+   "OS_NM": "복지마곡충전소 ㈜서울개인택시복지법인",
+   "PRICE": 1205,
+   "DISTANCE": 3481.9,
+   "GIS_X_COOR": 296499.46375,
+   "GIS_Y_COOR": 552916.91869
+  },
+  {
+   "UNI_ID": "A0033638",
+   "POLL_DIV_CD": "HDO",
+   "OS_NM": "실로암엘피지충전소㈜",
+   "PRICE": 1123,
+   "DISTANCE": 3551.0,
+   "GIS_X_COOR": 294284.47551,
+   "GIS_Y_COOR": 554710.27895
+  },
+  {
+   "UNI_ID": "A0000984",
+   "POLL_DIV_CD": "SKG",
+   "OS_NM": "SK행복충전 신흥충전소",
+   "PRICE": 1205,
+   "DISTANCE": 3705.8,
+   "GIS_X_COOR": 296500.00295,
+   "GIS_Y_COOR": 549178.99533
+  },
+  {
+   "UNI_ID": "A0032948",
+   "POLL_DIV_CD": "SKE",
+   "OS_NM": "대영가스충전소",
+   "PRICE": 1204,
+   "DISTANCE": 3893.0,
+   "GIS_X_COOR": 296974.59686,
+   "GIS_Y_COOR": 552884.01417
+  },
+  {
+   "UNI_ID": "A0033297",
+   "POLL_DIV_CD": "SKG",
+   "OS_NM": "부천IC충전소",
+   "PRICE": 1163,
+   "DISTANCE": 4055.2,
+   "GIS_X_COOR": 291989.85252,
+   "GIS_Y_COOR": 547472.45294
+  },
+  {
+   "UNI_ID": "A0005069",
+   "POLL_DIV_CD": "SKG",
+   "OS_NM": "SK행복충전 서운가스충전소",
+   "PRICE": 1168,
+   "DISTANCE": 4527.8,
+   "GIS_X_COOR": 289983.0,
+   "GIS_Y_COOR": 548332.0
+  },
+  {
+   "UNI_ID": "A0001003",
+   "POLL_DIV_CD": "E1G",
+   "OS_NM": "(주)대흥가스",
+   "PRICE": 1205,
+   "DISTANCE": 4608.9,
+   "GIS_X_COOR": 296961.6,
+   "GIS_Y_COOR": 548293.5
+  }
+ ]
+}

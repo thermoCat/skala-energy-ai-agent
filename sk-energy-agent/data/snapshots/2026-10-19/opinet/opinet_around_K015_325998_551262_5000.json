@@ -1,0 +1,74 @@
+{
+ "collected_at": "2026-10-19T11:38:58",
+ "params": {
+  "prodcd": "K015",
+  "x": "325998",
+  "y": "551262",
+  "radius": "5000"
+ },
+ "OIL": [
+  {
+   "UNI_ID": "A0009794",
+   "POLL_DIV_CD": "GSC",
+   "OS_NM": "복지상일충전소 ㈜서울개인택시복지법인",
+   "PRICE": 1207,
+   "DISTANCE": 1926.2,
+   "GIS_X_COOR": 326843.03842,
+   "GIS_Y_COOR": 549530.49889
+  },
+  {
+   "UNI_ID": "A0006564",
+   "POLL_DIV_CD": "E1G",
+   "OS_NM": "토평LPG충전소",
+   "PRICE": 1179,
+   "DISTANCE": 2290.4,
+   "GIS_X_COOR": 324760.0,
+   "GIS_Y_COOR": 553189.0
+  },
+  {
+   "UNI_ID": "A0010194",
+   "POLL_DIV_CD": "SKE",
+   "OS_NM": "광동LPG충전소",
+   "PRICE": 1192,
+   "DISTANCE": 2339.8,
+   "GIS_X_COOR": 328241.6,
+   "GIS_Y_COOR": 551928.4
+  },
+  {
+   "UNI_ID": "A0009788",
+   "POLL_DIV_CD": "GSC",
+   "OS_NM": "암사충전소",
+   "PRICE": 1208,
+   "DISTANCE": 3025.7,
+   "GIS_X_COOR": 323126.0,
+   "GIS_Y_COOR": 550310.0
+  },
+  {
+   "UNI_ID": "A0006709",
+   "POLL_DIV_CD": "GSC",
+   "OS_NM": "아천충전소",
+   "PRICE": 1182,
+   "DISTANCE": 3634.2,
+   "GIS_X_COOR": 322709.0,
+   "GIS_Y_COOR": 552808.0
+  },
+  {
+   "UNI_ID": "A0009777",
+   "POLL_DIV_CD": "SKE",
+   "OS_NM": "복지둔촌충전소 ㈜서울개인택시복지법인",
+   "PRICE": 1207,
+   "DISTANCE": 4123.2,
+   "GIS_X_COOR": 324757.0,
+   "GIS_Y_COOR": 547330.0
+  },
+  {
+   "UNI_ID": "A0032978",
+   "POLL_DIV_CD": "SKG",
+   "OS_NM": "삼페메가충전소 와이제이픽",
+   "PRICE": 1182,
+   "DISTANCE": 4247.0,
+   "GIS_X_COOR": 328038.21556,
+   "GIS_Y_COOR": 554987.27761
+  }
+ ]
+}

@@ -1,0 +1,110 @@
+{
+ "collected_at": "2026-10-19T11:38:57",
+ "params": {
+  "prodcd": "K015",
+  "x": "321927",
+  "y": "544212",
+  "radius": "5000"
+ },
+ "OIL": [
+  {
+   "UNI_ID": "A0010171",
+   "POLL_DIV_CD": "E1G",
+   "OS_NM": "홍익에너지(주)",
+   "PRICE": 1208,
+   "DISTANCE": 1604.9,
+   "GIS_X_COOR": 320946.7,
+   "GIS_Y_COOR": 545483.9
+  },
+  {
+   "UNI_ID": "A0011829",
+   "POLL_DIV_CD": "SKG",
+   "OS_NM": "SK행복충전 오금가스충전소",
+   "PRICE": 1208,
+   "DISTANCE": 1817.2,
+   "GIS_X_COOR": 323422.00297,
+   "GIS_Y_COOR": 545245.99537
+  },
+  {
+   "UNI_ID": "A0006019",
+   "POLL_DIV_CD": "E1G",
+   "OS_NM": "복지강남충전소 ㈜서울개인택시복지법인",
+   "PRICE": 1207,
+   "DISTANCE": 2411.2,
+   "GIS_X_COOR": 321076.0,
+   "GIS_Y_COOR": 541956.0
+  },
+  {
+   "UNI_ID": "A0010168",
+   "POLL_DIV_CD": "SKG",
+   "OS_NM": "복지잠실충전소 ㈜서울개인택시복지법인",
+   "PRICE": 1207,
+   "DISTANCE": 2577.1,
+   "GIS_X_COOR": 319471.3,
+   "GIS_Y_COOR": 544996.9
+  },
+  {
+   "UNI_ID": "A0033268",
+   "POLL_DIV_CD": "GSC",
+   "OS_NM": "복지송파충전소 ㈜서울개인택시복지법인",
+   "PRICE": 1207,
+   "DISTANCE": 2763.2,
+   "GIS_X_COOR": 323351.53011,
+   "GIS_Y_COOR": 541843.63798
+  },
+  {
+   "UNI_ID": "A0001227",
+   "POLL_DIV_CD": "HDO",
+   "OS_NM": "대치에너지",
+   "PRICE": 1209,
+   "DISTANCE": 3262.3,
+   "GIS_X_COOR": 318680.0,
+   "GIS_Y_COOR": 544528.0
+  },
+  {
+   "UNI_ID": "A0005732",
+   "POLL_DIV_CD": "SKG",
+   "OS_NM": "수정충전소",
+   "PRICE": 1189,
+   "DISTANCE": 3347.7,
+   "GIS_X_COOR": 322867.52271,
+   "GIS_Y_COOR": 540998.73868
+  },
+  {
+   "UNI_ID": "A0033750",
+   "POLL_DIV_CD": "SKE",
+   "OS_NM": "강남세곡충전소 셀프세차장㈜",
+   "PRICE": 1184,
+   "DISTANCE": 3349.6,
+   "GIS_X_COOR": 322120.86079,
+   "GIS_Y_COOR": 540867.46644
+  },
+  {
+   "UNI_ID": "A0001201",
+   "POLL_DIV_CD": "GSC",
+   "OS_NM": "남서울가스(주)",
+   "PRICE": 1209,
+   "DISTANCE": 3474.1,
+   "GIS_X_COOR": 318455.7,
+   "GIS_Y_COOR": 544359.4
+  },
+  {
+   "UNI_ID": "A0004092",
+   "POLL_DIV_CD": "GSC",
+   "OS_NM": "㈜삼표에너지 삼표충전소",
+   "PRICE": 1206,
+   "DISTANCE": 3496.8,
+   "GIS_X_COOR": 324669.0,
+   "GIS_Y_COOR": 546382.0
+  },
+  {
+   "UNI_ID": "A0009777",
+   "POLL_DIV_CD": "SKE",
+   "OS_NM": "복지둔촌충전소 ㈜서울개인택시복지법인",
+   "PRICE": 1207,
+   "DISTANCE": 4210.8,
+   "GIS_X_COOR": 324757.0,
+   "GIS_Y_COOR": 547330.0
+  }
+ ]
+}
