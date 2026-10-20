@@ -47,17 +47,26 @@ async def proxy_chat(req: Request):
 
 
 @app.get("/chat/stream")
-async def proxy_stream(message: str, thread_id: str = "web-demo"):
+async def proxy_stream(req: Request):
+    # 지도 클릭의 station_id·gu·company 도 함께 넘어가도록 쿼리를 통째로 전달
+    params = dict(req.query_params)
+
     async def relay():
         async with httpx.AsyncClient(timeout=None) as client:
-            async with client.stream(
-                "GET", f"{BACKEND}/chat/stream",
-                params={"message": message, "thread_id": thread_id},
-            ) as upstream:
+            async with client.stream("GET", f"{BACKEND}/chat/stream",
+                                     params=params) as upstream:
                 async for chunk in upstream.aiter_bytes():
                     yield chunk
 
     return StreamingResponse(relay(), media_type="text/event-stream")
+
+
+@app.get("/api/{path:path}")
+async def proxy_api(path: str, req: Request):
+    """대시보드 API(/api/...) 중계"""
+    async with httpx.AsyncClient(timeout=30.0) as client:
+        r = await client.get(f"{BACKEND}/api/{path}", params=dict(req.query_params))
+    return JSONResponse(r.json(), status_code=r.status_code)
 
 
 if __name__ == "__main__":

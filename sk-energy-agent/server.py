@@ -16,7 +16,7 @@ from dotenv import load_dotenv
 
 load_dotenv()   # LANGCHAIN_TRACING_V2 / API_KEY / PROJECT — import보다 먼저
 
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException, Query
 from fastapi.responses import StreamingResponse
 from langsmith import traceable
 from langsmith.run_helpers import get_current_run_tree
@@ -219,6 +219,78 @@ async def chat_stream(message: str, thread_id: str = "default", company: str = "
         yield "data: [DONE]\n\n"
 
     return StreamingResponse(gen(), media_type="text/event-stream")
+
+
+# ── 대시보드 API (LLM 없음) — 에이전트와 같은 MCP Tool을 불러 숫자를 맞춘다 ──────────
+
+async def _tool(name: str, args: dict) -> dict:
+    """MCP Tool을 불러 응답을 돌려주는 함수 (Tool이 error 를 돌려주면 404)
+
+    Args:
+        name: Tool 이름
+        args: Tool 입력
+    Returns:
+        Tool 응답 dict
+    Raises:
+        HTTPException: 없는 주유소·자치구 등 Tool이 error 를 돌려줄 때
+    """
+    data = await app.state.deps.mcp.call_tool(name, args)
+    if "error" in data:
+        raise HTTPException(status_code=404, detail=data["error"])
+    return data
+
+
+@app.get("/api/pins")
+async def api_pins(company: str = "SK에너지", brand: str | None = None):
+    """지도 핀 470개와 자치구 색칠 값 (화면을 열 때 1번)"""
+    return await _tool("get_map_pins", {"company": company, "brand": brand})
+
+
+@app.get("/api/stations/resolve")
+async def api_resolve(q: str, brand: str | None = None):
+    """이름으로 주유소 찾기 (검색창) — 같은 이름이 여러 곳이면 ambiguous=true"""
+    return await _tool("resolve_station", {"query": q, "brand": brand})
+
+
+@app.get("/api/stations/{station_id}/card")
+async def api_station_card(station_id: str, company: str = "SK에너지"):
+    """정보 패널 카드 — 자사면 기준 판정·현장 확인 항목, 타사면 공개 정보만"""
+    return await _tool("get_station_card", {"station_id": station_id, "company": company})
+
+
+@app.get("/api/stations/{station_id}/simulate")
+async def api_simulate(station_id: str, fast_add: int = Query(ge=1), kw: int = 100,
+                       company: str = "SK에너지"):
+    """급속 N기 추가 시나리오 숫자 (자사 거점만 — 타사 투자 계산은 하지 않음)"""
+    card = await _tool("get_station_card", {"station_id": station_id, "company": company,
+                                            "with_verdict": False})
+    if not card["is_own"]:
+        raise HTTPException(status_code=403, detail={"message": "타사 거점은 시나리오를 계산하지 않음"})
+    return await _tool("simulate", {"station_id": station_id, "fast_add": fast_add, "kw": kw})
+
+
+@app.get("/api/districts/{gu}")
+async def api_district(gu: str, company: str = "SK에너지"):
+    """자치구 패널 — 5개 연료 수요, 충전 공급, 수소 대기, 자사 거점 목록"""
+    demand = await _tool("get_fuel_demand", {"gu": gu})
+    supply = await _tool("get_ev_supply", {"gu": gu})
+    h2 = await _tool("get_h2_status", {"gu": gu})
+    own = await _tool("search_stations", {"gu": gu, "brand": company})
+    return {"gu": gu, "company": company, "demand": demand, "supply": supply, "h2": h2,
+            "own_stations": own["stations"]}
+
+
+@app.get("/api/clusters/{gu}")
+async def api_cluster(gu: str, company: str = "SK에너지"):
+    """자사 묶음 화면 — 거점별 기준 판정(⚡/유지)·연료 신호·전환 유형·현장 확인 항목"""
+    return await _tool("review_cluster", {"gu": gu, "brand": company})
+
+
+@app.get("/api/criteria")
+async def api_criteria():
+    """판별 기준 임계값·가정값·규칙 버전 (criteria://energy-mix)"""
+    text = await app.state.deps.mcp.read_resource("criteria://energy-mix", server="ops")
+    return json.loads(text)
 
 
 if __name__ == "__main__":
