@@ -1,0 +1,8 @@
+.env
+.venv/
+session.db
+__pycache__/
+*.log
+
+# 강의 베이스코드 설명서 (로컬 참고용, 저장소에 올리지 않음)
+doc/
