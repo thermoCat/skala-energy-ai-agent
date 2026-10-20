@@ -83,8 +83,9 @@ class OllamaLLM:
         return "".join(chunks), usage
 
     # 에너지 메서드용 — qwen3 의 생각 과정 출력은 끄고 답만 받는다 (응답 시간 단축)
-    def _json_call(self, system: str, user: str, schema: dict) -> tuple[str, dict]:
-        return self._chat(system, user, schema=schema, think=False)
+    def _json_call(self, system: str, user: str, schema: dict,
+                   think: bool = False) -> tuple[str, dict]:
+        return self._chat(system, user, schema=schema, think=think)
 
     async def _text_stream(self, system: str, user: str, on_token=None) -> tuple[str, dict]:
         return await self._chat_stream(system, user, on_token=on_token, think=False)

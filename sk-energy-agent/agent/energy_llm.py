@@ -72,7 +72,8 @@ class EnergyQualityMixin:
             (항목별 판별 dict, 사용량)
         """
         system, user, schema = p.judge_prompt(request_type, facts)
-        content, usage = self._json_call(system, user, schema)
+        # 순위 경계(5위) 같은 산수에서 생각 모드가 크게 나았다 (항목 16개 중 3 → 10개 일치, 2~3배 느림)
+        content, usage = self._json_call(system, user, schema, think=True)
         return p.normalize_judgement(content, request_type, facts), usage
 
     @traceable(run_type="llm", name="energy.write")

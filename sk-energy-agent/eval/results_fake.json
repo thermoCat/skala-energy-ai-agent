@@ -16,7 +16,7 @@
  "rows": [
   {
    "name": "풍한주유소 진단",
-   "seconds": 0.37,
+   "seconds": 0.36,
    "kind": "station",
    "kind_ok": true,
    "numbers": 23,
@@ -124,7 +124,7 @@
   },
   {
    "name": "강남구 묶음",
-   "seconds": 0.03,
+   "seconds": 0.04,
    "kind": "district",
    "kind_ok": true,
    "numbers": 13,
@@ -178,7 +178,7 @@
   },
   {
    "name": "금천구 묶음",
-   "seconds": 0.02,
+   "seconds": 0.03,
    "kind": "district",
    "kind_ok": true,
    "numbers": 13,
@@ -250,7 +250,7 @@
   },
   {
    "name": "박미 +2기 (이름)",
-   "seconds": 0.04,
+   "seconds": 0.05,
    "kind": "scenario",
    "kind_ok": true,
    "numbers": 15,
@@ -300,7 +300,7 @@
   },
   {
    "name": "S-OIL 신성주유소",
-   "seconds": 0.02,
+   "seconds": 0.03,
    "kind": "station",
    "kind_ok": true,
    "numbers": 16,
@@ -315,7 +315,7 @@
   },
   {
    "name": "GS 동작구 (재계획)",
-   "seconds": 0.04,
+   "seconds": 0.05,
    "kind": "district",
    "kind_ok": true,
    "numbers": 13,

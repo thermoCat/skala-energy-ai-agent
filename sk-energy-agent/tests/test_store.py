@@ -76,3 +76,13 @@ def test_station_card_has_nearby_fast_fields():
     assert card["fast_1km"] == 10
     assert card["fast_1km_busy_pct"] == 22.2
     assert card["gu_assignment"] == "확정"
+
+
+def test_rank_facts_for_analyst():
+    # 분석 에이전트에게 주는 25구 순위 (1위 = 가장 심한 쪽) — 기준 판정 값은 아님
+    dongdaemun = indicators.fuel_demand(SNAPSHOT, "동대문구")["fuels"]
+    assert dongdaemun["전기"]["growth_rank"] == 1 and dongdaemun["경유"]["decline_rank"] == 24
+    assert indicators.ev_supply(SNAPSHOT, "동대문구")["density_rank"] == 2
+    gangnam = indicators.ev_supply(SNAPSHOT, "강남구")
+    assert gangnam["density_rank"] == 1
+    assert indicators.fuel_demand(SNAPSHOT, "강남구")["fuels"]["전기"]["growth_rank"] == 21

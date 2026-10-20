@@ -25,13 +25,15 @@ def _add_district(facts: FactList, demand: dict, supply: dict, h2: dict) -> None
         facts.add("ev_growth_pct", f"{gu} 전기차 1년 증감률 ({months})", ev["rate_pct"], "%", src)
         facts.add("seoul_ev_growth_pct", f"서울 전기차 1년 증감률 ({months})",
                   ev["seoul_rate_pct"], "%", src)
+        facts.add("ev_growth_rank", f"{gu} 전기차 증가율 순위 ({n}구 중 1위 = 가장 빠르게 증가)",
+                  ev["growth_rank"], "위", src, gu_count=n)
         for fuel, key in (("경유", "diesel"), ("LPG", "lpg")):
             f = demand["fuels"][fuel]
             facts.add(f"{key}_rate_pct", f"{gu} {fuel}차 1년 증감률 ({months})",
                       f["rate_pct"], "%", src)
             facts.add(f"seoul_{key}_rate_pct", f"서울 {fuel}차 1년 증감률 ({months})",
                       f["seoul_rate_pct"], "%", src)
-            facts.add(f"{key}_decline_rank", f"{gu} {fuel} 감소율 순위 ({n}구 중 많이 줄어든 순)",
+            facts.add(f"{key}_decline_rank", f"{gu} {fuel} 감소율 순위 ({n}구 중 1위 = 가장 많이 감소)",
                       f["decline_rank"], "위", src, gu_count=n)
     if _ok(supply):
         gu, src = supply["gu"], supply["source"]
@@ -39,6 +41,8 @@ def _add_district(facts: FactList, demand: dict, supply: dict, h2: dict) -> None
                   "ID", src)
         facts.add("seoul_fast_per_10k_ev", "서울 전기차 1만 대당 급속 ID",
                   supply["seoul_fast_per_10k_ev"], "ID", src)
+        facts.add("fast_density_rank", f"{gu} 전기차 1만 대당 급속 순위 (25구 중 1위 = 가장 부족)",
+                  supply["density_rank"], "위", src)
         if supply["fast_busy_pct"] is not None:
             facts.add("fast_busy_pct", f"{gu} 급속 충전 중 비율 (한 시점)",
                       supply["fast_busy_pct"], "%", src)

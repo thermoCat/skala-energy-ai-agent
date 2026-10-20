@@ -102,8 +102,9 @@ def fuel_demand(snap: Snapshot, gu: str) -> dict:
             "change": after - before,
             "rate_pct": round(change_rate(before, after), 1),
             "seoul_rate_pct": round(seoul_rate, 1),
-            # 1 = 25구 중 가장 많이 감소 (동점은 같은 순위)
+            # 1 = 25구 중 가장 많이 감소 / 가장 빠르게 증가 (동점은 같은 순위)
             "decline_rank": int(all_rates.rank(method="min")[gu]),
+            "growth_rank": int(all_rates.rank(ascending=False, method="min")[gu]),
         }
     return {"gu": gu, "months": [base, cur], "gu_count": int(snap.monthly["자치구"].nunique()),
             "fuels": fuels}
@@ -197,6 +198,8 @@ def ev_supply(snap: Snapshot, gu: str) -> dict:
         "slow_ids": int((~mine["fast"]).sum()),
         "fast_busy_pct": busy_pct(fast),
         "fast_per_10k_ev": round(float(fast_per_10k_ev_by_gu(snap)[gu]), 1),
+        # 1 = 25구 중 전기차 대비 급속이 가장 적음 (화면 값과 같은 소수 첫째 자리로 순위)
+        "density_rank": int(fast_per_10k_ev_by_gu(snap).round(1).rank(method="min")[gu]),
         "seoul_fast_per_10k_ev": round(seoul_density, 1),
     }
 

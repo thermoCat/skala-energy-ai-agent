@@ -48,7 +48,8 @@ class OpenAILLM:
         return content, usage
 
     # 에너지 메서드용 — JSON 모드는 스키마를 강제하지 않아 형식은 energy_prompts 가 다듬는다
-    def _json_call(self, system: str, user: str, schema: dict) -> tuple[str, dict]:
+    def _json_call(self, system: str, user: str, schema: dict,
+                   think: bool = False) -> tuple[str, dict]:
         return self._chat(system, user, json_mode=True)
 
     async def _text_stream(self, system: str, user: str, on_token=None) -> tuple[str, dict]:
