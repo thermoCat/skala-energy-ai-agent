@@ -94,14 +94,19 @@ def fuel_demand(snap: Snapshot, gu: str) -> dict:
     for fuel in FUELS:
         before, after = _count(snap, base, fuel, gu), _count(snap, cur, fuel, gu)
         seoul_rate = change_rate(_count(snap, base, fuel), _count(snap, cur, fuel))
+        all_rates = change_rate(fuel_count_by_gu(snap, fuel, base),
+                                fuel_count_by_gu(snap, fuel, cur)).round(1)
         fuels[fuel] = {
             "before": before,
             "after": after,
             "change": after - before,
             "rate_pct": round(change_rate(before, after), 1),
             "seoul_rate_pct": round(seoul_rate, 1),
+            # 1 = 25구 중 가장 많이 감소 (동점은 같은 순위)
+            "decline_rank": int(all_rates.rank(method="min")[gu]),
         }
-    return {"gu": gu, "months": [base, cur], "fuels": fuels}
+    return {"gu": gu, "months": [base, cur], "gu_count": int(snap.monthly["자치구"].nunique()),
+            "fuels": fuels}
 
 
 def busy_pct(fast: pd.DataFrame) -> float | None:

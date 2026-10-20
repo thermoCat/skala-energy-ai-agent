@@ -49,6 +49,10 @@ CONVERSION_TYPES = (
 GATED_ITEMS = {
     "ev_bottleneck": "전기 병목",
     "diesel_idle": "경유 유휴 위험",
+    "lpg_idle": "LPG 유휴 위험",
+    "fast_candidates": "묶음 급속 후보",
+    "ev_bottleneck_before": "급속 추가 전 전기 병목",
+    "ev_bottleneck_after": "급속 추가 후 전기 병목",
 }
 
 # 모든 진단 카드에 붙는 현장 확인 항목

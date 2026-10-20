@@ -1,4 +1,6 @@
 """MCP Tool·대시보드가 그대로 내보내는 응답을 조립하는 함수 모음 (LLM 없음)"""
+import math
+
 from energy import criteria
 from energy.indicators import FACILITY_NAMES, session_minutes, station_card
 from energy.rules.cluster import review_cluster
@@ -121,6 +123,32 @@ def map_pins(snap: Snapshot, company: str, brand: str | None = None) -> dict:
         "h2_wait": int(h2["sum"].get(gu, 0)),
     } for gu, row in table.iterrows()}
     return {"company": company, "pins": pins, "districts": districts}
+
+
+def nearby_districts(snap: Snapshot, gu: str, brand: str) -> list[dict]:
+    """한 자치구에서 가까운 순으로 다른 자치구와 그 회사 거점 수를 반환하는 함수
+
+    자치구 중심은 그 구 주유소·LPG 거점 좌표의 평균으로 잡는다.
+
+    Args:
+        snap: 스냅샷
+        gu: 기준 자치구
+        brand: 회사 이름
+    Returns:
+        {"gu", "distance_km", "own_count"} 목록 (가까운 순, 기준 자치구 제외)
+    """
+    st = snap.stations
+    centers = st.groupby("자치구")[["lat", "lng"]].mean()
+    own = st[st["brand"] == brand].groupby("자치구").size()
+    lat0, lng0 = centers.loc[gu]
+    km_lat = 111.0
+    km_lng = 111.0 * math.cos(math.radians(lat0))
+    rows = []
+    for other, (lat, lng) in centers.drop(index=gu).iterrows():
+        distance = math.hypot((lat - lat0) * km_lat, (lng - lng0) * km_lng)
+        rows.append({"gu": other, "distance_km": round(distance, 1),
+                     "own_count": int(own.get(other, 0))})
+    return sorted(rows, key=lambda r: r["distance_km"])
 
 
 def criteria_resource(snap: Snapshot) -> dict:

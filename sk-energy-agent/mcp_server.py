@@ -22,8 +22,8 @@ from energy.rules.names import find_stations
 from energy.rules.score import district_baseline
 from energy.rules.simulate import simulate_fast_add
 from energy.store import load_snapshot
-from energy.views import (criteria_resource, h2_status, map_pins, search_stations as _search,
-                          station_card_view)
+from energy.views import (criteria_resource, h2_status, map_pins, nearby_districts as _nearby,
+                          search_stations as _search, station_card_view)
 
 mcp = FastMCP(name="capstone-all-total-ops")
 
@@ -97,6 +97,15 @@ def search_stations(gu: str | None = None, brand: str | None = None,
 def resolve_station(query: str, brand: str | None = None) -> dict:
     """주유소 이름으로 후보를 찾습니다. 같은 이름이 2곳 이상이면 ambiguous=true 로 되물어야 합니다."""
     return _with_meta(find_stations(SNAPSHOT.stations, query, brand), STATIONS_SOURCE)
+
+
+@mcp.tool()
+def nearby_districts(gu: str, brand: str = "SK에너지") -> dict:
+    """가까운 자치구 순서와 각 구의 회사 거점 수를 반환합니다. 거점이 없는 구를 물었을 때 재계획용입니다."""
+    if not _known_gu(gu):
+        return _error("없는 자치구", gu=gu)
+    return _with_meta({"gu": gu, "brand": brand, "districts": _nearby(SNAPSHOT, gu, brand)},
+                      STATIONS_SOURCE)
 
 
 @mcp.tool()

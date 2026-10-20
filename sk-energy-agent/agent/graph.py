@@ -19,8 +19,7 @@ from langgraph.config import get_stream_writer
 from langgraph.graph import END, StateGraph
 from langsmith import traceable
 
-from energy import criteria
-
+from . import energy_nodes as energy
 from .deps import SupervisorDeps
 from .retry import with_retry
 
@@ -68,17 +67,29 @@ class AgentState(TypedDict, total=False):
     last_prompt: str
     cost_usd: float
     events: list[dict]
-    # 에너지 — 주유소 핀 클릭 흐름
+    # 에너지 허브 진단
     company: str                 # 로그인 회사 (예: "SK에너지")
     station_id: str | None       # 지도 핀 클릭 시 프론트가 채움
-    gu: str | None
+    gu: str | None               # 지도 자치구 클릭 시 프론트가 채움
+    request_type: str            # station | district | scenario
+    fast_add: int | None         # 시나리오: 더할 급속 수
+    kw: int
+    station_name: str | None     # 문장 속 주유소 이름 (이름 찾기용)
+    brand_hint: str | None
+    candidates: list[dict]       # 같은 이름 주유소 후보 (되묻기용)
     is_own: bool                 # 자사 거점 여부 (타사면 판별하지 않음)
-    tool_results: dict           # Tool 이름 → 응답 (검증 대조용 원본)
+    tool_results: dict           # Tool 응답 원본 (검증 대조용)
+    errors: list[dict]           # 조회에 실패한 Tool
+    own_station_count: int
+    replan_count: int
+    replanned_from: str | None
     facts: list[dict]            # 번호 붙은 사실 [F1..Fn]
     llm_verdicts: dict           # 분석 에이전트 판별
     baseline: dict               # 코드 기준 판정 (게이트 전용, 분석 에이전트에게 주지 않음)
     verdicts: dict               # 확정 판정 (gate 노드만 씀)
     gate_corrections: list[dict]
+    validation: dict             # {"passed", "issues"}
+    rewrite_count: int
 
 
 def _cost(state: AgentState, usage: dict) -> float:
@@ -88,11 +99,11 @@ def _cost(state: AgentState, usage: dict) -> float:
 @traceable(name="route_node")
 async def route_node(state: AgentState, deps: SupervisorDeps) -> dict:
     """Wave 5 — 모든 쿼리가 무거운 파이프라인을 탈 필요는 없다."""
-    if state.get("station_id"):
-        # 지도 핀 클릭은 대상이 이미 정해져 있어 LLM 분류 없이 코드로 보낸다
-        event = {"type": "RouteDecided", "route": "station",
-                 "station_id": state["station_id"]}
-        return {"route": "station", "events": state.get("events", []) + [event]}
+    # 에너지 프롬프트가 아직 없는 백엔드(ollama·openai)는 기존 경로만 탄다
+    if hasattr(deps.fast_llm, "classify_energy"):
+        routed = energy.energy_route(state, deps)
+        if routed is not None:
+            return routed
     result, usage = deps.fast_llm.route(state["query"])
     event = {"type": "RouteDecided", "route": result["route"]}
     return {"route": result["route"], "needs_analysis": result["needs_analysis"],
@@ -308,169 +319,14 @@ async def validate_node(state: AgentState, deps: SupervisorDeps) -> dict:
 
 @traceable(name="finalize_node")
 async def finalize_node(state: AgentState, deps: SupervisorDeps) -> dict:
-    pipeline = "station-v1" if state.get("route") == "station" else "incident-v2"
+    pipeline = "energy-v1" if state.get("request_type") else "incident-v2"
     return {"final": state["draft"],
             "events": state["events"] + [{"type": "Finalize", "pipeline": pipeline}]}
 
 
-# ── 에너지: 주유소 핀 클릭 흐름 ────────────────────────────────────────
-# 조회(코드) → 분석 에이전트 판별(LLM) → 권위 게이트(코드 대조·교정) → 작성(LLM)
-
-
-def _fact(facts: list[dict], key: str, label: str, value, unit: str, source: str) -> None:
-    facts.append({"id": f"F{len(facts) + 1}", "key": key, "label": label,
-                  "value": value, "unit": unit, "source": source})
-
-
-def build_station_facts(results: dict) -> list[dict]:
-    """Tool 응답에서 번호 붙은 사실 목록 [F1..Fn]을 만드는 함수
-
-    Args:
-        results: Tool 이름 → 응답 dict (실패한 Tool은 error 포함)
-    Returns:
-        {"id", "key", "label", "value", "unit", "source"} 목록. 실패한 Tool의 사실은 빠짐
-    """
-    facts: list[dict] = []
-    card = results.get("get_station_card", {})
-    if "error" not in card:
-        _fact(facts, "station", "거점",
-              f"{card['gu']} · {card['brand']} {card['name']} ({card['facility']})",
-              "", card["source"])
-        _fact(facts, "in_station_fast_ids", "주유소 안 급속충전기 ID (반경 150m)",
-              card["in_station_fast_ids"], "개", card["source"])
-    demand = results.get("get_fuel_demand", {})
-    if "error" not in demand:
-        ev, diesel = demand["fuels"]["전기"], demand["fuels"]["경유"]
-        months = "→".join(demand["months"])
-        _fact(facts, "ev_growth_pct", f"{demand['gu']} 전기차 1년 증감률 ({months})",
-              ev["rate_pct"], "%", demand["source"])
-        _fact(facts, "seoul_ev_growth_pct", f"서울 전기차 1년 증감률 ({months})",
-              ev["seoul_rate_pct"], "%", demand["source"])
-        _fact(facts, "diesel_rate_pct", f"{demand['gu']} 경유차 1년 증감률 ({months})",
-              diesel["rate_pct"], "%", demand["source"])
-        _fact(facts, "seoul_diesel_rate_pct", f"서울 경유차 1년 증감률 ({months})",
-              diesel["seoul_rate_pct"], "%", demand["source"])
-    supply = results.get("get_ev_supply", {})
-    if "error" not in supply:
-        _fact(facts, "fast_per_10k_ev", f"{supply['gu']} 전기차 1만 대당 급속 ID",
-              supply["fast_per_10k_ev"], "ID", supply["source"])
-        _fact(facts, "seoul_fast_per_10k_ev", "서울 전기차 1만 대당 급속 ID",
-              supply["seoul_fast_per_10k_ev"], "ID", supply["source"])
-    return facts
-
-
-async def _call_tool_safely(deps: SupervisorDeps, name: str, args: dict) -> dict:
-    # 한 Tool이 예외로 죽어도 나머지 사실로 답하도록 error dict로 바꿔 돌려준다 (장애 격리)
-    try:
-        data, _ = await with_retry(deps.mcp.call_tool, name, args)
-        return data
-    except Exception as exc:
-        return {"error": {"message": type(exc).__name__}}
-
-
-@traceable(name="station_research_node")
-async def station_research_node(state: AgentState, deps: SupervisorDeps) -> dict:
-    """주유소 카드를 받고 그 자치구의 수요·공급·기준 판정을 병렬로 조회하는 노드"""
-    events = list(state["events"])
-    # 분석 에이전트가 볼 사실의 원천이므로 기준 판정은 빼고 받는다 (기준은 게이트만)
-    card = await _call_tool_safely(deps, "get_station_card",
-                                   {"station_id": state["station_id"],
-                                    "company": state.get("company", "SK에너지"),
-                                    "with_verdict": False})
-    events.append({"type": "TaskCompleted", "source": "get_station_card",
-                   "target": state["station_id"], "ok": "error" not in card})
-    if "error" in card:
-        return {"tool_results": {"get_station_card": card}, "facts": [], "is_own": False,
-                "events": events}
-
-    gu = card["gu"]
-    is_own = card["is_own"]
-    names = ["get_fuel_demand", "get_ev_supply"]
-    if is_own:   # 타사 거점은 판별하지 않으므로 기준 판정도 부르지 않는다
-        names.append("score_district")
-    started = time.perf_counter()
-    responses = await asyncio.gather(
-        *(_call_tool_safely(deps, n, {"gu": gu}) for n in names))
-    elapsed = round(time.perf_counter() - started, 3)
-    results = {"get_station_card": card, **dict(zip(names, responses))}
-    for name in names:
-        events.append({"type": "TaskCompleted", "source": name, "target": gu,
-                       "ok": "error" not in results[name]})
-
-    baseline = results.pop("score_district", {})
-    facts = build_station_facts(results)
-    events.append({"type": "FactsCollected", "count": len(facts), "is_own": is_own})
-    return {"gu": gu, "is_own": is_own, "tool_results": results, "facts": facts,
-            "baseline": baseline, "parallel_elapsed": elapsed, "events": events}
-
-
-@traceable(name="analyst_node")
-async def analyst_node(state: AgentState, deps: SupervisorDeps) -> dict:
-    """분석 에이전트 — 사실 [F]만 보고 판별하는 노드 (기준 판정은 넘기지 않음)"""
-    verdicts, usage = deps.quality_llm.judge_station(state["facts"])
-    summary = {item: v.get("value") for item, v in verdicts.items()}
-    return {"llm_verdicts": verdicts, "cost_usd": _cost(state, usage),
-            "events": state["events"] + [{"type": "Judged", "by": "analyst", **summary}]}
-
-
-@traceable(name="authority_gate_node")
-async def authority_gate_node(state: AgentState, deps: SupervisorDeps) -> dict:
-    """권위 게이트 — 분석 에이전트 판별을 코드 기준과 대조해 확정 판정을 만드는 노드
-
-    기준과 다르면 코드 기준으로 교정하고 GateCorrected 이벤트를 남긴다.
-    판별·기준·교정 여부는 decision_log 에 저장한다.
-    """
-    llm, baseline = state.get("llm_verdicts", {}), state.get("baseline", {})
-    events = list(state["events"])
-    verdicts, corrections = {}, []
-    for n, item in enumerate(criteria.GATED_ITEMS, start=1):
-        llm_value = llm.get(item, {}).get("value")
-        base_value = baseline.get(item)
-        final_value = llm_value
-        if base_value is not None and llm_value != base_value:
-            final_value = base_value
-            corrections.append({"item": item, "llm": llm_value, "baseline": base_value})
-            events.append({"type": "GateCorrected", "item": item,
-                           "label": criteria.GATED_ITEMS[item],
-                           "llm": llm_value, "baseline": base_value})
-        verdicts[item] = {"id": f"J{n}", "value": final_value,
-                          "facts": llm.get(item, {}).get("facts", [])}
-
-    snapshot = state["tool_results"]["get_station_card"].get("snapshot", "")
-    deps.session_store.log_decision(
-        company=state.get("company", "SK에너지"), scope_type="station",
-        scope_id=state["station_id"], snapshot=snapshot,
-        rule_version=baseline.get("rule_version", ""), llm_verdict=llm,
-        baseline=baseline, verdict=verdicts, corrections=corrections)
-    events.append({"type": "Judged", "by": "gate", "corrected": len(corrections),
-                   **{item: v["value"] for item, v in verdicts.items()}})
-    return {"verdicts": verdicts, "gate_corrections": corrections, "events": events}
-
-
-@traceable(name="station_write_node")
-async def station_write_node(state: AgentState, deps: SupervisorDeps) -> dict:
-    """작성 에이전트 — 사실과 확정 판정으로 답변을 쓰는 노드 (타사면 공개 정보만)"""
-    if not state.get("facts"):
-        draft = "해당 주유소 번호를 찾지 못했습니다. 지도에서 주유소를 다시 선택해 주세요."
-        return {"draft": draft,
-                "events": state["events"] + [{"type": "DraftWritten", "length": len(draft)}]}
-    writer = get_stream_writer()
-    draft, usage = await deps.quality_llm.write_station(
-        state["facts"], state.get("verdicts", {}), state.get("gate_corrections", []),
-        state.get("is_own", False), criteria.SITE_CHECK_ITEMS, criteria.GATED_ITEMS,
-        on_token=lambda piece: writer({"type": "AnswerToken", "attempt": 1, "delta": piece}))
-    return {"draft": draft, "cost_usd": _cost(state, usage),
-            "events": state["events"] + [{"type": "DraftWritten", "attempt": 1,
-                                          "length": len(draft)}]}
-
-
 def _after_route(state: AgentState) -> str:
-    return {"chat": "chat_answer", "station": "station_research"}.get(state["route"], "plan")
-
-
-def _after_station_research(state: AgentState) -> str:
-    # 타사 거점이나 없는 번호는 판별하지 않고 바로 작성 (타사 투자 판별 금지)
-    return "analyst" if state.get("is_own") and state.get("facts") else "station_write"
+    return {"chat": "chat_answer", "energy": "energy_research",
+            "resolve": "resolve"}.get(state["route"], "plan")
 
 
 def _after_replan_check(state: AgentState) -> str:
@@ -495,20 +351,31 @@ def build_graph(deps: SupervisorDeps):
     g.add_node("write", node(write_node))
     g.add_node("validate", node(validate_node))
     g.add_node("finalize", node(finalize_node))
-    g.add_node("station_research", node(station_research_node))
-    g.add_node("analyst", node(analyst_node))
-    g.add_node("authority_gate", node(authority_gate_node))
-    g.add_node("station_write", node(station_write_node))
+    g.add_node("resolve", node(energy.resolve_node))
+    g.add_node("ask_user", node(energy.ask_user_node))
+    g.add_node("energy_research", node(energy.energy_research_node))
+    g.add_node("replan", node(energy.replan_node))
+    g.add_node("analyst", node(energy.analyst_node))
+    g.add_node("authority_gate", node(energy.authority_gate_node))
+    g.add_node("energy_write", node(energy.energy_write_node))
+    g.add_node("energy_validate", node(energy.energy_validate_node))
 
     g.set_entry_point("route")
     g.add_conditional_edges("route", _after_route,
                             {"chat_answer": "chat_answer", "plan": "plan",
-                             "station_research": "station_research"})
-    g.add_conditional_edges("station_research", _after_station_research,
-                            {"analyst": "analyst", "station_write": "station_write"})
+                             "resolve": "resolve", "energy_research": "energy_research"})
+    g.add_conditional_edges("resolve", energy.after_resolve,
+                            {"energy_research": "energy_research", "ask_user": "ask_user"})
+    g.add_edge("ask_user", END)
+    g.add_conditional_edges("energy_research", energy.after_research,
+                            {"replan": "replan", "analyst": "analyst",
+                             "energy_write": "energy_write"})
+    g.add_edge("replan", "energy_research")
     g.add_edge("analyst", "authority_gate")
-    g.add_edge("authority_gate", "station_write")
-    g.add_edge("station_write", "finalize")
+    g.add_edge("authority_gate", "energy_write")
+    g.add_edge("energy_write", "energy_validate")
+    g.add_conditional_edges("energy_validate", energy.after_validate,
+                            {"energy_write": "energy_write", "finalize": "finalize"})
     g.add_edge("chat_answer", END)
     g.add_edge("plan", "gate")
     g.add_edge("gate", "research")
