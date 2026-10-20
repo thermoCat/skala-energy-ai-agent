@@ -123,3 +123,117 @@ class QualityLLM(FakeLLM):
         if on_token is not None:
             on_token(draft)
         return draft, self._usage(query + str(feedback), draft)
+
+    # ── 에너지 도메인 (주유소 핀 클릭 흐름) ──────────────────────────────
+
+    @traceable(run_type="llm", name="quality_llm.judge_station")
+    def judge_station(self, facts: list[dict]) -> tuple[dict, dict]:
+        """분석 에이전트 판별(fake) — 사실 [F]만 보고 전기 병목·경유 유휴 위험을 판별하는 함수
+
+        의도적 오판 1건: 경유는 서울 평균과 비교하지 않고 "줄었으면 유휴 위험"으로 판별한다.
+        동대문구(-4.8%, 서울 -6.6%)에서 권위 게이트가 이를 교정하는 장면이 매번 재현된다.
+
+        Args:
+            facts: 번호가 붙은 사실 목록 ({"id", "key", "value", ...})
+        Returns:
+            (항목별 {"value", "facts", "reason"} 판별 dict, 사용량)
+        """
+        by_key = {f["key"]: f for f in facts}
+
+        def value(key):
+            return by_key[key]["value"] if key in by_key else None
+
+        def ids(*keys):
+            return [by_key[k]["id"] for k in keys if k in by_key]
+
+        growth, seoul_growth = value("ev_growth_pct"), value("seoul_ev_growth_pct")
+        density, seoul_density = value("fast_per_10k_ev"), value("seoul_fast_per_10k_ev")
+        diesel = value("diesel_rate_pct")
+
+        ev_known = None not in (growth, seoul_growth, density, seoul_density)
+        ev = ev_known and growth >= seoul_growth and density <= seoul_density
+        result = {
+            "ev_bottleneck": {
+                "value": ev if ev_known else None,
+                "facts": ids("ev_growth_pct", "seoul_ev_growth_pct",
+                             "fast_per_10k_ev", "seoul_fast_per_10k_ev"),
+                "reason": "전기차 증가가 서울보다 빠르고 급속 밀도는 서울보다 낮음"
+                          if ev else "증가 속도나 급속 밀도가 서울 평균보다 나쁘지 않음",
+            },
+            "diesel_idle": {
+                "value": diesel < 0 if diesel is not None else None,
+                "facts": ids("diesel_rate_pct"),
+                "reason": "경유 차량이 1년 사이 줄었음",
+            },
+        }
+        return result, self._usage(str(facts), str(result))
+
+    @traceable(run_type="llm", name="quality_llm.write_station")
+    async def write_station(self, facts: list[dict], verdicts: dict,
+                            corrections: list[dict], is_own: bool,
+                            site_checks: tuple[str, ...], item_labels: dict,
+                            on_token=None) -> tuple[str, dict]:
+        """작성 에이전트(fake) — 사실 [F]와 확정 판정 [J]로 주유소 답변을 쓰는 함수
+
+        Args:
+            facts: 번호가 붙은 사실 목록
+            verdicts: 게이트 확정 판정 (항목 → {"id", "value"})
+            corrections: 게이트가 교정한 항목 목록
+            is_own: 자사 거점 여부 (타사면 공개 정보만)
+            site_checks: 현장 확인 항목
+            item_labels: 판정 항목 키 → 화면 이름
+            on_token: 토큰 스트리밍 콜백
+        Returns:
+            (답변 문자열, 사용량)
+        """
+        by_key = {f["key"]: f for f in facts}
+
+        def cite(key, fmt="{}"):
+            if key not in by_key:
+                return "데이터 없음"
+            return fmt.format(by_key[key]["value"]) + f"[{by_key[key]['id']}]"
+
+        station = by_key["station"]["value"] if "station" in by_key else "주유소"
+        lines = [f"[{station}]"]
+        ev_line = (f"전기차 1년 {cite('ev_growth_pct', '{:+.1f}%')} "
+                   f"(서울 {cite('seoul_ev_growth_pct', '{:+.1f}%')}), "
+                   f"전기차 1만 대당 급속 ID {cite('fast_per_10k_ev', '{:.1f}')} "
+                   f"(서울 {cite('seoul_fast_per_10k_ev', '{:.1f}')})")
+
+        if not is_own:
+            lines += [
+                "공개 정보입니다.",
+                f"- 주유소 안 급속충전기 {cite('in_station_fast_ids', '{}개')}",
+                f"- 자치구 {ev_line}",
+                "타사 거점이라 투자 판별은 하지 않습니다.",
+            ]
+        else:
+            ev = verdicts.get("ev_bottleneck", {})
+            diesel = verdicts.get("diesel_idle", {})
+            ev_text = {True: "전기 병목 자치구입니다", False: "전기 병목 자치구가 아닙니다"}
+            diesel_text = {True: "서울 평균보다 더 줄어 유휴 위험 표시 대상입니다",
+                           False: "서울 평균보다 덜 줄어 유휴 위험이 아닙니다"}
+            lines += [
+                "확정 판정 기준 진단입니다.",
+                f"1) 전기: {ev_line} → "
+                f"{ev_text.get(ev.get('value'), '판별 불가(데이터 없음)')}[{ev.get('id', 'J?')}].",
+                f"2) 경유: 1년 {cite('diesel_rate_pct', '{:+.1f}%')} "
+                f"(서울 {cite('seoul_diesel_rate_pct', '{:+.1f}%')}) → "
+                f"{diesel_text.get(diesel.get('value'), '판별 불가(데이터 없음)')}"
+                f"[{diesel.get('id', 'J?')}].",
+                f"3) 이 주유소: 주유소 안 급속충전기 {cite('in_station_fast_ids', '{}개')}. "
+                "반경 1km 급속 비교로 정하는 급속 후보 여부는 아직 판별하지 않았습니다.",
+            ]
+            for c in corrections:
+                label = item_labels.get(c["item"], c["item"])
+                yes_no = lambda v: {True: "예", False: "아니오"}.get(v, "판별 없음")
+                lines.append(f"※ 게이트 교정: 분석 에이전트 판별 '{label}: "
+                             f"{yes_no(c['llm'])}' → 기준에 따라 "
+                             f"'{yes_no(c['baseline'])}'로 바로잡았습니다.")
+            lines.append("현장 확인 항목: " + " · ".join(site_checks))
+            lines.append("이 답변은 투자 결정이 아니라 진단입니다. 결정은 담당자가 합니다.")
+
+        draft = "\n".join(lines)
+        if on_token is not None:
+            on_token(draft)
+        return draft, self._usage(str(facts) + str(verdicts), draft)

@@ -14,3 +14,6 @@ pydantic>=2.0
 pandas>=2.0
 numpy>=1.26
 openpyxl>=3.1
+
+# 테스트 (실데이터 스냅샷 픽스처)
+pytest>=8.0

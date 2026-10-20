@@ -16,9 +16,61 @@ from pathlib import Path
 from fastmcp import FastMCP
 from pydantic import BaseModel, Field
 
+from energy.indicators import ev_supply, fuel_demand, station_card
+from energy.rules.score import district_baseline
+from energy.store import load_snapshot
+
 mcp = FastMCP(name="capstone-all-total-ops")
 
 DATA_DIR = Path(__file__).parent / "data"
+
+# 스냅샷은 서버 시작 때 1번만 로드 — 요청마다 CSV를 읽으면 응답이 느려진다
+SNAPSHOT = load_snapshot()
+
+
+def _with_meta(payload: dict, source: str) -> dict:
+    return {**payload, "snapshot": SNAPSHOT.name, "source": source}
+
+
+def _error(message: str, **detail) -> dict:
+    # 예외를 던지지 않고 error 로 돌려줌 — 한 Tool 실패가 전체 답변을 멈추지 않게 (장애 격리)
+    return {"error": {"message": message, **detail}, "snapshot": SNAPSHOT.name}
+
+
+@mcp.tool()
+def get_station_card(station_id: str) -> dict:
+    """주유소 번호로 거점 기본 정보(상호·회사·시설 종류·자치구·주유소 안 충전기)를 반환합니다."""
+    card = station_card(SNAPSHOT, station_id)
+    if card is None:
+        return _error("없는 주유소 번호", station_id=station_id)
+    return _with_meta(card, "오피넷 반경 검색 + 환경공단 충전기 (seoul_stations.csv)")
+
+
+@mcp.tool()
+def get_fuel_demand(gu: str) -> dict:
+    """자치구의 5개 연료 등록 대수와 1년 증감률(서울 전체 증감률 포함)을 반환합니다."""
+    try:
+        return _with_meta(fuel_demand(SNAPSHOT, gu), "서울시 OA-15640 자치구별 연료별 등록현황")
+    except (KeyError, ZeroDivisionError):
+        return _error("없는 자치구", gu=gu, fuel="all")
+
+
+@mcp.tool()
+def get_ev_supply(gu: str) -> dict:
+    """자치구의 급속·완속 충전기 ID 수, 급속 충전 중 비율, 전기차 1만 대당 급속 ID를 반환합니다."""
+    try:
+        return _with_meta(ev_supply(SNAPSHOT, gu), "환경공단 충전기 API (seoul_fuel_balance.csv)")
+    except KeyError:
+        return _error("없는 자치구", gu=gu, fuel="전기")
+
+
+@mcp.tool()
+def score_district(gu: str) -> dict:
+    """자치구 기준 판정(전기 병목·경유 유휴 위험)을 반환합니다. 권위 게이트 전용입니다."""
+    try:
+        return _with_meta(district_baseline(SNAPSHOT, gu), "energy/rules/score.py")
+    except KeyError:
+        return _error("없는 자치구", gu=gu)
 
 
 class SystemStatus(BaseModel):

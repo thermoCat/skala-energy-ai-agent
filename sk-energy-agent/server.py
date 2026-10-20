@@ -35,6 +35,28 @@ CREATION_COUNT = 0   # Wave 1 — 프로세스 내 Agent 번들 생성 횟수 (�
 class ChatRequest(BaseModel):   # Wave 1 — Pydantic 요청 검증
     message: str
     thread_id: str = "default"
+    company: str = "SK에너지"
+    station_id: str | None = None   # 지도 핀 클릭 시 프론트가 채움 (동명 주유소 오인 방지)
+    gu: str | None = None
+
+
+def _initial_state(message: str, thread_id: str, history: list[dict], company: str,
+                   station_id: str | None, gu: str | None) -> dict:
+    """그래프 첫 상태를 만드는 함수
+
+    Args:
+        message: 사용자 질문
+        thread_id: 대화 id
+        history: 이전 대화
+        company: 로그인 회사
+        station_id: 지도에서 고른 주유소 번호 (없으면 None)
+        gu: 지도에서 고른 자치구 (없으면 None)
+    Returns:
+        그래프 입력 dict
+    """
+    return {"query": message, "thread_id": thread_id, "history": history,
+            "company": company, "station_id": station_id, "gu": gu,
+            "events": [], "cost_usd": 0.0}
 
 
 def _build_llms():
@@ -63,7 +85,7 @@ def _build_llms():
 async def lifespan(app: FastAPI):
     global CREATION_COUNT
     CREATION_COUNT += 1
-    mcp = MCPClient()
+    mcp = MCPClient(flaky_first_tool_call=False)   # 베이스 Wave 9 데모용 강제 실패는 끔
     await mcp.start()   # Wave 2 — MCP subprocess는 서버 수명 동안 딱 1개
     backend, fast_llm, quality_llm = _build_llms()
     app.state.llm_backend = backend
@@ -114,6 +136,8 @@ def _metadata(result: dict, run_id: str | None) -> dict:
         "retry_count": result.get("retry_count", 0),
         "parallel_elapsed": result.get("parallel_elapsed"),
         "validation_attempts": result.get("validation_attempts", 0),
+        "station_id": result.get("station_id"),
+        "gate_corrections": len(result.get("gate_corrections", [])),
         "cost_usd": result.get("cost_usd", 0.0),
         "llm_backend": app.state.llm_backend,
         "supervisor_version": app.state.deps.version,
@@ -123,13 +147,13 @@ def _metadata(result: dict, run_id: str | None) -> dict:
 
 
 @traceable(name="chat_request")
-async def _handle_chat(message: str, thread_id: str) -> tuple[dict, str | None]:
+async def _handle_chat(req: ChatRequest) -> tuple[dict, str | None]:
     deps = app.state.deps
+    message, thread_id = req.message, req.thread_id
     history = deps.session_store.load(thread_id)   # Wave 12
     if deps.version == "v2":
-        result = await app.state.graph.ainvoke(
-            {"query": message, "thread_id": thread_id, "history": history,
-             "events": [], "cost_usd": 0.0})
+        result = await app.state.graph.ainvoke(_initial_state(
+            message, thread_id, history, req.company, req.station_id, req.gu))
     else:
         result = await run_v1(deps, message, thread_id, history)   # Wave 14
     deps.session_store.append(thread_id, "user", message)
@@ -140,13 +164,14 @@ async def _handle_chat(message: str, thread_id: str) -> tuple[dict, str | None]:
 
 @app.post("/chat")
 async def chat(req: ChatRequest):
-    result, run_id = await _handle_chat(req.message, req.thread_id)
+    result, run_id = await _handle_chat(req)
     return {"reply": result["final"], "events": result.get("events", []),
             "metadata": _metadata(result, run_id)}
 
 
 @app.get("/chat/stream")
-async def chat_stream(message: str, thread_id: str = "default"):
+async def chat_stream(message: str, thread_id: str = "default", company: str = "SK에너지",
+                      station_id: str | None = None, gu: str | None = None):
     """Wave 3 — 그래프의 노드별 진행 상황을 SSE로 스트리밍.
 
     이벤트마다 'data: {json}\\n\\n' 형태로 내려보내고 마지막에 data: [DONE] 센티널을
@@ -169,8 +194,8 @@ async def chat_stream(message: str, thread_id: str = "default"):
             # 노드가 끝날 때마다의 상태 델타, "custom"은 write_node/chat_answer_node가
             # get_stream_writer()로 실행 중에 즉시 흘려보내는 토큰(AnswerToken) 이벤트다.
             async for mode, payload in app.state.graph.astream(
-                    {"query": message, "thread_id": thread_id, "history": history,
-                     "events": [], "cost_usd": 0.0}, stream_mode=["updates", "custom"]):
+                    _initial_state(message, thread_id, history, company, station_id, gu),
+                    stream_mode=["updates", "custom"]):
                 if mode == "custom":
                     yield f"data: {json.dumps(payload, ensure_ascii=False)}\n\n"
                     continue
