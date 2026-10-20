@@ -36,6 +36,25 @@ def classify_user(query: str, gu_names: tuple, brand_names: tuple) -> str:
             f"\n\n## 질문\n{query}")
 
 
+# 상호처럼 보이는 단어 ("박미주유소", "(주)홍릉가스충전소") — 시설 종류를 가리키는 일반 단어는 뺀다
+STATION_WORD = re.compile(r"([가-힣A-Za-z0-9()㈜\-]+(?:주유소|충전소))")
+GENERIC_FACILITY_WORDS = {"수소충전소", "LPG충전소", "급속충전소", "전기충전소", "충전소", "주유소"}
+
+
+def station_word(query: str) -> str | None:
+    """질문에서 상호처럼 보이는 단어를 찾는 함수 (모델이 놓쳤을 때 코드가 보충)
+
+    Args:
+        query: 사용자 질문
+    Returns:
+        "…주유소" / "…충전소" 단어, 없으면 None
+    """
+    for word in STATION_WORD.findall(query):
+        if word not in GENERIC_FACILITY_WORDS:
+            return word
+    return None
+
+
 def normalize_classify(content: str, query: str, gu_names: tuple, brand_aliases: dict) -> dict:
     """분류 출력에서 허용 값만 남기는 함수 (질문에 실제로 없는 값은 버림)
 
@@ -49,9 +68,12 @@ def normalize_classify(content: str, query: str, gu_names: tuple, brand_aliases:
     """
     raw = _load_json(content)
     gu = raw.get("gu") if raw.get("gu") in gu_names and raw.get("gu") in query else None
+    gu = gu or next((g for g in sorted(gu_names, key=len, reverse=True) if g in query), None)
     name = raw.get("station_name")
     station_name = name if isinstance(name, str) and name in query and \
         re.search(r"(주유소|충전소)$", name) and len(name) > 3 else None
+    # 소형 모델이 상호 대신 회사명("S-OIL")만 뽑는 경우가 있어 질문에서 직접 보충한다
+    station_name = station_name or station_word(query)
     brand = raw.get("brand")
     brand = brand_aliases.get(brand) if isinstance(brand, str) and brand in query else None
     # 급속 수·출력은 숫자를 지어낼 수 있어 질문의 숫자와 맞을 때만 쓴다
@@ -244,21 +266,37 @@ WRITE_SYSTEM = (
     "2. 결론(병목·유휴 위험·급속 후보)은 뼈대와 같아야 한다\n"
     "3. 판매량·부지·전력처럼 사실에 없는 정보는 말하지 않는다\n"
     "4. 뼈대의 '현장 확인 항목' 줄과 마지막 안내 문장은 글자 그대로 둔다\n"
+    "5. 뼈대에 없는 줄·제목·항목(예: 새 '현장 확인 항목', '안내')을 덧붙이지 않는다\n"
     "답변만 출력하라."
 )
 
 
 def write_prompt(request_type: str, facts: list[dict], verdicts: dict, corrections: list[dict],
                  is_own: bool, errors: list[dict], site_checks: tuple, labels: dict,
-                 replanned_from: str | None, feedback: list[str] | None) -> tuple[str, str]:
-    """작성 프롬프트(system, user)를 만드는 함수 — 코드가 만든 답변 뼈대 + 사실 원문"""
+                 replanned_from: str | None, feedback: list[str] | None) -> tuple[str, str, list[str]]:
+    """작성 프롬프트(system, user)와 답변 뼈대를 만드는 함수 — 코드가 만든 뼈대 + 사실 원문"""
     skeleton = EnergyAnswer(facts, verdicts).build(
         request_type, corrections, is_own, errors, site_checks, labels, replanned_from)
     parts = ["## 답변 뼈대\n" + "\n".join(skeleton),
              f"## 사실 원문 (참고용)\n{render_facts(facts)}"]
     if feedback:
         parts.append("## 검증 반려 사유 (반드시 고칠 것)\n" + "\n".join(f"- {x}" for x in feedback))
-    return WRITE_SYSTEM, "\n\n".join(parts)
+    return WRITE_SYSTEM, "\n\n".join(parts), skeleton
+
+
+def trim_to_skeleton(draft: str, skeleton: list[str]) -> str:
+    """작성 결과에서 뼈대 마지막 줄 뒤에 모델이 덧붙인 내용을 잘라내는 함수
+
+    Args:
+        draft: 작성 에이전트 출력
+        skeleton: 코드가 만든 답변 뼈대 줄 목록
+    Returns:
+        뼈대 마지막 줄까지만 남긴 답변 (마지막 줄을 못 찾으면 그대로)
+    """
+    # 실모델이 프롬프트 규칙을 어기고 근거 없는 "현장 확인 항목"·"안내"를 덧붙인 일이 있었다
+    last = skeleton[-1].strip()
+    cut = draft.find(last)
+    return draft[:cut + len(last)].rstrip() if cut >= 0 else draft
 
 
 # ── 검증 에이전트 LLM-as-Judge ─────────────────────────────────────

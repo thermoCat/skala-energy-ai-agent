@@ -97,6 +97,8 @@ class EnergyQualityMixin:
         Returns:
             (답변, 사용량)
         """
-        system, user = p.write_prompt(request_type, facts, verdicts, corrections, is_own,
-                                      errors, site_checks, item_labels, replanned_from, feedback)
-        return await self._text_stream(system, user, on_token)
+        system, user, skeleton = p.write_prompt(request_type, facts, verdicts, corrections,
+                                                is_own, errors, site_checks, item_labels,
+                                                replanned_from, feedback)
+        draft, usage = await self._text_stream(system, user, on_token)
+        return p.trim_to_skeleton(draft, skeleton), usage

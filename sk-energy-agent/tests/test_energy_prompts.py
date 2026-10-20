@@ -61,8 +61,30 @@ def test_write_prompt_contains_facts_verdicts_and_musts():
     verdicts = {"fast_candidates": {"id": "J4", "value": ["A0009172"]}}
     FACTS_WITH_MEDIAN = FACTS + [{"id": "F4", "key": "cluster_median_fast_1km", "label": "묶음 중앙값",
                                   "value": 26.0, "unit": "ID", "source": "s"}]
-    system, user = p.write_prompt("district", FACTS_WITH_MEDIAN, verdicts, [], True, [], ("부지",),
+    system, user, skeleton = p.write_prompt("district", FACTS_WITH_MEDIAN, verdicts, [], True, [], ("부지",),
                                   {"fast_candidates": "묶음 급속 후보"}, None, ["근거 없는 숫자: 320.0"])
     assert "[F2] 풍한주유소 (주유소) 반경 1km 급속 ID: 10 ID" in user
     assert "## 답변 뼈대" in user and "풍한주유소 — 반경 1km 급속 ID 10[F2]" in user
     assert "현장 확인 항목: 부지" in user and "근거 없는 숫자: 320.0" in user
+
+
+def test_classify_recovers_station_name_the_model_missed():
+    # 실제 qwen3:0.6b 출력: 상호 대신 회사명, 질문에 없는 강남구·1000kW
+    content = '{"gu": "강남구", "station_name": "S-OIL", "brand": "S-OIL", "fast_add": 1, "kw": 1000}'
+    result = p.normalize_classify(content, "S-OIL 신성주유소 어때?", SEOUL_GU, BRAND_ALIASES)
+    assert result == {"gu": None, "station_name": "신성주유소", "brand": "S-OIL",
+                      "fast_add": None, "kw": None}
+
+
+def test_classify_recovers_gu_and_ignores_generic_facility_word():
+    result = p.normalize_classify("{}", "동대문구 수소충전소 몇 곳이야?", SEOUL_GU, BRAND_ALIASES)
+    assert result["gu"] == "동대문구" and result["station_name"] is None
+
+
+def test_trim_removes_lines_the_model_added_after_skeleton():
+    skeleton = ["[노원구 · S-OIL 신성주유소]", "타사 거점이라 투자 판별은 하지 않습니다."]
+    draft = ("[노원구 · S-OIL 신성주유소]  \n타사 거점이라 투자 판별은 하지 않습니다.  \n\n"
+             "## 현장 확인 항목  \n- 주유소 내 급속 충전기 설치 여부")
+    assert p.trim_to_skeleton(draft, skeleton) == \
+        "[노원구 · S-OIL 신성주유소]  \n타사 거점이라 투자 판별은 하지 않습니다."
+    assert p.trim_to_skeleton("완전히 다른 글", skeleton) == "완전히 다른 글"

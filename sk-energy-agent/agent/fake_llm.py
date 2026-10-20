@@ -11,9 +11,7 @@ from langsmith import traceable
 from energy.seoul import BRAND_ALIASES
 
 from .answer_template import EnergyAnswer
-
-# 시설 종류를 가리키는 일반 단어 — 주유소 이름으로 보지 않는다
-GENERIC_FACILITY_WORDS = {"수소충전소", "LPG충전소", "급속충전소", "전기충전소", "충전소", "주유소"}
+from .energy_prompts import station_word
 
 
 class FakeLLM:
@@ -108,10 +106,7 @@ class FastLLM(FakeLLM):
             ({"gu", "station_name", "brand", "fast_add", "kw"}, 사용량)
         """
         gu = next((g for g in sorted(gu_names, key=len, reverse=True) if g in query), None)
-        name = re.search(r"([가-힣A-Za-z0-9()㈜\-]+(?:주유소|충전소))", query)
-        station_name = name.group(1) if name else None
-        if station_name in GENERIC_FACILITY_WORDS:
-            station_name = None
+        station_name = station_word(query)
         brand = next((b for b in sorted(brand_names, key=len, reverse=True) if b in query), None)
         fast = re.search(r"급속\s*(\d+)\s*기", query)
         kw = re.search(r"(\d+)\s*kW", query, re.IGNORECASE)
