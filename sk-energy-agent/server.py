@@ -1,11 +1,10 @@
-"""all_total 통합 실습 — FastAPI 백엔드 (Wave 1·3·12·14 축 + 전체 조립).
+"""주유소 복합 에너지 허브 Agent — FastAPI 백엔드 (채팅 SSE · 대시보드 API · 상시 작업)
 
 - Wave 1  : lifespan에서 Agent 번들(MCP 연결·LLM·그래프)을 프로세스당 정확히 1회 생성,
             app.state로 모든 요청이 공유 (creation_count/instance_id로 증명)
 - Wave 2  : mcp_server.py를 subprocess(stdio)로 기동해 연결 유지
 - Wave 3  : GET /chat/stream — 그래프 실행 과정을 SSE 이벤트로 스트리밍
-- Wave 12 : 대화 이력을 SQLite(session.db)에 저장 — 재시작해도 유지
-- Wave 14 : SUPERVISOR_VERSION(v1/v2) 환경변수로 legacy/신형 파이프라인 즉시 전환
+- Wave 12 : 대화·판단 이력·알림을 SQLite(session.db)에 저장 — 재시작해도 유지
 - LangSmith: 요청당 chat_request 루트 run 아래로 노드·LLM·MCP 호출이 계층 기록됨
 """
 import json
@@ -29,7 +28,6 @@ from agent.graph import build_graph
 from agent.mcp_client import MCPClient
 from agent.session_store import SqliteSessionStore
 from energy import criteria
-from agent.supervisor_v1 import run_v1
 
 CREATION_COUNT = 0   # Wave 1 — 프로세스 내 Agent 번들 생성 횟수 (항상 1이어야 정상)
 
@@ -87,7 +85,7 @@ def _build_llms():
 async def lifespan(app: FastAPI):
     global CREATION_COUNT
     CREATION_COUNT += 1
-    mcp = MCPClient(flaky_first_tool_call=False)   # 베이스 Wave 9 데모용 강제 실패는 끔
+    mcp = MCPClient()
     await mcp.start()   # Wave 2 — MCP subprocess는 서버 수명 동안 딱 1개
     backend, fast_llm, quality_llm = _build_llms()
     app.state.llm_backend = backend
@@ -96,10 +94,9 @@ async def lifespan(app: FastAPI):
         quality_llm=quality_llm,
         mcp=mcp,
         session_store=SqliteSessionStore(),
-        version=os.environ.get("SUPERVISOR_VERSION", "v2"),
     )
     app.state.deps = deps
-    app.state.graph = build_graph(deps) if deps.version == "v2" else None
+    app.state.graph = build_graph(deps)
     app.state.instance_id = id(deps)
     yield
     await mcp.stop()
@@ -118,35 +115,25 @@ app = FastAPI(lifespan=lifespan)
 async def health():
     return {"status": "ok", "instance_id": app.state.instance_id,
             "creation_count": CREATION_COUNT,
-            "supervisor_version": app.state.deps.version,
             "llm_backend": app.state.llm_backend,
             "fast_llm": app.state.deps.fast_llm.name,
             "quality_llm": app.state.deps.quality_llm.name}
 
 
-@app.get("/version")
-async def version():
-    return {"supervisor_version": app.state.deps.version}
-
-
 def _metadata(result: dict, run_id: str | None) -> dict:
     return {
         "route": result.get("route"),
-        "task_count": len(result.get("tasks", [])),
-        "gate_removed": result.get("gate_removed", 0),
-        "replan_rounds": result.get("replan_rounds", 0),
-        "retry_count": result.get("retry_count", 0),
-        "parallel_elapsed": result.get("parallel_elapsed"),
-        "validation_attempts": result.get("validation_attempts", 0),
         "request_type": result.get("request_type"),
         "station_id": result.get("station_id"),
         "gu": result.get("gu"),
         "gate_corrections": len(result.get("gate_corrections", [])),
         "validation_passed": (result.get("validation") or {}).get("passed"),
         "replanned_from": result.get("replanned_from"),
+        "rewrite_count": result.get("rewrite_count", 0),
+        "parallel_elapsed": result.get("parallel_elapsed"),
+        "llm_calls": result.get("llm_calls", 0),
         "cost_usd": result.get("cost_usd", 0.0),
         "llm_backend": app.state.llm_backend,
-        "supervisor_version": app.state.deps.version,
         "instance_id": app.state.instance_id,
         "langsmith_run_id": run_id,
     }
@@ -157,11 +144,8 @@ async def _handle_chat(req: ChatRequest) -> tuple[dict, str | None]:
     deps = app.state.deps
     message, thread_id = req.message, req.thread_id
     history = deps.session_store.load(thread_id)   # Wave 12
-    if deps.version == "v2":
-        result = await app.state.graph.ainvoke(_initial_state(
-            message, thread_id, history, req.company, req.station_id, req.gu))
-    else:
-        result = await run_v1(deps, message, thread_id, history)   # Wave 14
+    result = await app.state.graph.ainvoke(_initial_state(
+        message, thread_id, history, req.company, req.station_id, req.gu))
     deps.session_store.append(thread_id, "user", message)
     deps.session_store.append(thread_id, "assistant", result["final"])
     rt = get_current_run_tree()
@@ -187,37 +171,31 @@ async def chat_stream(message: str, thread_id: str = "default", company: str = "
 
     async def gen():
         history = deps.session_store.load(thread_id)
-        if deps.version != "v2":
-            result = await run_v1(deps, message, thread_id, history)
-            for ev in result["events"]:
-                yield f"data: {json.dumps(ev, ensure_ascii=False)}\n\n"
-            yield f"data: {json.dumps({'type': 'FinalAnswer', 'reply': result['final']}, ensure_ascii=False)}\n\n"
-        else:
-            seen = 0
-            final = ""
-            last_prompt = None   # finalize까지 살아남은 최종 write/chat 호출의 실제 프롬프트
-            # stream_mode를 리스트로 주면 (mode, payload) 튜플이 나온다 — "updates"는
-            # 노드가 끝날 때마다의 상태 델타, "custom"은 write_node/chat_answer_node가
-            # get_stream_writer()로 실행 중에 즉시 흘려보내는 토큰(AnswerToken) 이벤트다.
-            async for mode, payload in app.state.graph.astream(
-                    _initial_state(message, thread_id, history, company, station_id, gu),
-                    stream_mode=["updates", "custom"]):
-                if mode == "custom":
-                    yield f"data: {json.dumps(payload, ensure_ascii=False)}\n\n"
-                    continue
-                for node_name, delta in payload.items():
-                    for ev in (delta.get("events") or [])[seen:]:
-                        ev = {**ev, "node": node_name}
-                        yield f"data: {json.dumps(ev, ensure_ascii=False)}\n\n"
-                    if delta.get("events"):
-                        seen = len(delta["events"])
-                    if delta.get("final"):
-                        final = delta["final"]
-                    if delta.get("last_prompt"):
-                        last_prompt = delta["last_prompt"]
-            yield f"data: {json.dumps({'type': 'FinalAnswer', 'reply': final, 'prompt': last_prompt}, ensure_ascii=False)}\n\n"
-            deps.session_store.append(thread_id, "user", message)
-            deps.session_store.append(thread_id, "assistant", final)
+        seen = 0
+        final = ""
+        last_prompt = None   # 마지막 작성(또는 대화) 호출에 실제로 쓴 프롬프트
+        # stream_mode를 리스트로 주면 (mode, payload) 튜플이 나온다 — "updates"는
+        # 노드가 끝날 때마다의 상태 델타, "custom"은 작성·대화 노드가
+        # get_stream_writer()로 실행 중에 즉시 흘려보내는 토큰(AnswerToken) 이벤트다.
+        async for mode, payload in app.state.graph.astream(
+                _initial_state(message, thread_id, history, company, station_id, gu),
+                stream_mode=["updates", "custom"]):
+            if mode == "custom":
+                yield f"data: {json.dumps(payload, ensure_ascii=False)}\n\n"
+                continue
+            for node_name, delta in payload.items():
+                for ev in (delta.get("events") or [])[seen:]:
+                    ev = {**ev, "node": node_name}
+                    yield f"data: {json.dumps(ev, ensure_ascii=False)}\n\n"
+                if delta.get("events"):
+                    seen = len(delta["events"])
+                if delta.get("final"):
+                    final = delta["final"]
+                if delta.get("last_prompt"):
+                    last_prompt = delta["last_prompt"]
+        yield f"data: {json.dumps({'type': 'FinalAnswer', 'reply': final, 'prompt': last_prompt}, ensure_ascii=False)}\n\n"
+        deps.session_store.append(thread_id, "user", message)
+        deps.session_store.append(thread_id, "assistant", final)
         yield "data: [DONE]\n\n"
 
     return StreamingResponse(gen(), media_type="text/event-stream")

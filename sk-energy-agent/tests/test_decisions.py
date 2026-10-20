@@ -37,7 +37,7 @@ def test_other_company_cannot_see_decisions(store, tmp_path):
 
 def test_agent_has_no_tool_that_writes_decisions():
     async def tool_names():
-        mcp = MCPClient(flaky_first_tool_call=False)
+        mcp = MCPClient()
         await mcp.start()
         try:
             return {t.name for t in (await mcp.sessions["ops"].list_tools()).tools}

@@ -227,7 +227,7 @@ const TOOL_NAMES = {
   get_station_card: '주유소 카드', get_fuel_demand: '5개 연료 수요', get_ev_supply: '전기 공급',
   get_h2_status: '수소 대기', search_stations: '자사 거점 목록', score_district: '자치구 기준 판정',
   review_cluster: '묶음 기준 판정', simulate: '시나리오 계산',
-  monitoring: '모니터링 지표', runbook: '대응 매뉴얼',
+  get_nearby_competition: '주변 경쟁 현황', get_decision_log: '판단 이력',
 };
 const ITEM_NAMES = { ev_bottleneck: '전기 병목', diesel_idle: '경유 유휴', lpg_idle: 'LPG 유휴',
   fast_candidates: '급속 후보', ev_bottleneck_before: '추가 전 병목', ev_bottleneck_after: '추가 후 병목' };
@@ -433,7 +433,7 @@ createApp({
         case 'RouteDecided': return e.request_type ? { text: `요청 분류: ${REQUEST_NAMES[e.request_type] || e.request_type}` } : null;
         case 'StationResolved': return { text: `이름 찾기: "${e.query}" → ${e.count}곳` };
         case 'AskUser': return { text: '같은 이름이 여러 곳 → 되묻기', warn: true };
-        case 'PlanCreated': return e.tools ? { text: `조회 계획: ${e.gu} · Tool ${e.tools.length}개 병렬` } : { text: `계획 수립: 할 일 ${e.task_count}가지` };
+        case 'PlanCreated': return { text: `조회 계획: ${e.gu} · Tool ${e.tools.length}개 병렬` };
         case 'TaskCompleted': {
           const name = TOOL_NAMES[e.source] || e.source;
           return e.ok === false ? { text: `${name} 실패 → 데이터 없음으로 표시`, warn: true } : { text: `${name} 조회` };

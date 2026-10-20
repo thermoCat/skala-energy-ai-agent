@@ -1,36 +1,28 @@
-"""all_total 통합 실습 — MCP Server (Wave 2 축).
+"""에너지 허브 MCP 서버 (FastMCP, stdio) — 대시보드 API와 에이전트가 같은 Tool을 쓴다
 
-Tool / Resource / Prompt 3대 capability를 모두 노출하는 실제 fastmcp 서버.
-FastAPI 백엔드(server.py)가 lifespan에서 이 파일을 subprocess(stdio)로 1회 기동해
-프로세스가 살아 있는 동안 재사용한다 (Wave 1 싱글턴 + Wave 2 표준화의 결합).
+- Tool     조회(카드·수요·공급·수소·검색·이름·핀·경쟁), 기준 판정·시나리오, 상시 감지, 판단 이력 읽기
+- Resource criteria://energy-mix — 판별 기준 임계값·가정값·규칙 버전
+- Prompt   district_review_prompt — 자치구 묶음 진단 표준 절차
 
-- Tool    get_monitoring_status : 호출마다 값이 달라지는 동적 조회 → Tool이 맞다
-- Resource runbook://incident-response/{incident_type} : URI로 식별되는 정적 문서
-- Prompt  incident_analysis_prompt : 여러 Tool을 조합하는 표준 진단 절차를 강제
+결정 기록(쓰기)은 여기 없다 — 대시보드 API만 쓸 수 있어 에이전트는 결정을 남길 수 없다.
 """
 import json
-import random
-from datetime import datetime
-from pathlib import Path
 
 from fastmcp import FastMCP
-from pydantic import BaseModel, Field
 
 from agent.session_store import default_db_path, read_decision_log
 from energy.indicators import ev_supply, fuel_demand
+from energy.rules.anomaly import detect_anomalies as _detect
 from energy.rules.cluster import review_cluster as _review_cluster
+from energy.rules.competitors import nearby_operators, weekly_competition
 from energy.rules.names import find_stations
 from energy.rules.score import district_baseline
 from energy.rules.simulate import simulate_fast_add
-from energy.rules.anomaly import detect_anomalies as _detect
-from energy.rules.competitors import nearby_operators, weekly_competition
 from energy.store import load_snapshot, load_status_history
 from energy.views import (criteria_resource, h2_status, map_pins, nearby_districts as _nearby,
                           search_stations as _search, station_card_view)
 
-mcp = FastMCP(name="capstone-all-total-ops")
-
-DATA_DIR = Path(__file__).parent / "data"
+mcp = FastMCP(name="sk-energy-hub")
 
 # 스냅샷은 서버 시작 때 1번만 로드 — 요청마다 CSV를 읽으면 응답이 느려진다
 SNAPSHOT = load_snapshot()
@@ -205,63 +197,6 @@ def district_review_prompt(gu: str, brand: str = "SK에너지") -> str:
 5. 현장 확인: 부지·폭발위험장소·전력 인입·주차면은 데이터가 없으므로 사람에게 넘김
 
 숫자는 Tool 결과만 쓰고, 투자 결정이 아니라 진단임을 밝히세요.
-"""
-
-
-class SystemStatus(BaseModel):
-    system_name: str = Field(description="시스템 이름")
-    status: str = Field(description="상태: healthy / degraded / down")
-    cpu_percent: float = Field(description="CPU 사용률 (%)")
-    memory_percent: float = Field(description="메모리 사용률 (%)")
-    last_checked: str = Field(description="마지막 체크 시각 (ISO 8601)")
-    alerts: list[str] = Field(default_factory=list, description="활성 알림 목록")
-
-
-@mcp.tool()
-def get_monitoring_status(system_name: str) -> SystemStatus:
-    """지정된 시스템의 현재 모니터링 상태를 조회합니다 (호출마다 값이 달라지는 동적 Tool)."""
-    monitoring_data = json.loads((DATA_DIR / "monitoring.json").read_text())
-    if system_name not in monitoring_data:
-        return SystemStatus(
-            system_name=system_name, status="unknown",
-            cpu_percent=0.0, memory_percent=0.0,
-            last_checked=datetime.now().isoformat(),
-            alerts=[f"System '{system_name}' not found in monitoring"],
-        )
-    data = monitoring_data[system_name]
-    jitter = random.uniform(-3.0, 8.0)
-    return SystemStatus(
-        system_name=system_name,
-        status=data["status"],
-        cpu_percent=round(data["cpu_base"] + jitter, 1),
-        memory_percent=round(data["memory_base"] + jitter / 2, 1),
-        last_checked=datetime.now().isoformat(timespec="microseconds"),
-        alerts=data.get("alerts", []),
-    )
-
-
-@mcp.resource("runbook://incident-response/{incident_type}")
-def get_incident_runbook(incident_type: str) -> str:
-    """특정 incident 유형의 runbook(정적 문서)을 반환합니다."""
-    runbook_path = DATA_DIR / "runbooks" / f"{incident_type}.md"
-    if not runbook_path.exists():
-        return f"# Runbook Not Found\n\nNo runbook for incident type: {incident_type}"
-    return runbook_path.read_text()
-
-
-@mcp.prompt()
-def incident_analysis_prompt(system_name: str, symptom: str) -> str:
-    """장애 진단 표준 절차 프롬프트 — planning 노드가 계획을 세울 때 이 절차를 따른다."""
-    return f"""다음 장애에 대해 표준 진단 절차를 수행하세요.
-
-## 장애 정보
-- 시스템: {system_name}
-- 증상: {symptom}
-
-## 진단 절차 (반드시 순서대로 수행)
-1. get_monitoring_status Tool로 관련 시스템의 현재 상태를 조회하세요.
-2. 증상에 해당하는 runbook(runbook://incident-response/...)을 확인하세요.
-3. 위 정보를 종합해 가능한 원인과 권장 조치를 제시하세요.
 """
 
 

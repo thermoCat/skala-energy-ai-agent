@@ -59,7 +59,7 @@ cleanup() {
 trap cleanup EXIT
 
 # ── 2) 서버 기동 (백그라운드로 띄운 뒤 준비될 때까지 대기) ─────────────
-LLM_BACKEND=openai SUPERVISOR_VERSION=v2 python3 server.py &
+LLM_BACKEND=openai python3 server.py &
 SERVER_PID=$!
 for _ in $(seq 1 40); do
     curl -s http://127.0.0.1:8100/health >/dev/null 2>&1 && break

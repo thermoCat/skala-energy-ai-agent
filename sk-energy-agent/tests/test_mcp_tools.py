@@ -24,7 +24,7 @@ async def _serve(client: MCPClient, ready: asyncio.Event, done: asyncio.Event) -
 def mcp():
     """MCP 서버를 모듈에서 1번만 띄워 모든 테스트가 같이 쓰는 fixture"""
     loop = asyncio.new_event_loop()
-    client = MCPClient(flaky_first_tool_call=False)
+    client = MCPClient()
     ready, done = asyncio.Event(), asyncio.Event()
     server = loop.create_task(_serve(client, ready, done))
     loop.run_until_complete(ready.wait())

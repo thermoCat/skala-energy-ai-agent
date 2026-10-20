@@ -33,7 +33,7 @@ cleanup() {
 }
 trap cleanup EXIT
 
-LLM_BACKEND=fake SUPERVISOR_VERSION=v2 python3 server.py &
+LLM_BACKEND=fake python3 server.py &
 SERVER_PID=$!
 for _ in $(seq 1 40); do
     curl -s http://127.0.0.1:8100/health >/dev/null 2>&1 && break

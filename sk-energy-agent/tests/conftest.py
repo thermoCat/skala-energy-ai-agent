@@ -21,11 +21,11 @@ def store(tmp_path, monkeypatch):
 
 
 async def _ask(store, query: str, wrap_mcp, quality, **state) -> dict:
-    mcp = MCPClient(flaky_first_tool_call=False)
+    mcp = MCPClient()
     await mcp.start()
     try:
         deps = SupervisorDeps(FastLLM("fast", 0.0), quality or QualityLLM("quality", 0.0),
-                              wrap_mcp(mcp) if wrap_mcp else mcp, store, "v2")
+                              wrap_mcp(mcp) if wrap_mcp else mcp, store)
         return await build_graph(deps).ainvoke(
             {"query": query, "thread_id": "t", "history": [], "company": "SK에너지",
              "events": [], "cost_usd": 0.0, **state})

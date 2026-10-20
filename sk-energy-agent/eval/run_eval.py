@@ -115,10 +115,10 @@ def score_case(name: str, expect_numbers: list[str], expect_kind: str, r: dict, 
 
 async def run(backend: str) -> list[dict]:
     os.environ["SESSION_DB_PATH"] = str(Path(tempfile.mkdtemp()) / "eval.db")
-    mcp = MCPClient(flaky_first_tool_call=False)
+    mcp = MCPClient()
     await mcp.start()
     fast, quality = _build_llms(backend)
-    graph = build_graph(SupervisorDeps(fast, quality, mcp, SqliteSessionStore(), "v2"))
+    graph = build_graph(SupervisorDeps(fast, quality, mcp, SqliteSessionStore()))
     rows = []
     try:
         for name, request, numbers, kind in CASES:
