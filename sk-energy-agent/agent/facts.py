@@ -155,7 +155,7 @@ def build_facts(results: dict, company: str) -> list[dict]:
 
 
 def build_watch_facts(summary: dict, top: int) -> list[dict]:
-    """매일 감시 요약을 번호 붙은 사실 목록으로 만드는 함수
+    """일간 추적 요약을 번호 붙은 사실 목록으로 만드는 함수
 
     Args:
         summary: detect_anomalies 결과
@@ -169,14 +169,20 @@ def build_watch_facts(summary: dict, top: int) -> list[dict]:
     facts.add("watch_scope", "감시 범위", scope, "", src)
     facts.add("watch_window", "감시 구간 (수집 시각)",
               " → ".join(w[:16].replace("T", " ") for w in summary["window"]), "", src)
-    facts.add("watch_rule", "새 고장 기준", f"최근 {len(summary['window'])}회 수집 연속 고장 + "
-              "고장으로 바뀐 지 24시간 이내", "", src)
+    facts.add("watch_rule", "새로 멈춤 기준", "직전 수집에서 정상이던 급속이 그 뒤 수집 내내 "
+              "통신이상·운영중지·점검중", "", src)
     facts.add("own_stations", "감시한 자사 거점", summary["own_stations"], "곳", src)
-    facts.add("new_failures", "자사 거점 반경 1km 새 고장 급속", summary["new_failures"], "개", src)
-    facts.add("stations_affected", "새 고장이 주변에 있는 자사 거점", len(summary["stations"]), "곳", src)
+    facts.add("new_failures", "자사 거점 반경 1km 새로 멈춘 급속", summary["new_failures"], "개", src)
+    for reason, n in summary.get("reasons", {}).items():
+        facts.add(f"reason:{reason}", f"새로 멈춘 급속 중 {reason}", n, "개", src, reason=reason)
+    facts.add("stations_affected", "새로 멈춘 급속이 주변에 있는 자사 거점", len(summary["stations"]),
+              "곳", src)
     for s in summary["stations"]:
-        facts.add(f"new_failures:{s['station_id']}", f"{s['name']} ({s['gu']}) 반경 1km 새 고장 급속",
+        facts.add(f"new_failures:{s['station_id']}", f"{s['name']} ({s['gu']}) 반경 1km 새로 멈춘 급속",
                   s["new_failures"], "개", src, station_id=s["station_id"], name=s["name"], gu=s["gu"])
+        for reason, n in s.get("reasons", {}).items():
+            facts.add(f"reason:{s['station_id']}:{reason}", f"{s['name']} 주변 {reason}", n, "개", src,
+                      station_id=s["station_id"], reason=reason)
     rest = len(summary["stations"]) - top
     if rest > 0:
         facts.add("stations_rest", "알림 위에 올리지 않은 나머지 거점", rest, "곳", src)
@@ -184,7 +190,7 @@ def build_watch_facts(summary: dict, top: int) -> list[dict]:
 
 
 def build_competition_facts(summary: dict) -> list[dict]:
-    """주간 경쟁 요약을 번호 붙은 사실 목록으로 만드는 함수
+    """주유소 주간 추적 요약을 번호 붙은 사실 목록으로 만드는 함수
 
     Args:
         summary: diff_competitors 결과
@@ -200,14 +206,25 @@ def build_competition_facts(summary: dict) -> list[dict]:
     facts.add("seoul_removed", "서울 급속 철거", summary["seoul_removed"], "개", src)
     facts.add("near_changes", "자사 거점 반경 1km 안 변화", len(summary["changes"]), "건", src)
     facts.add("competitor_new", "그중 타사 신설", summary["competitor_new"], "건", src)
+    facts.add("competitor_new_public", "타사 신설 중 일반 이용 (버스 전용·이용 제한 제외)",
+              summary.get("competitor_new_public", 0), "건", src)
+    # 같은 충전소에 같은 날 여러 기가 생기면(버스 차고지 8기 등) 한 줄로 묶고 대수를 따로 센다
+    groups: dict[tuple, list[dict]] = {}
     for c in summary["changes"]:
+        key = (c["station_id"], c["change"], c["operator"], c.get("place"), c["distance_m"])
+        groups.setdefault(key, []).append(c)
+    for members in groups.values():
+        c, first = members[0], members[0]["charger"]
         who = "자사·계열" if c["own_operator"] else "타사"
-        facts.add(f"change:{c['charger']}", f"{c['name']} ({c['gu']}) 주변 변화",
-                  f"{c['change']} · {c['operator']}({who})", "", src,
-                  station_id=c["station_id"], name=c["name"], gu=c["gu"],
+        use = c.get("use", "이용 정보 없음")
+        facts.add(f"change:{first}", f"{c['name']} ({c['gu']}) 주변 변화",
+                  f"{c['change']} · {c['operator']}({who}) · {use}", "", src,
+                  station_id=c["station_id"], name=c["name"], gu=c["gu"], use=use,
                   competitor=not c["own_operator"] and c["change"] == "신설")
-        facts.add(f"distance:{c['charger']}", f"{c['name']} 에서 거리", c["distance_m"], "m", src,
-                  station_id=c["station_id"], name=c["name"], charger=c["charger"])
+        facts.add(f"count:{first}", f"{c['name']} 주변 같은 충전소 변화 대수", len(members), "대", src,
+                  station_id=c["station_id"], charger=first)
+        facts.add(f"distance:{first}", f"{c['name']} 에서 거리", c["distance_m"], "m", src,
+                  station_id=c["station_id"], name=c["name"], charger=first)
     return facts.items
 
 

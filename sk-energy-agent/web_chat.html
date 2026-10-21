@@ -56,6 +56,14 @@
   .alert .t { font-weight: 600; }
   .alert .s { color: var(--muted); font-size: 12px; margin: 2px 0 6px; }
   .alert .chip { font-size: 12px; }
+  .use { font-size: 11px; margin-left: 6px; padding: 1px 6px; border-radius: 6px; }
+  .use.pub { background: #10345a; color: #8cc8ff; }
+  .use.bus { background: #3a3a52; color: #c8c8d8; }
+  .use.lim { background: #3a2e14; color: #ffd08a; }
+  .alist { margin-top: 6px; border-top: 1px solid var(--line); }
+  .alist .row { display: block; padding: 6px 2px; border-bottom: 1px solid #2b2b40; font-size: 12px; cursor: pointer; }
+  .alist .row:hover { background: #23233a; }
+  .alist .d { color: var(--muted); font-size: 11px; margin-top: 2px; }
   .jobs { display: flex; gap: 6px; margin-top: 4px; }
   .jobs button { padding: 5px 10px; font-size: 12px; }
 
@@ -111,8 +119,8 @@
 <div id="app">
   <header>
     <b>{{ company }} 에너지 허브</b>
-    <label><input type="checkbox" v-model="ownOnly" /> 자사만</label>
-    <label><input type="checkbox" v-model="showDistricts" /> 자치구 신호</label>
+    <label><input type="checkbox" v-model="ownOnly" /> 자사 주유소만</label>
+    <label><input type="checkbox" v-model="showDistricts" /> 구별 신호</label>
     <button type="button" class="ghost" @click="showAlerts">🔔 알림 {{ unread }}</button>
   </header>
   <main>
@@ -171,17 +179,27 @@
         <template v-else-if="panel.kind === 'alerts'">
           <h3>알림</h3>
           <div class="jobs">
-            <button type="button" class="ghost" :disabled="watching" @click="runJob('daily_watch')">매일 감시 실행</button>
-            <button type="button" class="ghost" :disabled="watching" @click="runJob('weekly')">주간 경쟁 실행</button>
+            <button type="button" class="ghost" :disabled="watching" @click="runJob('daily_watch')">일간 추적</button>
+            <button type="button" class="ghost" :disabled="watching" @click="runJob('weekly')">주유소 주간 추적</button>
           </div>
           <div v-if="panel.runInfo" class="sub" style="margin-top:6px">{{ panel.runInfo }}</div>
           <div v-if="!panel.alerts.length" class="hint" style="margin-top:8px">알림이 없습니다. 변화가 없으면 알림을 만들지 않습니다.</div>
           <div v-for="a in panel.alerts" :key="a.id" class="alert" :class="{ unread: !a.read }">
             <div class="t">{{ alertTitle(a) }}</div>
             <div class="s">{{ alertWindow(a) }}</div>
+            <div v-if="alertOperators(a)" class="s">{{ alertOperators(a) }}</div>
             <div class="chips" style="margin-top:0">
-              <span v-for="x in alertTop(a)" :key="x.id" class="chip" @click="openAlertStation(a, x.id)">{{ x.text }}</span>
+              <span v-for="x in alertItems(a).slice(0, 3)" :key="x.key" class="chip" @click="openAlertStation(a, x.id)">{{ x.text }}<span v-if="x.use" class="use" :class="useClass(x.use)">{{ x.use }}</span></span>
             </div>
+            <template v-if="alertItems(a).length > 3">
+              <button type="button" class="link" style="margin-top:6px" @click="a.more = !a.more">{{ a.more ? '접기' : `전체 보기 (${alertItems(a).length}건)` }}</button>
+              <div v-if="a.more" class="alist">
+                <div v-for="x in alertItems(a)" :key="'l' + x.key" class="row" @click="openAlertStation(a, x.id)">
+                  <div>{{ x.text }}<span v-if="x.use" class="use" :class="useClass(x.use)">{{ x.use }}</span></div>
+                  <div v-if="x.detail" class="d">{{ x.detail }}</div>
+                </div>
+              </div>
+            </template>
           </div>
         </template>
 
@@ -441,7 +459,7 @@ createApp({
       Object.assign(panel, { kind: 'alerts', alerts: (await getJson(`/api/alerts?company=${q(company)}`)).alerts });
     }
     async function runJob(job) {
-      const title = job === 'weekly' ? '주간 경쟁' : '매일 감시';
+      const title = job === 'weekly' ? '주유소 주간 추적' : '일간 추적';
       watching.value = true;
       try {
         const res = await (await fetch(`/api/jobs/${job}/run?company=${q(company)}`, { method: 'POST' })).json();
@@ -455,17 +473,55 @@ createApp({
     }
     function alertTitle(a) {
       const p = a.payload;
-      if (a.job === 'weekly') return `주간 경쟁 · 자사 거점 1km 안 변화 ${p.changes.length}건 (타사 신설 ${p.competitor_new}건)`;
-      return `매일 감시 · 새로 멈춘 급속 ${p.new_failures}개 · 거점 ${p.stations.length}곳`;
+      if (a.job === 'weekly') {
+        const pub = p.competitor_new_public !== undefined ? ` · 일반 이용 ${p.competitor_new_public}건` : '';
+        return `주유소 주간 추적 · 자사 거점 1km 안 변화 ${p.changes.length}건 (타사 신설 ${p.competitor_new}건${pub})`;
+      }
+      return `일간 추적 · ${reasonText(p.reasons || reasonsOf(p.stations.flatMap(s => s.chargers)))} · 자사 주유소 ${p.stations.length}곳 주변`;
+    }
+    const reasonText = r => Object.entries(r).map(([k, n]) => `${k} ${n}`).join(' · ');
+    // 이유 요약이 없는 예전 알림도 충전기마다 남은 상태(통신이상·점검중·운영중지)로 센다 — 여러 거점에 겹친 충전기는 한 번만
+    function reasonsOf(chargers) {
+      const seen = new Map(chargers.map(c => [c.charger, c.status]));
+      const counts = {};
+      for (const st of seen.values()) counts[st] = (counts[st] || 0) + 1;
+      return Object.fromEntries(Object.entries(counts).sort((a, b) => b[1] - a[1]));
+    }
+    // 한 운영사 충전기가 한꺼번에 멈췄으면 운영사 통신 장애일 수 있어 따로 적는다
+    function alertOperators(a) {
+      if (a.job === 'weekly') return '';
+      let ops = a.payload.operators;
+      if (!ops) {
+        const seen = new Map(a.payload.stations.flatMap(s => s.chargers).map(c => [c.charger, c.operator]));
+        const counts = {};
+        for (const op of seen.values()) counts[op] = (counts[op] || 0) + 1;
+        ops = Object.fromEntries(Object.entries(counts).sort((x, y) => y[1] - x[1]).slice(0, 3));
+      }
+      return Object.keys(ops).length ? '운영사: ' + reasonText(ops) : '';
     }
     const alertWindow = a => a.payload.window.map(w => w.slice(5, 16).replace('T', ' ')).join(' → ');
-    function alertTop(a) {
-      if (a.job === 'weekly') {
-        return a.payload.changes.slice(0, 3).map(c => ({ id: c.station_id,
-          text: `${c.name} · ${c.change} ${c.operator}${c.own_operator ? '' : '(타사)'} ${c.distance_m}m` }));
+    // 알림 항목 전체 — 위 3개는 칩으로, 나머지는 "전체 보기" 목록으로
+    function alertItems(a) {
+      if (a.job !== 'weekly') {
+        return a.payload.stations.map(s => ({ id: s.station_id, key: s.station_id,
+          text: `${s.name} · ${reasonText(s.reasons || reasonsOf(s.chargers))}`, detail: s.gu }));
       }
-      return a.payload.stations.slice(0, 3).map(s => ({ id: s.station_id, text: `${s.name} · 새 고장 ${s.new_failures}` }));
+      // 같은 충전소에 여러 기가 함께 생긴 변화는 한 줄로 (버스 차고지 8기 등)
+      const groups = new Map();
+      for (const c of a.payload.changes) {
+        const k = [c.station_id, c.change, c.operator, c.place, c.distance_m].join('|');
+        if (!groups.has(k)) groups.set(k, { ...c, count: 0 });
+        groups.get(k).count++;
+      }
+      const rival = c => c.change === '신설' && !c.own_operator && c.use === '일반 이용';
+      return [...groups.entries()]
+        .sort(([, x], [, y]) => (rival(y) - rival(x)) || (x.distance_m - y.distance_m))
+        // 이용 구분은 새로 생긴 충전기에만 — 철거된 충전기는 경쟁 판단에 쓰지 않는다
+        .map(([k, c]) => ({ id: c.station_id, key: k, use: c.change === '신설' ? c.use : null,
+          text: `${c.name} · ${c.change} ${c.operator}${c.own_operator ? '' : '(타사)'}${c.count > 1 ? ` ${c.count}대` : ''} · ${c.distance_m}m`,
+          detail: [c.place, c.output_kw && `${c.output_kw}kW`].filter(Boolean).join(' · ') }));
     }
+    const useClass = u => ({ '일반 이용': 'pub', '버스 전용': 'bus' }[u] || 'lim');
     async function openAlertStation(alertItem, stationId) {
       if (!alertItem.read) {
         await fetch(`/api/alerts/${alertItem.id}/read?company=${q(company)}`, { method: 'POST' });
@@ -607,7 +663,7 @@ createApp({
 
     return { company, ownOnly, showDistricts, evPerFast, panel, decision, log, input, sending, logEl, target, suggestions,
              unread, watching, signed, targetPrefix, ev, districtFlags, candidates, stationWhy, focusStation,
-             clearTarget, saveDecision, showAlerts, runJob, alertTitle, alertWindow, alertTop, openAlertStation,
+             clearTarget, saveDecision, showAlerts, runJob, alertTitle, alertWindow, alertItems, useClass, alertOperators, openAlertStation,
              answerView, onSubmit };
   },
 }).mount('#app');

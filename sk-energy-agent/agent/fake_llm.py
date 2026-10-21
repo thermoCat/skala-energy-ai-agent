@@ -87,14 +87,17 @@ class FastLLM(FakeLLM):
         Returns:
             ({"report_needed", "watch_competitors"}, 사용량)
         """
+        # 일반 이용 타사 신설이 있는 변화를 먼저, 그다음 가까운 순 (버스 전용은 고객 수요가 겹치지 않음)
+        public = {f["key"].split(":", 1)[1] for f in facts if f["key"].startswith("change:")
+                  and f.get("competitor") and f.get("use") == "일반 이용"}
         distances = sorted((f for f in facts if f["key"].startswith("distance:")),
-                           key=lambda f: f["value"])
+                           key=lambda f: (f["charger"] not in public, f["value"]))
         stations = list(dict.fromkeys(f["station_id"] for f in distances))[:3]
         result = {
             "report_needed": {"value": bool(distances), "facts": [f["id"] for f in distances],
                               "reason": "자사 거점 1km 안에 급속 신설·철거가 있음"},
             "watch_competitors": {"value": stations, "facts": [f["id"] for f in distances[:3]],
-                                  "reason": "변화가 가까운 순", "reasons": {}},
+                                  "reason": "일반 이용 타사 신설을 먼저, 그다음 가까운 순", "reasons": {}},
         }
         return result, self._usage(str(facts), str(result))
 

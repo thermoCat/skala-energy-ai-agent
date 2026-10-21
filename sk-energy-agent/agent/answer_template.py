@@ -148,7 +148,8 @@ class EnergyAnswer:
         c = self.cite
         lines = [f"서울 급속 신설 {c('seoul_added', '{}개')} · 철거 {c('seoul_removed', '{}개')} 중 "
                  f"자사 거점 반경 1km 안 변화 {c('near_changes', '{}건')} "
-                 f"(타사 신설 {c('competitor_new', '{}건')}){self.j('report_needed')}."]
+                 f"(타사 신설 {c('competitor_new', '{}건')}, 그중 일반 이용 "
+                 f"{c('competitor_new_public', '{}건')}){self.j('report_needed')}."]
         if not self.value("report_needed"):
             return lines
         marks = "①②③④⑤"
@@ -158,11 +159,19 @@ class EnergyAnswer:
                 if k.startswith("change:") and f["station_id"] == sid:
                     charger = k.split(":", 1)[1]
                     picks.append(f"{marks[len(picks) % 5]} {f['name']}({f['gu']}) — "
-                                 f"{f['value']}[{f['id']}], {c(f'distance:{charger}', '{}m')}")
+                                 f"{f['value']}[{f['id']}] {c(f'count:{charger}', '{}대')}, "
+                                 f"{c(f'distance:{charger}', '{}m')}")
         lines.append(f"먼저 볼 거점{self.j('watch_competitors')}: " + "  ".join(picks))
         lines.append("주변에 생긴 타사 급속은 같은 충전 수요를 나눠 가질 수 있어, 해당 거점의 급속 "
                      "후보 판단과 함께 보세요.")
         return lines
+
+    def reasons(self, station_id: str | None = None) -> str:
+        # "새 고장 N개" 대신 멈춘 이유별로 — 통신이상이 몰리면 운영사 장애, 점검중이면 곧 복구일 수 있다
+        prefix = f"reason:{station_id}:" if station_id else "reason:"
+        items = [f for k, f in self.by_key.items()
+                 if k.startswith(prefix) and (station_id or k.count(":") == 1)]
+        return ", ".join(f"{f['reason']} {f['value']}개[{f['id']}]" for f in items) or "이유 데이터 없음"
 
     def watch_lines(self) -> list[str]:
         c = self.cite
@@ -171,11 +180,11 @@ class EnergyAnswer:
         marks = "①②③④⑤"
         top = self.value("alert_stations") or []
         picks = [f"{marks[i]} {self.by_key[f'new_failures:{sid}']['name']}"
-                 f"({self.by_key[f'new_failures:{sid}']['gu']}) — "
-                 f"새 고장 {c(f'new_failures:{sid}', '{}개')}" for i, sid in enumerate(top)]
-        lines = [f"자사 거점 {c('stations_affected', '{}곳')} 주변 반경 1km에서 급속충전기가 새로 "
-                 f"멈췄습니다{self.j('alert_needed')} (새 고장 {c('new_failures', '{}개')}, "
-                 f"기준: {c('watch_rule')}).",
+                 f"({self.by_key[f'new_failures:{sid}']['gu']}) — {self.reasons(sid)}"
+                 for i, sid in enumerate(top)]
+        lines = [f"자사 주유소 {c('stations_affected', '{}곳')} 주변 1km에서 급속충전기가 새로 "
+                 f"멈췄습니다{self.j('alert_needed')} — {self.reasons()} "
+                 f"(기준: {c('watch_rule')}).",
                  f"먼저 볼 거점{self.j('alert_stations')}: " + "  ".join(picks)]
         if "stations_rest" in self.by_key:
             lines.append(f"나머지 {c('stations_rest', '{}곳')}은 알림을 눌러 목록에서 확인하세요.")
@@ -238,7 +247,7 @@ class EnergyAnswer:
               replanned_from) -> list[str]:
         station = self.by_key.get("station", {}).get("value")
         if request_type in ("watch", "weekly"):
-            title = "매일 감시" if request_type == "watch" else "주간 경쟁"
+            title = "일간 추적" if request_type == "watch" else "주유소 주간 추적"
             body = self.watch_lines() if request_type == "watch" else self.weekly_lines()
             lines = [f"[{self.by_key['watch_scope']['value']} {title} · "
                      f"{self.by_key['watch_window']['value']}]"]

@@ -110,14 +110,14 @@ def test_watch_job_api_and_alert_inbox(client):
     run = client.post("/api/jobs/daily_watch/run").json()
     assert run["alert_id"] is not None
     alerts = client.get("/api/alerts", params={"unread": True}).json()["alerts"]
-    assert len(alerts) == 1 and len(alerts[0]["payload"]["stations"]) == 23
+    assert len(alerts) == 1 and len(alerts[0]["payload"]["stations"]) == 8
     assert client.post(f"/api/alerts/{run['alert_id']}/read").status_code == 200
     assert client.get("/api/alerts", params={"unread": True}).json()["alerts"] == []
     assert client.post(f"/api/alerts/{run['alert_id']}/read",
                        params={"company": "GS칼텍스"}).status_code == 404   # 다른 회사
     assert client.post("/api/jobs/monthly/run").status_code == 404      # 아직 없는 작업
     weekly = client.post("/api/jobs/weekly/run").json()
-    assert weekly["alert_id"] is not None and "수서지점" in weekly["message"]
+    assert weekly["alert_id"] is not None and "태봉셀프주유소" in weekly["message"]
     comp = client.get("/api/stations/A0009177/competition").json()       # 타사 거점도 공개 정보
     assert comp["fast_1km"] > 0 and comp["top"]
 

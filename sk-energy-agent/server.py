@@ -309,11 +309,11 @@ async def api_decisions(company: str = "SK에너지", station_id: str | None = N
 
 @app.post("/api/jobs/{job}/run")
 async def api_run_job(job: str, company: str = "SK에너지", gu: str | None = None):
-    """상시 작업 수동 실행 (시연용) — 매일 감시(daily_watch) · 주간 경쟁(weekly)"""
+    """상시 작업 수동 실행 (시연용) — 일간 추적(daily_watch) · 주유소 주간 추적(weekly)"""
     if job not in ("daily_watch", "weekly"):
         raise HTTPException(status_code=404, detail={"message": f"없는 작업: {job}"})
     result = await app.state.graph.ainvoke(
-        {"query": "매일 감시", "job": job, "thread_id": f"job-{job}", "history": [],
+        {"query": "일간 추적", "job": job, "thread_id": f"job-{job}", "history": [],
          "company": company, "gu": gu, "events": [], "cost_usd": 0.0})
     return {"job": job, "company": company, "gu": gu, "job_run_id": result["job_run_id"],
             "alert_id": result.get("alert_id"), "llm_calls": result.get("llm_calls", 0),

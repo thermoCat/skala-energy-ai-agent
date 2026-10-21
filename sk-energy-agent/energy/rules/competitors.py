@@ -18,6 +18,31 @@ def is_own_operator(company: str, operator: str) -> bool:
     return operator in criteria.COMPANY_OPERATORS.get(company, (company,))
 
 
+def charger_use(place: str, limit_yn: str) -> str:
+    """충전기를 일반 이용·버스 전용·이용 제한으로 나누는 함수
+
+    Args:
+        place: 충전소 이름 (statNm)
+        limit_yn: 이용자 제한 여부 (limitYn, "Y"/"N")
+    Returns:
+        이용 구분 이름
+    """
+    if limit_yn == "N":
+        return criteria.USE_PUBLIC
+    if limit_yn != "Y":
+        return criteria.USE_UNKNOWN
+    if any(w in str(place) for w in criteria.BUS_DEPOT_WORDS):
+        return criteria.USE_BUS
+    return criteria.USE_LIMITED
+
+
+def watch_order_key(change: dict) -> tuple:
+    """먼저 볼 변화의 정렬 기준 — 일반 이용 타사 신설을 먼저, 그다음 가까운 순"""
+    public_rival = (change["change"] == "신설" and not change["own_operator"]
+                    and change.get("use") == criteria.USE_PUBLIC)
+    return (not public_rival, change["distance_m"])
+
+
 def nearby_operators(snap: Snapshot, station_id: str) -> dict | None:
     """거점 반경 1km 급속충전기를 운영사별로 세는 함수 (경계 너머 경기·인천 포함)
 
@@ -59,7 +84,7 @@ def weekly_competition(history: list[pd.DataFrame], stations: pd.DataFrame,
         stations: 주유소·LPG 표
         company: 회사
     Returns:
-        구간, 서울 전체 신설·철거 수, 자사 거점 1km 안 신설·철거 목록(운영사·자사 여부·거리) dict
+        구간, 서울 전체 신설·철거 수, 자사 거점 1km 안 신설·철거 목록(운영사·자사 여부·이용 구분·거리) dict
     """
     window = [history[0]["collected_at"].iloc[0], history[-1]["collected_at"].iloc[0]]
     added, removed = _changes(history) if len(history) >= 2 else (history[0][:0], history[0][:0])
@@ -75,6 +100,8 @@ def weekly_competition(history: list[pd.DataFrame], stations: pd.DataFrame,
             if d[i] <= NEAR_RADIUS_M:
                 rows.append({"change": change, "charger": r["key"], "operator": r["busiNm"],
                              "own_operator": is_own_operator(company, r["busiNm"]),
+                             "place": r.get("statNm"), "output_kw": r.get("output"),
+                             "use": charger_use(r.get("statNm"), r.get("limitYn")),
                              "station_id": own.iloc[i]["UNI_ID"], "name": own.iloc[i]["OS_NM"],
                              "gu": own.iloc[i]["자치구"], "distance_m": int(round(d[i]))})
         return rows
@@ -84,4 +111,5 @@ def weekly_competition(history: list[pd.DataFrame], stations: pd.DataFrame,
     return {"company": company, "window": window,
             "seoul_added": int(len(added)), "seoul_removed": int(len(removed)),
             "changes": changes, "competitor_new": len(competitor_new),
+            "competitor_new_public": sum(c["use"] == criteria.USE_PUBLIC for c in competitor_new),
             "report_needed": bool(changes)}

@@ -11,6 +11,7 @@ from langgraph.config import get_stream_writer
 from langsmith import traceable
 
 from energy import criteria
+from energy.rules.competitors import watch_order_key
 from energy.seoul import BRAND_ALIASES, SEOUL_GU
 
 from .deps import SupervisorDeps
@@ -403,14 +404,14 @@ async def energy_validate_node(state: dict, deps: SupervisorDeps) -> dict:
                                           "verdict": verdict, "issues": issues}]}
 
 
-# ── 상시 작업 (매일 감시 · 주간 경쟁) ─────────────────────────────
+# ── 상시 작업 (일간 추적 · 주유소 주간 추적) ─────────────────────────────
 
 JOBS = {
     "daily_watch": {"request_type": "watch", "tool": "detect_anomalies", "needed": "alert_needed",
-                    "kind": "new_charger_failure", "title": "매일 감시",
+                    "kind": "new_charger_failure", "title": "일간 추적",
                     "quiet": "자사 거점 주변에 새로 멈춘 급속충전기가 없습니다. 알림을 만들지 않았습니다."},
     "weekly": {"request_type": "weekly", "tool": "diff_competitors", "needed": "report_needed",
-               "kind": "weekly_competition", "title": "주간 경쟁",
+               "kind": "weekly_competition", "title": "주유소 주간 추적",
                "quiet": "자사 거점 반경 1km에 새로 생기거나 없어진 급속충전기가 없습니다. "
                         "보고를 만들지 않았습니다."},
 }
@@ -421,7 +422,7 @@ def _job_baseline(job: str, summary: dict) -> dict:
         top = [s["station_id"] for s in summary["stations"][:criteria.ALERT_TOP_STATIONS]]
         return {"alert_needed": summary["alert_needed"], "alert_stations": top}
     stations = []
-    for c in sorted(summary["changes"], key=lambda c: c["distance_m"]):
+    for c in sorted(summary["changes"], key=watch_order_key):
         if c["station_id"] not in stations:
             stations.append(c["station_id"])
     return {"report_needed": summary["report_needed"],

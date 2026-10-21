@@ -6,7 +6,8 @@
     python3 -I build_fast_status.py <스냅샷 폴더> [<스냅샷 폴더> ...]
 
 입력: ev_chargers_z11.csv
-출력: fast_status.csv   (collected_at, statId, chgerId, busiNm, zscode, lat, lng, stat, statUpdDt, output)
+출력: fast_status.csv   (collected_at, statId, chgerId, statNm, busiNm, zscode, lat, lng, stat, statUpdDt,
+                         output, limitYn)
 """
 
 import sys
@@ -14,8 +15,9 @@ from pathlib import Path
 
 import pandas as pd
 
-COLUMNS = ["collected_at", "statId", "chgerId", "busiNm", "zscode", "lat", "lng", "stat",
-           "statUpdDt", "output"]
+# statNm·limitYn: 주간 추적에서 버스 차고지 같은 이용 제한 충전기를 일반 이용과 나눠 보여주려고 둔다
+COLUMNS = ["collected_at", "statId", "chgerId", "statNm", "busiNm", "zscode", "lat", "lng", "stat",
+           "statUpdDt", "output", "limitYn"]
 
 
 def main(folder):

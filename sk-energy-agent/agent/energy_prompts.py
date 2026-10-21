@@ -125,7 +125,8 @@ WATCH_JUDGE_SYSTEM = (
 COMPETITION_JUDGE_SYSTEM = (
     "당신은 정유사의 정책·경쟁 에이전트다. 자사 거점 주변 급속충전기 신설·철거 사실 [F]만 보고 판별하라.\n"
     "- report_needed: 이번 주 관리자에게 보고할 경쟁 변화가 있는가\n"
-    "- watch_competitors: 먼저 볼 자사 거점 station_id 최대 3곳 (타사 신설이 가까운 곳부터)\n"
+    "- watch_competitors: 먼저 볼 자사 거점 station_id 최대 3곳 — '일반 이용' 타사 신설이 있는 거점을 먼저, "
+    "그다음 가까운 곳부터 ('버스 전용'·'이용 제한' 충전기는 주유소 고객과 수요가 겹치지 않음)\n"
     "JSON 객체로만 답하라: "
     '{"report_needed": {"value": bool, "facts": ["F1"], "reason": str}, '
     '"watch_competitors": {"value": [station_id], "facts": [...], "reason": str}}'
