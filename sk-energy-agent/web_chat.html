@@ -17,6 +17,14 @@
   header b { font-size: 15px; margin-right: auto; white-space: nowrap; }
   header button { white-space: nowrap; }
   header label { font-size: 12px; color: var(--muted); display: flex; gap: 4px; align-items: center; white-space: nowrap; }
+  /* 아이폰 설정 토글처럼 — 켜면 초록 트랙에 손잡이가 오른쪽으로 */
+  .switch { gap: 8px !important; cursor: pointer; user-select: none; }
+  .switch input { position: absolute; opacity: 0; width: 0; height: 0; }
+  .switch .track { position: relative; width: 38px; height: 22px; border-radius: 11px; background: #4a4a60; transition: background .2s; flex: none; }
+  .switch .knob { position: absolute; top: 2px; left: 2px; width: 18px; height: 18px; border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,.4); transition: transform .2s; }
+  .switch input:checked + .track { background: #34c759; }
+  .switch input:checked + .track .knob { transform: translateX(16px); }
+  .switch input:focus-visible + .track { outline: 2px solid var(--accent); outline-offset: 2px; }
   button { padding: 8px 14px; border-radius: 9px; border: none; background: var(--accent); color: white; font-size: 13px; cursor: pointer; }
   button.ghost { background: #34345a; }
   button.link { background: transparent; color: var(--muted); padding: 0; font-size: 12px; }
@@ -119,8 +127,7 @@
 <div id="app">
   <header>
     <b>{{ company }} 에너지 허브</b>
-    <label><input type="checkbox" v-model="ownOnly" /> 자사 주유소만</label>
-    <label><input type="checkbox" v-model="showDistricts" /> 구별 신호</label>
+    <label class="switch"><input type="checkbox" v-model="ownOnly" role="switch" /><span class="track"><span class="knob"></span></span> 자사 주유소만</label>
     <button type="button" class="ghost" @click="showAlerts">🔔 알림 {{ unread }}</button>
   </header>
   <main>
@@ -283,7 +290,6 @@ createApp({
   setup() {
     const company = 'SK에너지';
     const ownOnly = ref(false);
-    const showDistricts = ref(true);
     const panel = reactive({ kind: null, card: null, district: null, cluster: null, decisions: [],
                              alerts: [], runInfo: '' });
     const unread = ref(0);
@@ -386,10 +392,6 @@ createApp({
       refreshUnread();
     });
     watch(ownOnly, () => pinsData && drawPins(pinsData.pins));
-    // 핀과 같은 캔버스에 그려야 구 클릭이 먹힌다 — 다시 켤 때는 핀 아래로 내린다
-    watch(showDistricts, v => v
-      ? districtLayer.addTo(map).eachLayer(g => g.bringToBack())
-      : districtLayer.remove());
 
     // ── 정보 패널 ───────────────────────────────────────────────
     function stationWhy(card) {
@@ -661,7 +663,7 @@ createApp({
       es.onerror = finish;
     }
 
-    return { company, ownOnly, showDistricts, evPerFast, panel, decision, log, input, sending, logEl, target, suggestions,
+    return { company, ownOnly, evPerFast, panel, decision, log, input, sending, logEl, target, suggestions,
              unread, watching, signed, targetPrefix, ev, districtFlags, candidates, stationWhy, focusStation,
              clearTarget, saveDecision, showAlerts, runJob, alertTitle, alertWindow, alertItems, useClass, alertOperators, openAlertStation,
              answerView, onSubmit };
