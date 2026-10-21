@@ -149,7 +149,7 @@ def add_fast_nearby(stations: pd.DataFrame, fast: pd.DataFrame,
 
 
 def load_status_history(limit: int = 4, until: str | None = None) -> list[pd.DataFrame]:
-    """최근 스냅샷들의 서울 급속 상태 표를 오래된 순으로 반환하는 함수 (매일 감시용)
+    """최근 스냅샷들의 서울 급속 상태 표를 오래된 순으로 반환하는 함수 (일간·주간 추적용)
 
     Args:
         limit: 최근 몇 개를 읽을지 (일간 추적 = 정상이던 1회 + 연속 고장 3회)

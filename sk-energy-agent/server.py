@@ -1,10 +1,10 @@
 """주유소 복합 에너지 허브 Agent — FastAPI 백엔드 (채팅 SSE · 대시보드 API · 상시 작업)
 
-- Wave 1  : lifespan에서 Agent 번들(MCP 연결·LLM·그래프)을 프로세스당 정확히 1회 생성,
-            app.state로 모든 요청이 공유 (creation_count/instance_id로 증명)
-- Wave 2  : mcp_server.py를 subprocess(stdio)로 기동해 연결 유지
-- Wave 3  : GET /chat/stream — 그래프 실행 과정을 SSE 이벤트로 스트리밍
-- Wave 12 : 대화·판단 이력·알림을 SQLite(session.db)에 저장 — 재시작해도 유지
+- lifespan에서 Agent 번들(MCP 연결·LLM·그래프)을 프로세스당 정확히 1회 생성,
+  app.state로 모든 요청이 공유 (creation_count/instance_id로 확인)
+- mcp_server.py를 subprocess(stdio)로 기동해 연결 유지
+- GET /chat/stream — 그래프 실행 과정을 SSE 이벤트로 스트리밍
+- 대화·판단 이력·알림을 SQLite(session.db)에 저장 — 재시작해도 유지
 - LangSmith: 요청당 chat_request 루트 run 아래로 노드·LLM·MCP 호출이 계층 기록됨
 """
 import json
@@ -31,10 +31,10 @@ from agent.mcp_client import MCPClient
 from agent.session_store import SqliteSessionStore
 from energy import criteria
 
-CREATION_COUNT = 0   # Wave 1 — 프로세스 내 Agent 번들 생성 횟수 (항상 1이어야 정상)
+CREATION_COUNT = 0   # 프로세스 내 Agent 번들 생성 횟수 (항상 1이어야 정상)
 
 
-class ChatRequest(BaseModel):   # Wave 1 — Pydantic 요청 검증
+class ChatRequest(BaseModel):   # Pydantic 요청 검증
     message: str
     thread_id: str = "default"
     company: str = "SK에너지"
@@ -88,7 +88,7 @@ async def lifespan(app: FastAPI):
     global CREATION_COUNT
     CREATION_COUNT += 1
     mcp = MCPClient()
-    await mcp.start()   # Wave 2 — MCP subprocess는 서버 수명 동안 딱 1개
+    await mcp.start()   # MCP subprocess는 서버 수명 동안 딱 1개
     backend, fast_llm, quality_llm = _build_llms()
     app.state.llm_backend = backend
     deps = SupervisorDeps(
@@ -145,7 +145,7 @@ def _metadata(result: dict, run_id: str | None) -> dict:
 async def _handle_chat(req: ChatRequest) -> tuple[dict, str | None]:
     deps = app.state.deps
     message, thread_id = req.message, req.thread_id
-    history = deps.session_store.load(thread_id)   # Wave 12
+    history = deps.session_store.load(thread_id)
     result = await app.state.graph.ainvoke(_initial_state(
         message, thread_id, history, req.company, req.station_id, req.gu))
     deps.session_store.append(thread_id, "user", message)
@@ -164,10 +164,10 @@ async def chat(req: ChatRequest):
 @app.get("/chat/stream")
 async def chat_stream(message: str, thread_id: str = "default", company: str = "SK에너지",
                       station_id: str | None = None, gu: str | None = None):
-    """Wave 3 — 그래프의 노드별 진행 상황을 SSE로 스트리밍.
+    """그래프의 노드별 진행 상황을 SSE로 스트리밍.
 
     이벤트마다 'data: {json}\\n\\n' 형태로 내려보내고 마지막에 data: [DONE] 센티널을
-    보낸다 — 프론트엔드는 \\n\\n 경계로 이벤트를 분리해 파싱해야 한다(Wave 3b).
+    보낸다 — 프론트엔드는 \\n\\n 경계로 이벤트를 분리해 파싱해야 한다.
     """
     deps = app.state.deps
 

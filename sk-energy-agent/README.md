@@ -47,7 +47,7 @@ bash sh/run_frontend.sh        # 대시보드 :8600 (새 터미널)
 | Ollama (로컬 qwen3:0.6b / 8b) | `bash sh/run_agent_ollma.sh` | 없음 (로컬) |
 | OpenAI | `bash sh/run_agent_openai.sh` | **과금** |
 
-fake LLM은 경유 유휴 위험을 일부러 1건 틀리게 판별합니다(감소율 순위를 보지 않음). 그래서 권위 게이트가 교정하는 장면이 매번 재현됩니다.
+fake LLM은 경유차 감소를 일부러 1건 틀리게 판별합니다(감소율 순위를 보지 않음). 그래서 권위 게이트가 교정하는 장면이 매번 재현됩니다.
 
 ## 화면
 

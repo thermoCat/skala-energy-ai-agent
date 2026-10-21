@@ -114,7 +114,7 @@ def get_map_pins(company: str = "SK에너지", brand: str | None = None) -> dict
 
 @mcp.tool()
 def score_district(gu: str) -> dict:
-    """자치구 기준 판정(전기 병목·경유/LPG 유휴 위험·전기 유휴·수소 병목)을 반환합니다. 권위 게이트 전용입니다."""
+    """자치구 기준 판정(충전기 부족·경유/LPG 차량 감소·전기 유휴·수소 병목)을 반환합니다. 권위 게이트 전용입니다."""
     if not _known_gu(gu):
         return _error("없는 자치구", gu=gu)
     return _with_meta(district_baseline(SNAPSHOT, gu), "energy/rules/score.py")
@@ -142,7 +142,7 @@ def simulate(station_id: str, fast_add: int, kw: int = 100) -> dict:
 
 @mcp.tool()
 def detect_anomalies(company: str = "SK에너지", gu: str | None = None) -> dict:
-    """매일 감시 1차 감지: 자사 거점 반경 1km 급속이 최근 3회 연속 고장이고 24시간 안에 멈춘 것을 거점별로 묶습니다."""
+    """일간 추적 1차 감지: 직전 수집에서 정상이던 자사 거점 반경 1km 급속이 그 뒤 3회 연속 고장인 것을 거점별·이유별로 묶습니다."""
     if gu is not None and not _known_gu(gu):
         return _error("없는 자치구", gu=gu)
     return _with_meta(_detect(STATUS_HISTORY, SNAPSHOT.stations, company, gu),

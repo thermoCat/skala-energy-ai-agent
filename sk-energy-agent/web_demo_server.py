@@ -1,7 +1,6 @@
-"""web_demo_server.py — all_total_vue 에이전트와 브라우저 채팅창으로 대화해보는 데모.
+"""web_demo_server.py — 에너지 허브 관리자 대시보드(web_chat.html)를 띄우는 서버.
 
-web_chat.html이 바닐라 JS 대신 Vue 3(CDN 글로벌 빌드, 별도 빌드 단계 없음)로 되어
-있다는 점만 all_total과 다르다. server.py(8100, 기존 통합 테스트 서버)는 전혀
+화면은 Vue 3·Leaflet(CDN, 빌드 단계 없음) 한 장이고, server.py(8100, 백엔드)는
 건드리지 않는다. 이 스크립트는
 - web_chat.html 한 장을 같은 출처(origin)로 띄우고
 - /chat/stream 요청을 그대로 8100으로 중계(프록시)해서

@@ -37,7 +37,7 @@ data/
 | `opinet/grid_plan*.json` | 반경 검색 원 배치 계산 결과 | `plan_grid.py` | 커밋 |
 | `seoul_stations.csv` | 서울 주유소 397 + LPG 73 = 470곳 (좌표·자치구·상표·주유소 안 충전기). 자치구 배정 신뢰도 컬럼 `판정` 은 코드에서 `자치구_판정` 으로 읽음 (다음 스냅샷부터 파일에도 `자치구_판정`) | `build_supply.py` | 커밋 |
 | `seoul_fuel_balance.csv` | 자치구 × 5개 연료 수급표 | `build_supply.py` | 커밋 |
-| `seoul_ev_bottleneck_rank.csv` | 전기 병목 순위 (예시) | ⚠️ 생성 스크립트 없음 | 커밋 |
+| `seoul_ev_bottleneck_rank.csv` | 충전기 부족 순위 (초기 예시, 지금은 `energy/rules/score.py` 가 계산) | ⚠️ 생성 스크립트 없음 | 커밋 |
 
 ## snapshots/<날짜>T<시>/ — 매시 수집 (일간 추적용)
 

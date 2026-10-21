@@ -102,7 +102,7 @@ def map_pins(snap: Snapshot, company: str, brand: str | None = None) -> dict:
         company: 로그인 회사 (자사 핀 강조·⚡ 배지 기준)
         brand: 이 회사 핀만 (없으면 전체)
     Returns:
-        pins(좌표·회사·시설·자사 여부·배지)와 districts(병목·유휴 위험·수소) dict
+        pins(좌표·회사·시설·자사 여부·배지)와 districts(충전기 부족·차량 감소·수소) dict
     """
     badges = {}
     for gu in snap.stations.loc[snap.stations["brand"] == company, "자치구"].unique():

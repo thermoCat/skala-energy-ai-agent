@@ -31,7 +31,7 @@ def fast_candidates(own: pd.DataFrame, ev_bottleneck: bool) -> tuple[set, set]:
 
     Args:
         own: 묶음 거점 표
-        ev_bottleneck: 자치구 전기 병목 여부
+        ev_bottleneck: 자치구 충전기 부족 여부
     Returns:
         (조건 충족 거점 번호 집합, 후보로 고른 거점 번호 집합)
     """
@@ -60,7 +60,7 @@ def _station_verdict(row: pd.Series, eligible: set, chosen: set,
 
 
 def fuel_signals(district: dict, own: pd.DataFrame) -> list[dict]:
-    """경유·LPG 유휴 위험을 묶음 단위 신호로 만드는 함수
+    """경유·LPG 차량 감소를 묶음 단위 신호로 만드는 함수
 
     판매량이 없어 같은 자치구 거점끼리 구별할 근거가 없으므로 거점별 판정으로 내리지 않는다.
 
@@ -68,7 +68,7 @@ def fuel_signals(district: dict, own: pd.DataFrame) -> list[dict]:
         district: 자치구 기준 판정
         own: 묶음 거점 표
     Returns:
-        연료별 유휴 위험 여부·감소율·해당 시설 자사 거점 수·안내 문구 목록
+        연료별 차량 감소 여부·감소율·해당 시설 자사 거점 수·안내 문구 목록
     """
     signals = []
     for fuel, item, rate_key, prodcd in FUEL_SIGNALS:

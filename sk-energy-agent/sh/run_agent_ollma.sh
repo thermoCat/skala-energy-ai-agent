@@ -1,8 +1,7 @@
 #!/usr/bin/env bash
 #
-# all_total — Ollama 실모델로 에이전트를 "기동만" 해두는 스크립트.
+# 에너지 허브 Agent — Ollama 실모델(로컬, 과금 없음)로 백엔드를 기동해 두는 스크립트.
 #
-# run_ollama_test.sh처럼 자동으로 요청을 보내고 검증한 뒤 끝나는 것이 아니라,
 # 서버를 켠 채로 그대로 떠 있게 두어 사용자가 직접 테스트해볼 수 있게 한다:
 #   - curl로 /chat, /chat/stream 호출해보기 (주유소 번호·자치구로 진단)
 #   - web_demo_server.py를 추가로 띄워 브라우저 채팅 화면으로 써보기
@@ -34,7 +33,7 @@ echo "모델: fast=$FAST_MODEL / quality=$QUALITY_MODEL"
 STARTED_OLLAMA=""
 if ! curl -s --max-time 2 http://127.0.0.1:11434/api/tags >/dev/null 2>&1; then
     echo "ollama serve가 없어 백그라운드로 기동합니다..."
-    nohup ollama serve > /tmp/all_total_ollama.log 2>&1 &
+    nohup ollama serve > /tmp/energy_hub_ollama.log 2>&1 &
     STARTED_OLLAMA=$!
     for _ in $(seq 1 30); do
         curl -s --max-time 2 http://127.0.0.1:11434/api/tags >/dev/null 2>&1 && break

@@ -55,7 +55,7 @@ def h2_queue_flags(h2: pd.DataFrame) -> pd.Series | None:
 
 
 def score_districts(snap: Snapshot, extra_fast: dict[str, int] | None = None) -> pd.DataFrame:
-    """25개 자치구의 전기 병목·유휴 위험·수소 병목 기준 판정 표를 만드는 함수
+    """25개 자치구의 충전기 부족·차량 감소·전기 유휴·수소 병목 기준 판정 표를 만드는 함수
 
     Args:
         snap: 스냅샷
@@ -123,7 +123,7 @@ def district_baseline(snap: Snapshot, gu: str) -> dict:
         snap: 스냅샷
         gu: 자치구 이름
     Returns:
-        병목·유휴 위험 기준 값과 순위·점수, rule_version dict
+        충전기 부족·차량 감소 기준 값과 순위·점수, rule_version dict
     """
     row = district_table(snap).loc[gu]
     return {

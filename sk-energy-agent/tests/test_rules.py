@@ -35,7 +35,7 @@ def test_fuel_idle_is_bottom_20_percent_by_decline_rate():
 def test_ev_idle_needs_three_snapshots():
     busy = busy_pct_by_gu(SNAPSHOT)
     assert ev_idle_flags([busy]) is None
-    # 같은 실측값이 3번 연속이면 하위 20% 자치구가 그대로 유휴 위험
+    # 같은 실측값이 3번 연속이면 하위 20% 자치구가 그대로 전기 유휴
     flags = ev_idle_flags([busy, busy, busy])
     assert flags.equals(bottom_flags(busy, criteria.EV_IDLE_BOTTOM_RATIO))
     assert flags.sum() >= 5
@@ -68,7 +68,7 @@ def test_every_cluster_card_carries_site_checks_and_conversion_types():
 
 
 def test_idle_risk_is_cluster_signal_not_station_badge():
-    # 강남구: 전기 병목 아님, 경유 감소율 하위 20% — 판매량이 없어 거점마다 붙이지 않는다
+    # 강남구: 충전기 부족 아님, 경유 감소율 하위 20% — 판매량이 없어 거점마다 붙이지 않는다
     cluster = review_cluster(SNAPSHOT, "강남구", "SK에너지")
     assert {s["verdict"] for s in cluster["stations"]} == {"keep"}
     diesel = next(f for f in cluster["fuel_signals"] if f["fuel"] == "경유")

@@ -131,6 +131,6 @@ def test_district_review_prompt(mcp):
 
 
 def test_card_shows_only_own_fuel_signal(mcp):
-    # 서대문구는 LPG 유휴 위험 구지만, 주유소 카드에는 경유 신호만 해당 — 경유는 아니므로 비어 있음
+    # 서대문구는 LPG차 감소 구지만, 주유소 카드에는 경유 신호만 해당 — 경유는 아니므로 비어 있음
     card = mcp("get_station_card", station_id="A0000568")    # 서대문구 광호주유소
     assert card["fuel_signals"] == []

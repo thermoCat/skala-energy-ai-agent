@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 #
-# all_total_vue — 로컬 Ollama 환경을 구성하는 스크립트.
+# 에너지 허브 Agent — 로컬 Ollama 환경을 구성하는 스크립트.
 #
-# 이 실습에 필요한 모델(기본 qwen3:0.6b / qwen3:8b)이 이미 받아져 있으면 그대로
+# 이 서비스에 필요한 모델(기본 qwen3:0.6b / qwen3:8b)이 이미 받아져 있으면 그대로
 # 재사용하고(삭제·재다운로드 없음), 없는 모델만 새로 받는다.
 #
 # "모델이 이상하게 응답한다", "처음부터 깨끗하게 다시 세팅하고 싶다" 할 때는
@@ -41,7 +41,7 @@ fi
 
 # ── 2) 모델 확인/구성을 위해 ollama serve 임시 기동 ─────────────────────
 echo "모델 확인을 위해 ollama serve를 임시로 띄웁니다..."
-nohup ollama serve > /tmp/all_total_vue_ollama_setup.log 2>&1 &
+nohup ollama serve > /tmp/energy_hub_ollama_setup.log 2>&1 &
 
 cleanup() {
     echo

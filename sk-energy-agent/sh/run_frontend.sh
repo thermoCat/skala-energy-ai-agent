@@ -1,14 +1,10 @@
 #!/usr/bin/env bash
 #
-# all_total_vue — web_demo_server.py(브라우저 채팅 화면, 이 실습의 "프론트엔드" 역할)를
-# 띄우는 스크립트.
+# 에너지 허브 Agent — 관리자 대시보드(web_demo_server.py + web_chat.html)를 띄우는 스크립트.
 #
-# 이 실습엔 별도 npm/Next.js 프론트엔드가 없고, web_demo_server.py + web_chat.html
-# 조합이 그 역할을 한다 — server.py(8100, 백엔드)는 건드리지 않고, web_chat.html을
-# 같은 출처(origin)로 띄운 뒤 /chat, /chat/stream 요청을 8100으로 프록시해주는
-# 아주 얇은 레이어다(브라우저 CORS 제약을 피하기 위함).
-# web_chat.html 내부만 바닐라 JS 대신 Vue 3(CDN 글로벌 빌드, 빌드 단계 없음)로
-# 되어 있다는 점이 all_total과 다르다.
+# 별도 npm 빌드 없이 Vue 3·Leaflet(CDN) 화면 한 장을 같은 출처(origin)로 띄우고,
+# /chat/stream·/api 요청을 백엔드(server.py, 8100)로 프록시하는 얇은 레이어다
+# (브라우저 CORS 제약을 피하기 위함).
 #
 # ⚠️ 먼저 run_agent_fake.sh / run_agent_ollma.sh / run_agent_openai.sh 로 백엔드(8100)를
 # 띄워둔 상태여야 한다 — 백엔드 없이 이 스크립트만 띄우면 채팅 화면은 열리지만

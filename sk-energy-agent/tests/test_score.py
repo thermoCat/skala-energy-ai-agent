@@ -18,7 +18,7 @@ def test_dongdaemun_scores_match_reference_rank_file():
 
 
 def test_dongdaemun_diesel_not_idle_because_milder_than_seoul():
-    # 동대문 경유 -4.8%, 서울 -6.6% → 서울보다 덜 줄어 유휴 위험 아님
+    # 동대문 경유 -4.8%, 서울 -6.6% → 서울보다 덜 줄어 차량 감소 아님
     baseline = district_baseline(SNAPSHOT, "동대문구")
     assert baseline["ev_bottleneck"] is True
     assert baseline["diesel_idle"] is False

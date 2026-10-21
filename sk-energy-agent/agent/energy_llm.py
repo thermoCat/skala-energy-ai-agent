@@ -63,7 +63,7 @@ class EnergyQualityMixin:
 
     @traceable(run_type="llm", name="energy.judge")
     def judge_energy(self, request_type: str, facts: list[dict]) -> tuple[dict, dict]:
-        """사실 [F]만 보고 병목·유휴 위험·급속 후보(또는 시나리오 병목 전후)를 판별하는 함수
+        """사실 [F]만 보고 충전기 부족·차량 감소·급속 후보(또는 신설 전후 충전기 부족)를 판별하는 함수
 
         Args:
             request_type: "station" | "district" | "scenario"
