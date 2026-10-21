@@ -123,7 +123,7 @@ class EnergyAnswer:
             f"충전기 부족 순위 {c('score_rank_before', '{}위')} → {c('score_rank_after', '{}위')} → "
             f"{change.get(before_after, '판별 불가')}{self.j('ev_bottleneck_before')}"
             f"{self.j('ev_bottleneck_after')}",
-            f"3) 필요 주차면 {c('parking_spaces', '{}개')}, 시간당 처리 약 {c('cars_per_hour', '{}대')} "
+            f"3) 필요 주차면 {c('parking_spaces', '{}개')}, 새 충전기로 시간당 약 {c('cars_per_hour', '{}대')} 충전 "
             f"(급속 1회 충전 시간 중앙값 {c('occupancy_min', '{}분')} 가정)",
         ]
 
@@ -223,8 +223,9 @@ class EnergyAnswer:
             change = {(True, True): "여전히 충전기 부족", (True, False): "충전기 부족에서 벗어남",
                       (False, False): "전후 모두 충전기 부족 아님", (False, True): "충전기 부족이 됨"}
             before_after = (self.value("ev_bottleneck_before"), self.value("ev_bottleneck_after"))
-            return (f"요약: 충전기 {c('fast_add', '{}대')} 신설 → {change.get(before_after, '판별 불가')}, "
-                    f"시간당 약 {c('cars_per_hour', '{}대')}")
+            return (f"요약: 충전기 {c('fast_add', '{}대')} 신설 → {change.get(before_after, '판별 불가')} · "
+                    f"급속 1개당 전기차 {c('ev_per_fast_before', '{}')} → {c('ev_per_fast_after', '{}대')} · "
+                    f"새 충전기로 시간당 약 {c('cars_per_hour', '{}대')} 충전")
         ev = {True: "충전기 부족 구", False: "충전기 부족 아님"}.get(self.value("ev_bottleneck"),
                                                               "충전기 부족 판별 불가")
         idle = [f"{fuel} 감소 큰 구" for item, fuel in (("diesel_idle", "경유차"), ("lpg_idle", "LPG차"))
