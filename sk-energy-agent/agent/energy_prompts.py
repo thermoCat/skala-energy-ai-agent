@@ -14,7 +14,7 @@ CLASSIFY_SYSTEM = (
     "당신은 주유소 복합 에너지 허브 서비스의 Supervisor 분류기다. 사용자 질문에서 아래 값만 "
     "뽑아 JSON 객체로 답하라. 질문에 없으면 null.\n"
     '{"gu": 서울 자치구 이름, "station_name": "…주유소" 또는 "…충전소"로 끝나는 상호, '
-    '"brand": 회사 이름, "fast_add": "급속 N기"의 N(정수), "kw": 출력 kW(정수)}'
+    '"brand": 회사 이름, "fast_add": 새로 넣을 충전기 수 — "충전기 N대 신설"·"급속 N기"의 N(정수), "kw": 출력 kW(정수)}'
 )
 
 CLASSIFY_SCHEMA = {
@@ -77,7 +77,7 @@ def normalize_classify(content: str, query: str, gu_names: tuple, brand_aliases:
     brand = raw.get("brand")
     brand = brand_aliases.get(brand) if isinstance(brand, str) and brand in query else None
     # 급속 수·출력은 숫자를 지어낼 수 있어 질문의 숫자와 맞을 때만 쓴다
-    fast = re.search(r"급속\s*(\d+)\s*기", query)
+    fast = re.search(r"(?:급속|충전기)\s*(\d+)\s*(?:기|대)", query)
     fast_add = int(fast.group(1)) if fast and raw.get("fast_add") == int(fast.group(1)) else None
     kw = re.search(r"(\d+)\s*kW", query, re.IGNORECASE)
     return {"gu": gu, "station_name": station_name, "brand": brand, "fast_add": fast_add,
@@ -316,7 +316,7 @@ WRITE_SYSTEM = (
     "당신은 정유사 리테일 네트워크 관리자에게 보고하는 작성 에이전트다. 한국어로 짧게 쓴다.\n"
     "'답변 뼈대'를 읽기 쉬운 보고 문장으로 다듬어라. 규칙:\n"
     "1. 뼈대의 줄 순서, 모든 숫자, [F번호]·[J번호]를 그대로 남긴다. 숫자를 빼거나 바꾸거나 새로 만들지 않는다\n"
-    "2. 결론(병목·차량 감소·급속 후보)은 뼈대와 같아야 한다\n"
+    "2. 결론(충전기 부족·차량 감소·급속 후보)은 뼈대와 같아야 한다\n"
     "3. 판매량·부지·전력처럼 사실에 없는 정보는 말하지 않는다\n"
     "4. 뼈대의 '현장 확인 항목' 줄과 마지막 안내 문장은 글자 그대로 둔다\n"
     "5. 뼈대에 없는 줄·제목·항목(예: 새 '현장 확인 항목', '안내')을 덧붙이지 않는다\n"

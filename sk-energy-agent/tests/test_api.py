@@ -33,7 +33,7 @@ def test_own_station_card_within_one_second(client):
     r = client.get("/api/stations/A0009172/card")
     assert time.perf_counter() - started < 1.0
     card = r.json()
-    assert card["verdict"]["label"] == "⚡ 급속 후보" and len(card["site_checks"]) == 4
+    assert card["verdict"]["label"] == "⚡ 급속 후보" and len(card["site_checks"]) == 2
 
 
 def test_other_company_card_and_unknown_station(client):
@@ -88,7 +88,7 @@ def test_chat_with_gu_from_map_click(client):
 
 def test_record_decision_and_read_back(client):
     r = client.post("/api/decisions", json={"station_id": "A0009172", "choice": "보류",
-                                            "conversion_type": "소형 추가 (초급속 1~2기)",
+                                            "conversion_type": "소형 추가 (초급속 충전기 1~2대)",
                                             "note": "부지 협의 필요"})
     assert r.status_code == 200 and r.json()["gu"] == "동대문구"
     log = client.get("/api/decisions", params={"station_id": "A0009172"}).json()

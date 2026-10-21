@@ -130,7 +130,7 @@ def review_cluster(gu: str, brand: str = "SK에너지") -> dict:
 
 @mcp.tool()
 def simulate(station_id: str, fast_add: int, kw: int = 100) -> dict:
-    """거점에 급속 N기를 더했을 때 자치구 순위·병목 전후, 필요 주차면, 시간당 처리 대수를 계산합니다."""
+    """거점에 급속충전기 N대를 신설했을 때 자치구 순위·병목 전후, 필요 주차면, 시간당 처리 대수를 계산합니다."""
     try:
         return _with_meta(simulate_fast_add(SNAPSHOT, station_id, fast_add, kw),
                           "energy/rules/simulate.py")
@@ -194,7 +194,7 @@ def district_review_prompt(gu: str, brand: str = "SK에너지") -> str:
 2. 공급: 급속 밀도·충전 중 비율, 수소 대기 (get_ev_supply, get_h2_status)
 3. 신호: 사실 번호 [F]를 인용해 전기 병목·경유/LPG 유휴 위험을 판별
 4. 묶음 역할: 거점별 반경 1km 급속 수를 비교해 급속 후보와 우선순위·이유를 판별
-5. 현장 확인: 부지·폭발위험장소·전력 인입·주차면은 데이터가 없으므로 사람에게 넘김
+5. 현장 확인: 한전 전력 인입 용량·안전거리는 데이터가 없으므로 사람에게 넘김
 
 숫자는 Tool 결과만 쓰고, 투자 결정이 아니라 진단임을 밝히세요.
 """

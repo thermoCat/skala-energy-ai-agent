@@ -1,5 +1,6 @@
 """그래프 테스트 공통 fixture — 실제 MCP 서버 + 실데이터 스냅샷 + fake LLM"""
 import asyncio
+import os
 
 import pytest
 
@@ -8,6 +9,10 @@ from agent.fake_llm import FastLLM, QualityLLM
 from agent.graph import build_graph
 from agent.mcp_client import MCPClient
 from agent.session_store import SqliteSessionStore
+
+# 매일 감시·주간 경쟁 기대값은 10-20 19·20시 수집까지 기준 — 새 수집이 쌓여도 테스트가 흔들리지 않게 고정
+# (MCP 서버 subprocess 도 이 환경변수를 물려받는다)
+os.environ.setdefault("SNAPSHOT_UNTIL", "2026-10-20T20")
 
 
 @pytest.fixture

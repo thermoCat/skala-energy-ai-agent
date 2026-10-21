@@ -58,7 +58,7 @@ class FastLLM(FakeLLM):
 
     @traceable(run_type="llm", name="fast_llm.classify_energy")
     def classify_energy(self, query: str, gu_names: tuple, brand_names: tuple) -> tuple[dict, dict]:
-        """Supervisor 분류(fake) — 질문에서 자치구·주유소 이름·회사·급속 N기를 뽑는 함수
+        """Supervisor 분류(fake) — 질문에서 자치구·주유소 이름·회사·충전기 N대 신설을 뽑는 함수
 
         Args:
             query: 사용자 질문
@@ -70,7 +70,7 @@ class FastLLM(FakeLLM):
         gu = next((g for g in sorted(gu_names, key=len, reverse=True) if g in query), None)
         station_name = station_word(query)
         brand = next((b for b in sorted(brand_names, key=len, reverse=True) if b in query), None)
-        fast = re.search(r"급속\s*(\d+)\s*기", query)
+        fast = re.search(r"(?:급속|충전기)\s*(\d+)\s*(?:기|대)", query)
         kw = re.search(r"(\d+)\s*kW", query, re.IGNORECASE)
         result = {"gu": gu, "station_name": station_name,
                   "brand": BRAND_ALIASES.get(brand) if brand else None,
@@ -243,7 +243,7 @@ class QualityLLM(FakeLLM):
     @staticmethod
     def _fast_candidates(by_key: dict, ev_bottleneck: bool) -> dict:
         if not ev_bottleneck or "cluster_median_fast_1km" not in by_key:
-            return {"value": [], "facts": [], "reason": "전기 병목 자치구가 아님", "reasons": {}}
+            return {"value": [], "facts": [], "reason": "충전기 부족 구가 아님", "reasons": {}}
         median = by_key["cluster_median_fast_1km"]["value"]
         gas = [f for k, f in by_key.items() if k.startswith("fast_1km:") and f["prodcd"] == "B027"]
         eligible = [f for f in gas
@@ -253,10 +253,10 @@ class QualityLLM(FakeLLM):
         reasons = {f["station_id"]: {
             "facts": [f["id"], by_key[f"in_station_fast:{f['station_id']}"]["id"],
                       by_key["cluster_median_fast_1km"]["id"]],
-            "text": "주유소 안 급속이 없고 반경 1km 급속이 묶음 중앙값 이하"} for f in chosen}
+            "text": "주유소 안 급속이 없고 1km 안 급속이 같은 구 자사 보통 이하"} for f in chosen}
         return {"value": [f["station_id"] for f in chosen],
                 "facts": [by_key["cluster_median_fast_1km"]["id"]],
-                "reason": "반경 1km 급속이 적은 순으로 최대 2곳", "reasons": reasons}
+                "reason": "1km 안 급속이 적은 순으로 최대 2곳", "reasons": reasons}
 
     @traceable(run_type="llm", name="quality_llm.write_energy")
     async def write_energy(self, request_type: str, facts: list[dict], verdicts: dict,

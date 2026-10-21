@@ -22,21 +22,21 @@ def test_district_named_in_text_without_map_click(ask):
 
 
 def test_scenario_still_bottleneck(ask):
-    result = ask("급속 2기 넣으면?", station_id="A0009172")
+    result = ask("충전기 2대 신설하면?", station_id="A0009172")
     assert result["request_type"] == "scenario"
     assert result["gate_corrections"] == []
-    assert "여전히 전기 병목입니다" in result["final"] and "3.9대" in result["final"]
+    assert "여전히 충전기 부족 구입니다" in result["final"] and "3.9대" in result["final"]
 
 
 def test_scenario_leaves_bottleneck(ask):
-    result = ask("급속 3기 넣으면?", station_id="A0000379")    # 동작구, 점수 16 경계
-    assert "전기 병목에서 벗어납니다" in result["final"]
+    result = ask("충전기 3대 신설하면?", station_id="A0000379")    # 동작구, 점수 16 경계
+    assert "충전기 부족 구에서 벗어납니다" in result["final"]
 
 
 def test_scenario_never_bottleneck(ask):
-    result = ask("박미주유소에 급속 2기 넣으면?")              # 이름 → 금천구 박미주유소
+    result = ask("박미주유소에 충전기 2대 신설하면?")              # 이름 → 금천구 박미주유소
     assert result["station_id"] == "A0001146" and result["request_type"] == "scenario"
-    assert "추가 전후 모두 전기 병목이 아닙니다" in result["final"]
+    assert "추가 전후 모두 충전기 부족 구가 아닙니다" in result["final"]
 
 
 def test_same_name_asks_back(ask):
@@ -86,7 +86,7 @@ class _SloppyFirstDraft(QualityLLM):
     async def write_energy(self, *args, **kwargs):
         draft, usage = await super().write_energy(*args, **kwargs)
         if not kwargs.get("feedback"):
-            draft = draft.replace("317.1", "320.0", 1)
+            draft = draft.replace("31.5대", "32.0대", 1)
         return draft, usage
 
 
@@ -95,9 +95,9 @@ def test_validator_rejects_wrong_number_and_rewrites(ask):
                  quality=_SloppyFirstDraft("quality", 0.0))
     checks = [e for e in result["events"] if e["type"] == "Validation"]
     assert checks[0]["verdict"] == "불합격 → 재작성"
-    assert "근거 없는 숫자: 320.0" in checks[0]["issues"]
+    assert "근거 없는 숫자: 32.0" in checks[0]["issues"]
     assert checks[1]["verdict"] == "합격"
-    assert "317.1" in result["final"] and "320.0" not in result["final"]
+    assert "31.5대" in result["final"] and "32.0대" not in result["final"]
 
 
 def test_check_answer_unit():

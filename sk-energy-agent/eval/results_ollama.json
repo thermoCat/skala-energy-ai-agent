@@ -3,23 +3,29 @@
   "cases": 18,
   "kind_ok": 18,
   "number_accuracy_pct": 100.0,
-  "numbers": 297,
+  "numbers": 300,
   "unbacked": 0,
   "expected_found": 31,
   "expected_total": 31,
-  "llm_agreement_pct": 88.9,
+  "llm_agreement_pct": 85.2,
   "judged_items": 54,
-  "gate_corrections": 6,
+  "gate_corrections": 8,
   "validation_passed": 18,
-  "median_seconds": 62.81
+  "median_seconds": 78.96,
+  "priority_cases": 4,
+  "priority_llm": 4,
+  "priority_same_order": 2,
+  "priority_repeat_cases": 2,
+  "priority_repeat_llm": 6,
+  "priority_repeat_runs": 6
  },
  "rows": [
   {
    "name": "풍한주유소 진단",
-   "seconds": 145.08,
+   "seconds": 218.55,
    "kind": "station",
    "kind_ok": true,
-   "numbers": 23,
+   "numbers": 28,
    "unbacked": [],
    "expected_found": [
     "+57.0%",
@@ -30,11 +36,16 @@
    "llm_agree": 3,
    "gate_corrections": 1,
    "validation": true,
-   "llm_calls": 4
+   "llm_calls": 5,
+   "priority_by": "llm",
+   "priority_order": [
+    "A0009172",
+    "A0009248"
+   ]
   },
   {
    "name": "박미주유소 진단",
-   "seconds": 60.55,
+   "seconds": 75.24,
    "kind": "station",
    "kind_ok": true,
    "numbers": 23,
@@ -48,14 +59,16 @@
    "llm_agree": 4,
    "gate_corrections": 0,
    "validation": true,
-   "llm_calls": 4
+   "llm_calls": 4,
+   "priority_by": null,
+   "priority_order": null
   },
   {
    "name": "미래주유소 진단",
-   "seconds": 65.86,
+   "seconds": 209.0,
    "kind": "station",
    "kind_ok": true,
-   "numbers": 21,
+   "numbers": 24,
    "unbacked": [],
    "expected_found": [
     "+47.8%",
@@ -66,11 +79,16 @@
    "llm_agree": 2,
    "gate_corrections": 2,
    "validation": true,
-   "llm_calls": 4
+   "llm_calls": 5,
+   "priority_by": "llm",
+   "priority_order": [
+    "A0009413",
+    "A0006762"
+   ]
   },
   {
    "name": "광호주유소 진단",
-   "seconds": 82.87,
+   "seconds": 264.19,
    "kind": "station",
    "kind_ok": true,
    "numbers": 23,
@@ -84,11 +102,13 @@
    "llm_agree": 4,
    "gate_corrections": 0,
    "validation": true,
-   "llm_calls": 4
+   "llm_calls": 4,
+   "priority_by": null,
+   "priority_order": null
   },
   {
    "name": "수서지점 진단",
-   "seconds": 75.57,
+   "seconds": 223.38,
    "kind": "station",
    "kind_ok": true,
    "numbers": 23,
@@ -102,11 +122,13 @@
    "llm_agree": 4,
    "gate_corrections": 0,
    "validation": true,
-   "llm_calls": 4
+   "llm_calls": 4,
+   "priority_by": null,
+   "priority_order": null
   },
   {
    "name": "동대문구 묶음",
-   "seconds": 99.46,
+   "seconds": 219.02,
    "kind": "district",
    "kind_ok": true,
    "numbers": 21,
@@ -117,14 +139,19 @@
    ],
    "expected_missing": [],
    "judged_items": 4,
-   "llm_agree": 4,
-   "gate_corrections": 0,
+   "llm_agree": 3,
+   "gate_corrections": 1,
    "validation": true,
-   "llm_calls": 4
+   "llm_calls": 5,
+   "priority_by": "llm",
+   "priority_order": [
+    "A0009172",
+    "A0009248"
+   ]
   },
   {
    "name": "강남구 묶음",
-   "seconds": 62.34,
+   "seconds": 78.96,
    "kind": "district",
    "kind_ok": true,
    "numbers": 13,
@@ -138,14 +165,16 @@
    "llm_agree": 4,
    "gate_corrections": 0,
    "validation": true,
-   "llm_calls": 4
+   "llm_calls": 4,
+   "priority_by": null,
+   "priority_order": null
   },
   {
    "name": "성북구 묶음",
-   "seconds": 67.12,
+   "seconds": 177.64,
    "kind": "district",
    "kind_ok": true,
-   "numbers": 21,
+   "numbers": 16,
    "unbacked": [],
    "expected_found": [
     "+47.9%",
@@ -156,11 +185,16 @@
    "llm_agree": 2,
    "gate_corrections": 2,
    "validation": true,
-   "llm_calls": 4
+   "llm_calls": 5,
+   "priority_by": "llm",
+   "priority_order": [
+    "A0009490",
+    "A0009502"
+   ]
   },
   {
    "name": "양천구 묶음",
-   "seconds": 80.86,
+   "seconds": 120.39,
    "kind": "district",
    "kind_ok": true,
    "numbers": 13,
@@ -174,11 +208,13 @@
    "llm_agree": 4,
    "gate_corrections": 0,
    "validation": true,
-   "llm_calls": 4
+   "llm_calls": 4,
+   "priority_by": null,
+   "priority_order": null
   },
   {
    "name": "금천구 묶음",
-   "seconds": 51.06,
+   "seconds": 61.84,
    "kind": "district",
    "kind_ok": true,
    "numbers": 13,
@@ -189,14 +225,16 @@
    ],
    "expected_missing": [],
    "judged_items": 4,
-   "llm_agree": 4,
-   "gate_corrections": 0,
+   "llm_agree": 3,
+   "gate_corrections": 1,
    "validation": true,
-   "llm_calls": 4
+   "llm_calls": 4,
+   "priority_by": null,
+   "priority_order": null
   },
   {
    "name": "용산구 (문장만)",
-   "seconds": 75.4,
+   "seconds": 81.14,
    "kind": "district",
    "kind_ok": true,
    "numbers": 13,
@@ -210,11 +248,13 @@
    "llm_agree": 4,
    "gate_corrections": 0,
    "validation": true,
-   "llm_calls": 4
+   "llm_calls": 4,
+   "priority_by": null,
+   "priority_order": null
   },
   {
    "name": "풍한 +2기",
-   "seconds": 62.81,
+   "seconds": 61.69,
    "kind": "scenario",
    "kind_ok": true,
    "numbers": 15,
@@ -228,11 +268,13 @@
    "llm_agree": 2,
    "gate_corrections": 0,
    "validation": true,
-   "llm_calls": 4
+   "llm_calls": 4,
+   "priority_by": null,
+   "priority_order": null
   },
   {
    "name": "살피재 +3기",
-   "seconds": 50.86,
+   "seconds": 45.14,
    "kind": "scenario",
    "kind_ok": true,
    "numbers": 15,
@@ -246,11 +288,13 @@
    "llm_agree": 2,
    "gate_corrections": 0,
    "validation": true,
-   "llm_calls": 4
+   "llm_calls": 4,
+   "priority_by": null,
+   "priority_order": null
   },
   {
    "name": "박미 +2기 (이름)",
-   "seconds": 43.32,
+   "seconds": 48.65,
    "kind": "scenario",
    "kind_ok": true,
    "numbers": 15,
@@ -264,11 +308,13 @@
    "llm_agree": 2,
    "gate_corrections": 0,
    "validation": true,
-   "llm_calls": 4
+   "llm_calls": 4,
+   "priority_by": null,
+   "priority_order": null
   },
   {
    "name": "홍능주유소 (타사)",
-   "seconds": 15.95,
+   "seconds": 17.56,
    "kind": "station",
    "kind_ok": true,
    "numbers": 16,
@@ -281,11 +327,13 @@
    "llm_agree": 0,
    "gate_corrections": 0,
    "validation": true,
-   "llm_calls": 3
+   "llm_calls": 3,
+   "priority_by": null,
+   "priority_order": null
   },
   {
    "name": "신성주유소 (동명)",
-   "seconds": 0.28,
+   "seconds": 0.29,
    "kind": "ask_user",
    "kind_ok": true,
    "numbers": 0,
@@ -296,11 +344,13 @@
    "llm_agree": 0,
    "gate_corrections": 0,
    "validation": null,
-   "llm_calls": 1
+   "llm_calls": 1,
+   "priority_by": null,
+   "priority_order": null
   },
   {
    "name": "S-OIL 신성주유소",
-   "seconds": 15.65,
+   "seconds": 15.53,
    "kind": "station",
    "kind_ok": true,
    "numbers": 16,
@@ -311,11 +361,13 @@
    "llm_agree": 0,
    "gate_corrections": 0,
    "validation": true,
-   "llm_calls": 3
+   "llm_calls": 3,
+   "priority_by": null,
+   "priority_order": null
   },
   {
    "name": "GS 동작구 (재계획)",
-   "seconds": 51.93,
+   "seconds": 55.36,
    "kind": "district",
    "kind_ok": true,
    "numbers": 13,
@@ -329,7 +381,65 @@
    "llm_agree": 3,
    "gate_corrections": 1,
    "validation": true,
-   "llm_calls": 4
+   "llm_calls": 4,
+   "priority_by": null,
+   "priority_order": null
+  }
+ ],
+ "consistency": [
+  {
+   "name": "동대문구 묶음",
+   "runs": [
+    {
+     "by": "llm",
+     "order": [
+      "A0009172",
+      "A0009248"
+     ]
+    },
+    {
+     "by": "llm",
+     "order": [
+      "A0009172",
+      "A0009248"
+     ]
+    },
+    {
+     "by": "llm",
+     "order": [
+      "A0009172",
+      "A0009248"
+     ]
+    }
+   ],
+   "same_order": true
+  },
+  {
+   "name": "광진구 묶음",
+   "runs": [
+    {
+     "by": "llm",
+     "order": [
+      "A0009413",
+      "A0006762"
+     ]
+    },
+    {
+     "by": "llm",
+     "order": [
+      "A0009413",
+      "A0006762"
+     ]
+    },
+    {
+     "by": "llm",
+     "order": [
+      "A0009413",
+      "A0006762"
+     ]
+    }
+   ],
+   "same_order": true
   }
  ]
 }

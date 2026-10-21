@@ -16,8 +16,8 @@ FACTS = [
 
 def test_classify_keeps_only_values_found_in_question():
     content = '{"gu": "강남구", "station_name": "박미주유소", "brand": "GS", "fast_add": 3, "kw": null}'
-    result = p.normalize_classify(content, "박미주유소에 급속 2기 넣으면?", SEOUL_GU, BRAND_ALIASES)
-    # 질문에 없는 강남구·GS, 질문과 다른 급속 3기는 버린다
+    result = p.normalize_classify(content, "박미주유소에 충전기 2대 신설하면?", SEOUL_GU, BRAND_ALIASES)
+    # 질문에 없는 강남구·GS, 질문과 다른 충전기 3대는 버린다
     assert result == {"gu": None, "station_name": "박미주유소", "brand": None,
                       "fast_add": None, "kw": None}
 
@@ -64,7 +64,7 @@ def test_write_prompt_contains_facts_verdicts_and_musts():
     system, user, skeleton = p.write_prompt("district", FACTS_WITH_MEDIAN, verdicts, [], True, [], ("부지",),
                                   {"fast_candidates": "묶음 급속 후보"}, None, ["근거 없는 숫자: 320.0"])
     assert "[F2] 풍한주유소 (주유소) 반경 1km 급속 ID: 10 ID" in user
-    assert "## 답변 뼈대" in user and "풍한주유소 — 반경 1km 급속 10[F2]" in user
+    assert "## 답변 뼈대" in user and "풍한주유소 — 1km 안 급속 10개[F2]" in user
     assert "현장 확인 항목: 부지" in user and "근거 없는 숫자: 320.0" in user
 
 

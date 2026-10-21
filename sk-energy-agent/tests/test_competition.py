@@ -49,7 +49,7 @@ def test_weekly_job_without_change_uses_no_llm(ask, store):
 
 def test_station_answer_includes_nearby_competition(ask):
     own = ask("이 주유소에 무엇을 더해야 해?", station_id="A0009172")
-    assert "5) 주변 경쟁: 반경 1km 급속 운영사 5곳" in own["final"]
+    assert "5) 주변 경쟁: 1km 안 급속 운영사 5곳" in own["final"]
     other = ask("이 주유소 주변 경쟁 현황은?", station_id="A0009177")
     assert "주변 경쟁" in other["final"] and "투자 판별은 하지 않습니다" in other["final"]
     assert other["validation"]["passed"] is True

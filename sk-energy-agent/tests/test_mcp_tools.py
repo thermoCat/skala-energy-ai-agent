@@ -49,7 +49,7 @@ def test_own_station_card_has_verdict_and_site_checks(mcp):
     assert card["is_own"] is True
     assert card["verdict"]["code"] == "fast_candidate"
     assert card["fast_1km"] == 10
-    assert len(card["site_checks"]) == 4 and len(card["conversion_types"]) == 5
+    assert len(card["site_checks"]) == 2 and len(card["conversion_types"]) == 5
     assert card["snapshot"] == "2026-10-19" and card["source"]
 
 

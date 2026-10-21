@@ -14,7 +14,7 @@ class EnergyFastMixin:
 
     @traceable(run_type="llm", name="energy.classify")
     def classify_energy(self, query: str, gu_names: tuple, brand_names: tuple) -> tuple[dict, dict]:
-        """질문에서 자치구·주유소 이름·회사·급속 N기를 뽑는 함수
+        """질문에서 자치구·주유소 이름·회사·충전기 N대 신설을 뽑는 함수
 
         Args:
             query: 사용자 질문

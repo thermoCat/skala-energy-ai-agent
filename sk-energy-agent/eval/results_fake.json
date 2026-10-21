@@ -3,7 +3,7 @@
   "cases": 18,
   "kind_ok": 18,
   "number_accuracy_pct": 100.0,
-  "numbers": 309,
+  "numbers": 321,
   "unbacked": 0,
   "expected_found": 31,
   "expected_total": 31,
@@ -22,14 +22,14 @@
  "rows": [
   {
    "name": "풍한주유소 진단",
-   "seconds": 0.39,
+   "seconds": 0.47,
    "kind": "station",
    "kind_ok": true,
-   "numbers": 28,
+   "numbers": 29,
    "unbacked": [],
    "expected_found": [
     "+57.0%",
-    "317.1"
+    "31.5"
    ],
    "expected_missing": [],
    "judged_items": 4,
@@ -52,7 +52,7 @@
    "unbacked": [],
    "expected_found": [
     "+47.6%",
-    "1188.9"
+    "8.4"
    ],
    "expected_missing": [],
    "judged_items": 4,
@@ -68,11 +68,11 @@
    "seconds": 0.05,
    "kind": "station",
    "kind_ok": true,
-   "numbers": 25,
+   "numbers": 26,
    "unbacked": [],
    "expected_found": [
     "+47.8%",
-    "550.5"
+    "18.2"
    ],
    "expected_missing": [],
    "judged_items": 4,
@@ -95,7 +95,7 @@
    "unbacked": [],
    "expected_found": [
     "+47.1%",
-    "707.7"
+    "14.1"
    ],
    "expected_missing": [],
    "judged_items": 4,
@@ -115,7 +115,7 @@
    "unbacked": [],
    "expected_found": [
     "+40.7%",
-    "280.3"
+    "35.7"
    ],
    "expected_missing": [],
    "judged_items": 4,
@@ -128,14 +128,14 @@
   },
   {
    "name": "동대문구 묶음",
-   "seconds": 0.05,
+   "seconds": 0.06,
    "kind": "district",
    "kind_ok": true,
-   "numbers": 22,
+   "numbers": 23,
    "unbacked": [],
    "expected_found": [
     "+57.0%",
-    "317.1"
+    "31.5"
    ],
    "expected_missing": [],
    "judged_items": 4,
@@ -151,14 +151,14 @@
   },
   {
    "name": "강남구 묶음",
-   "seconds": 0.03,
+   "seconds": 0.04,
    "kind": "district",
    "kind_ok": true,
    "numbers": 13,
    "unbacked": [],
    "expected_found": [
     "+40.7%",
-    "280.3"
+    "35.7"
    ],
    "expected_missing": [],
    "judged_items": 4,
@@ -171,14 +171,14 @@
   },
   {
    "name": "성북구 묶음",
-   "seconds": 0.04,
+   "seconds": 0.05,
    "kind": "district",
    "kind_ok": true,
-   "numbers": 23,
+   "numbers": 24,
    "unbacked": [],
    "expected_found": [
     "+47.9%",
-    "504.7"
+    "19.8"
    ],
    "expected_missing": [],
    "judged_items": 4,
@@ -201,7 +201,7 @@
    "unbacked": [],
    "expected_found": [
     "+46.7%",
-    "672.2"
+    "14.9"
    ],
    "expected_missing": [],
    "judged_items": 4,
@@ -214,14 +214,14 @@
   },
   {
    "name": "금천구 묶음",
-   "seconds": 0.02,
+   "seconds": 0.03,
    "kind": "district",
    "kind_ok": true,
    "numbers": 13,
    "unbacked": [],
    "expected_found": [
     "+47.6%",
-    "1188.9"
+    "8.4"
    ],
    "expected_missing": [],
    "judged_items": 4,
@@ -241,7 +241,7 @@
    "unbacked": [],
    "expected_found": [
     "+39.0%",
-    "556.8"
+    "18.0"
    ],
    "expected_missing": [],
    "judged_items": 4,
@@ -253,11 +253,11 @@
    "priority_order": null
   },
   {
-   "name": "풍한 +2기",
+   "name": "풍한 충전기 2대",
    "seconds": 0.05,
    "kind": "scenario",
    "kind_ok": true,
-   "numbers": 15,
+   "numbers": 17,
    "unbacked": [],
    "expected_found": [
     "107",
@@ -273,11 +273,11 @@
    "priority_order": null
   },
   {
-   "name": "살피재 +3기",
+   "name": "살피재 충전기 3대",
    "seconds": 0.04,
    "kind": "scenario",
    "kind_ok": true,
-   "numbers": 15,
+   "numbers": 17,
    "unbacked": [],
    "expected_found": [
     "119",
@@ -293,11 +293,11 @@
    "priority_order": null
   },
   {
-   "name": "박미 +2기 (이름)",
+   "name": "박미 충전기 2대 (이름)",
    "seconds": 0.05,
    "kind": "scenario",
    "kind_ok": true,
-   "numbers": 15,
+   "numbers": 17,
    "unbacked": [],
    "expected_found": [
     "272",
@@ -317,7 +317,7 @@
    "seconds": 0.03,
    "kind": "station",
    "kind_ok": true,
-   "numbers": 16,
+   "numbers": 17,
    "unbacked": [],
    "expected_found": [
     "+57.0%"
@@ -353,7 +353,7 @@
    "seconds": 0.03,
    "kind": "station",
    "kind_ok": true,
-   "numbers": 16,
+   "numbers": 17,
    "unbacked": [],
    "expected_found": [],
    "expected_missing": [],
@@ -374,7 +374,7 @@
    "unbacked": [],
    "expected_found": [
     "+51.4%",
-    "698.8"
+    "14.3"
    ],
    "expected_missing": [],
    "judged_items": 4,

@@ -63,7 +63,7 @@ def test_dongdaemun_sk_cluster_fast_candidates():
 
 def test_every_cluster_card_carries_site_checks_and_conversion_types():
     cluster = review_cluster(SNAPSHOT, "동대문구", "SK에너지")
-    assert len(cluster["site_checks"]) == 4
+    assert len(cluster["site_checks"]) == 2
     assert len(cluster["conversion_types"]) == 5
 
 
@@ -99,7 +99,7 @@ def test_simulate_low_power_uses_low_power_median():
 
 
 def test_simulate_dongjak_plus_three_leaves_bottleneck():
-    # 동작구: 점수 16(병목 경계) → 급속 3기 더하면 밀도 순위 4 → 5, 점수 17 로 병목에서 빠짐
+    # 동작구: 점수 16(병목 경계) → 충전기 3대 신설하면 밀도 순위 4 → 5, 점수 17 로 병목에서 빠짐
     result = simulate_fast_add(SNAPSHOT, "A0000379", 3)
     assert result["before"]["ev_bottleneck"] is True
     assert result["after"]["ev_bottleneck"] is False

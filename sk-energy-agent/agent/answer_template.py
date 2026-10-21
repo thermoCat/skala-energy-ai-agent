@@ -44,14 +44,14 @@ class EnergyAnswer:
             f"(서울 {c('seoul_ev_growth_pct', '{:+.1f}%')}) · "
             f"경유차 {c('diesel_rate_pct', '{:+.1f}%')} (서울 {c('seoul_diesel_rate_pct', '{:+.1f}%')}) · "
             f"LPG차 {c('lpg_rate_pct', '{:+.1f}%')} (서울 {c('seoul_lpg_rate_pct', '{:+.1f}%')})",
-            f"2) 공급: 전기차 1만 대당 급속 {c('fast_per_10k_ev', '{:.1f}')} "
-            f"(서울 {c('seoul_fast_per_10k_ev', '{:.1f}')}) · {h2}",
+            f"2) 공급: 급속 1개당 전기차 {c('ev_per_fast', '{}대')} "
+            f"(서울 {c('seoul_ev_per_fast', '{}대')}) · {h2}",
         ]
 
     def district_verdicts(self) -> str:
-        ev = {True: "전기 병목 구", False: "전기 병목 아님"}
+        ev = {True: "충전기 부족 구", False: "충전기 부족 아님"}
         idle = {True: "🔻 감소 큰 구", False: "감소 신호 아님"}
-        line = (f"3) 판정: {ev.get(self.value('ev_bottleneck'), '전기 병목 판별 불가')}{self.j('ev_bottleneck')}"
+        line = (f"3) 판정: {ev.get(self.value('ev_bottleneck'), '충전기 부족 판별 불가')}{self.j('ev_bottleneck')}"
                 f" · 경유차 {idle.get(self.value('diesel_idle'), '판별 불가')}{self.j('diesel_idle')}"
                 f" · LPG차 {idle.get(self.value('lpg_idle'), '판별 불가')}{self.j('lpg_idle')}")
         if self.value("diesel_idle") or self.value("lpg_idle"):
@@ -62,25 +62,33 @@ class EnergyAnswer:
     def priority(self) -> dict:
         return self.verdicts.get("fast_candidates", {}).get("priority") or {}
 
+    def versus_typical(self) -> str:
+        # "묶음 중앙값" 대신 같은 구 자사 주유소의 보통 수와 비교해 적은지 많은지를 바로 쓴다
+        if "fast_1km" not in self.by_key or "cluster_median_fast_1km" not in self.by_key:
+            return ""
+        mine, typical = self.by_key["fast_1km"]["value"], self.by_key["cluster_median_fast_1km"]["value"]
+        rel = "보다 적음" if mine < typical else "와 같음" if mine == typical else "보다 많음"
+        return f" — 같은 구 자사 주유소 보통({self.cite('cluster_median_fast_1km', '{}개')}){rel}"
+
     def station_lines(self, station_id: str) -> list[str]:
         c = self.cite
         chosen = self.value("fast_candidates") or []
         candidate = station_id in chosen
         verdict = "⚡ 급속 후보입니다" if candidate else "이번 기준으로는 급속 후보가 아닙니다"
         lines = [f"4) 이 주유소: 주유소 안 급속 {c('in_station_fast_ids', '{}개')} · "
-                 f"반경 1km 급속 {c('fast_1km')} (묶음 중앙값 {c('cluster_median_fast_1km')}) "
+                 f"1km 안 급속 {c('fast_1km', '{}개')}{self.versus_typical()} "
                  f"→ {verdict}{self.j('fast_candidates')}"]
         pri = self.priority()
         if candidate and pri.get("by") == "llm":
             ordinal = ORDINALS[chosen.index(station_id)]
-            lines.append(f"   묶음 후보 {len(chosen)}곳 중 {ordinal}로 볼 곳 (AI 판단: "
+            lines.append(f"   같은 구 후보 {len(chosen)}곳 중 {ordinal}로 볼 곳 (AI 판단: "
                          f"{pri['reasons'][station_id]['text']})")
         return lines
 
     def cluster_lines(self) -> list[str]:
         chosen = self.value("fast_candidates") or []
         if not chosen:
-            return [f"4) 급속 후보{self.j('fast_candidates')}: 없음 (전기 병목 자치구가 아님)"]
+            return [f"4) 급속 후보{self.j('fast_candidates')}: 없음 (충전기 부족 구가 아님)"]
         marks = "①②③④"
         pri = self.priority()
         if pri.get("by") == "llm":
@@ -88,31 +96,31 @@ class EnergyAnswer:
                      for i, sid in enumerate(chosen)]
             head = f"4) 급속 후보{self.j('fast_candidates')} — 먼저 볼 순서 (AI 판단): "
         else:
-            picks = [f"{marks[i]} {self.name(sid)} — 반경 1km 급속 {self.cite(f'fast_1km:{sid}')}, "
+            picks = [f"{marks[i]} {self.name(sid)} — 1km 안 급속 {self.cite(f'fast_1km:{sid}', '{}개')}, "
                      f"주유소 안 급속 {self.cite(f'in_station_fast:{sid}', '{}개')}"
                      for i, sid in enumerate(chosen)]
             head = f"4) 급속 후보{self.j('fast_candidates')}: "
             if pri.get("by") == "fallback":
                 head = (f"4) 급속 후보{self.j('fast_candidates')} — AI 우선순위 판단이 검사를 "
-                        "통과하지 못해 반경 급속이 적은 순: ")
+                        "통과하지 못해 1km 안 급속이 적은 순: ")
         return [head + "  ".join(picks),
-                f"   나머지 거점은 유지 (묶음 반경 1km 급속 중앙값 "
-                f"{self.cite('cluster_median_fast_1km')})"]
+                f"   나머지 주유소는 유지 (같은 구 자사 주유소 보통 1km 안 급속 "
+                f"{self.cite('cluster_median_fast_1km', '{}개')})"]
 
     def scenario_lines(self) -> list[str]:
         c = self.cite
-        change = {(True, True): "여전히 전기 병목입니다",
-                  (True, False): "전기 병목에서 벗어납니다",
-                  (False, False): "추가 전후 모두 전기 병목이 아닙니다",
-                  (False, True): "추가 후 전기 병목이 됩니다"}
+        change = {(True, True): "여전히 충전기 부족 구입니다",
+                  (True, False): "충전기 부족 구에서 벗어납니다",
+                  (False, False): "추가 전후 모두 충전기 부족 구가 아닙니다",
+                  (False, True): "추가 후 충전기 부족 구가 됩니다"}
         before_after = (self.value("ev_bottleneck_before"), self.value("ev_bottleneck_after"))
         return [
-            f"급속 {c('fast_add', '{}기')} ({c('kw', '{}kW')}) 추가 시나리오입니다.",
-            f"1) 자치구 급속 {c('fast_ids_before')} → {c('fast_ids_after')}, "
-            f"전기차 1만 대당 {c('fast_per_10k_ev_before', '{:.1f}')} → "
-            f"{c('fast_per_10k_ev_after', '{:.1f}')}",
+            f"충전기 {c('fast_add', '{}대')} ({c('kw', '{}kW')} 급속) 신설 시나리오입니다.",
+            f"1) 자치구 급속 {c('fast_ids_before', '{}개')} → {c('fast_ids_after', '{}개')}, "
+            f"급속 1개당 전기차 {c('ev_per_fast_before', '{}대')} → "
+            f"{c('ev_per_fast_after', '{}대')}",
             f"2) 급속 밀도 순위 {c('rank_density_before', '{}위')} → {c('rank_density_after', '{}위')}, "
-            f"병목 점수 순위 {c('score_rank_before', '{}위')} → {c('score_rank_after', '{}위')} → "
+            f"충전기 부족 순위 {c('score_rank_before', '{}위')} → {c('score_rank_after', '{}위')} → "
             f"{change.get(before_after, '판별 불가')}{self.j('ev_bottleneck_before')}"
             f"{self.j('ev_bottleneck_after')}",
             f"3) 필요 주차면 {c('parking_spaces', '{}개')}, 시간당 처리 약 {c('cars_per_hour', '{}대')} "
@@ -133,7 +141,7 @@ class EnergyAnswer:
         if not ops:
             return []
         listed = " · ".join(f"{f['name']} {f['value']}[{f['id']}]" for f in ops)
-        return [f"{number}주변 경쟁: 반경 1km 급속 운영사 {self.cite('nearby_operators', '{}곳')} "
+        return [f"{number}주변 경쟁: 1km 안 급속 운영사 {self.cite('nearby_operators', '{}곳')} "
                 f"— 많은 순 {listed}"]
 
     def weekly_lines(self) -> list[str]:
@@ -203,13 +211,13 @@ class EnergyAnswer:
                    if "nearby_operators" in self.by_key else "")
             return f"요약: 타사 거점 — 공개 정보만{ops}"
         if request_type == "scenario":
-            change = {(True, True): "여전히 전기 병목", (True, False): "전기 병목에서 벗어남",
-                      (False, False): "전후 모두 전기 병목 아님", (False, True): "전기 병목이 됨"}
+            change = {(True, True): "여전히 충전기 부족", (True, False): "충전기 부족에서 벗어남",
+                      (False, False): "전후 모두 충전기 부족 아님", (False, True): "충전기 부족이 됨"}
             before_after = (self.value("ev_bottleneck_before"), self.value("ev_bottleneck_after"))
-            return (f"요약: 급속 {c('fast_add', '{}기')} 추가 → {change.get(before_after, '판별 불가')}, "
+            return (f"요약: 충전기 {c('fast_add', '{}대')} 신설 → {change.get(before_after, '판별 불가')}, "
                     f"시간당 약 {c('cars_per_hour', '{}대')}")
-        ev = {True: "전기 병목 구", False: "전기 병목 아님"}.get(self.value("ev_bottleneck"),
-                                                            "전기 병목 판별 불가")
+        ev = {True: "충전기 부족 구", False: "충전기 부족 아님"}.get(self.value("ev_bottleneck"),
+                                                              "충전기 부족 판별 불가")
         idle = [f"{fuel} 감소 큰 구" for item, fuel in (("diesel_idle", "경유차"), ("lpg_idle", "LPG차"))
                 if self.value(item)]
         chosen = self.value("fast_candidates") or []
@@ -219,7 +227,7 @@ class EnergyAnswer:
             if station_id in chosen:
                 head = "⚡ 급속 후보"
                 if len(chosen) > 1:
-                    head += f" — 묶음 후보 {len(chosen)}곳 중 {ORDINALS[chosen.index(station_id)]}"
+                    head += f" — 같은 구 후보 {len(chosen)}곳 중 {ORDINALS[chosen.index(station_id)]}"
             parts = [head, ev]
         else:
             first = f"급속 후보 {len(chosen)}곳 — 먼저 {self.name(chosen[0])}" if chosen else "급속 후보 없음"
@@ -248,10 +256,10 @@ class EnergyAnswer:
             c = self.cite
             lines += ["공개 정보입니다.",
                       f"- 주유소 안 급속충전기 {c('in_station_fast_ids', '{}개')}, "
-                      f"반경 1km 급속 {c('fast_1km')}",
+                      f"1km 안 급속 {c('fast_1km', '{}개')}",
                       f"- 자치구 전기차 1년 {c('ev_growth_pct', '{:+.1f}%')} "
-                      f"(서울 {c('seoul_ev_growth_pct', '{:+.1f}%')}), 전기차 1만 대당 급속 "
-                      f"{c('fast_per_10k_ev', '{:.1f}')} (서울 {c('seoul_fast_per_10k_ev', '{:.1f}')})",
+                      f"(서울 {c('seoul_ev_growth_pct', '{:+.1f}%')}), 급속 1개당 전기차 "
+                      f"{c('ev_per_fast', '{}대')} (서울 {c('seoul_ev_per_fast', '{}대')})",
                       *self.competition_line("- "),
                       "타사 거점이라 투자 판별은 하지 않습니다."]
             return lines

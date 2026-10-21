@@ -23,7 +23,7 @@ from agent.graph import build_graph  # noqa: E402
 from agent.mcp_client import MCPClient  # noqa: E402
 from agent.session_store import SqliteSessionStore  # noqa: E402
 from agent.validation import NUMBER, _strip_known_text, unbacked_numbers  # noqa: E402
-from energy.indicators import ev_supply, fuel_demand  # noqa: E402
+from energy.indicators import ev_per_fast, ev_supply, fuel_demand  # noqa: E402
 from energy.rules.simulate import simulate_fast_add  # noqa: E402
 from energy.store import load_snapshot  # noqa: E402
 
@@ -32,7 +32,7 @@ SNAP = load_snapshot("2026-10-19")
 
 def _gu_numbers(gu: str) -> list[str]:
     ev = fuel_demand(SNAP, gu)["fuels"]["전기"]["rate_pct"]
-    return [f"{ev:+.1f}%", f"{ev_supply(SNAP, gu)['fast_per_10k_ev']:.1f}"]
+    return [f"{ev:+.1f}%", f"{ev_per_fast(ev_supply(SNAP, gu)['fast_per_10k_ev'])}"]
 
 
 def _scenario_numbers(station_id: str, n: int) -> list[str]:
@@ -71,11 +71,11 @@ CASES = [
      _gu_numbers("금천구"), "district"),
     ("용산구 (문장만)", {"query": "용산구 SK 거점 어떻게 써야 해?"},
      _gu_numbers("용산구"), "district"),
-    ("풍한 +2기", {"query": "급속 2기 넣으면?", "station_id": "A0009172"},
+    ("풍한 충전기 2대", {"query": "충전기 2대 신설하면?", "station_id": "A0009172"},
      _scenario_numbers("A0009172", 2), "scenario"),
-    ("살피재 +3기", {"query": "급속 3기 넣으면?", "station_id": "A0000379"},
+    ("살피재 충전기 3대", {"query": "충전기 3대 신설하면?", "station_id": "A0000379"},
      _scenario_numbers("A0000379", 3), "scenario"),
-    ("박미 +2기 (이름)", {"query": "박미주유소에 급속 2기 넣으면?"},
+    ("박미 충전기 2대 (이름)", {"query": "박미주유소에 충전기 2대 신설하면?"},
      _scenario_numbers("A0001146", 2), "scenario"),
     ("홍능주유소 (타사)", {"query": "이 주유소 주변 경쟁 현황은?", "station_id": "A0009177"},
      _gu_numbers("동대문구")[:1], "station"),

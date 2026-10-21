@@ -243,7 +243,7 @@ async def api_station_card(station_id: str, company: str = "SK에너지"):
 @app.get("/api/stations/{station_id}/simulate")
 async def api_simulate(station_id: str, fast_add: int = Query(ge=1), kw: int = 100,
                        company: str = "SK에너지"):
-    """급속 N기 추가 시나리오 숫자 (자사 거점만 — 타사 투자 계산은 하지 않음)"""
+    """충전기 N대 신설 시나리오 숫자 (자사 거점만 — 타사 투자 계산은 하지 않음)"""
     card = await _tool("get_station_card", {"station_id": station_id, "company": company,
                                             "with_verdict": False})
     if not card["is_own"]:

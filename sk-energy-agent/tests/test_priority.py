@@ -31,7 +31,7 @@ def test_held_decision_moves_candidate_back(ask, store):
 
 def test_station_answer_says_its_place(ask):
     result = ask("이 주유소에 무엇을 더해야 해?", station_id=SAMYOUNG)
-    assert "묶음 후보 2곳 중 두 번째로 볼 곳 (AI 판단:" in result["final"]
+    assert "같은 구 후보 2곳 중 두 번째로 볼 곳 (AI 판단:" in result["final"]
 
 
 def test_single_candidate_skips_priority(ask):

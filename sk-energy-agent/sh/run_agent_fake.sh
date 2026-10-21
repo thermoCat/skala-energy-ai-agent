@@ -62,7 +62,7 @@ cat <<EOF
 
 3) 시나리오·이름 찾기
    curl -s -X POST localhost:8100/chat -H 'Content-Type: application/json' \\
-     -d '{"message":"박미주유소에 급속 2기 넣으면?","thread_id":"t-test-2"}' \\
+     -d '{"message":"박미주유소에 충전기 2대 신설하면?","thread_id":"t-test-2"}' \\
      | python3 -m json.tool --no-ensure-ascii
 
 4) 브라우저 채팅 화면으로 써보기 (새 터미널에서)

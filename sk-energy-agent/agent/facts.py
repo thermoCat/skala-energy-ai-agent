@@ -1,6 +1,8 @@
 """Tool 응답을 번호 붙은 사실 [F1..Fn] 목록으로 바꾸는 함수 (분석·작성·검증 에이전트 공통 입력)"""
 from statistics import median
 
+from energy.indicators import ev_per_fast
+
 
 class FactList:
     """번호를 차례로 붙이며 사실을 모으는 목록"""
@@ -45,6 +47,11 @@ def _add_district(facts: FactList, demand: dict, supply: dict, h2: dict) -> None
                   supply["seoul_fast_per_10k_ev"], "ID", src)
         facts.add("fast_density_rank", f"{gu} 전기차 1만 대당 급속 순위 (25구 중 1위 = 가장 부족)",
                   supply["density_rank"], "위", src)
+        # 화면에 보여주는 말 — "1만 대당 급속"보다 "급속 1개를 몇 대가 나눠 쓰나"가 바로 읽힌다
+        facts.add("ev_per_fast", f"{gu} 급속 1개당 전기차", ev_per_fast(supply["fast_per_10k_ev"]),
+                  "대", src)
+        facts.add("seoul_ev_per_fast", "서울 급속 1개당 전기차",
+                  ev_per_fast(supply["seoul_fast_per_10k_ev"]), "대", src)
         if supply["fast_busy_pct"] is not None:
             facts.add("fast_busy_pct", f"{gu} 급속 충전 중 비율 (한 시점)",
                       supply["fast_busy_pct"], "%", src)
@@ -77,7 +84,7 @@ def _add_cluster(facts: FactList, cards: list[dict], company: str) -> None:
 
 def _add_scenario(facts: FactList, sim: dict) -> None:
     src, before, after = sim["source"], sim["before"], sim["after"]
-    facts.add("fast_add", "추가 가정 급속충전기", sim["fast_add"], "기", src)
+    facts.add("fast_add", "신설 가정 급속충전기", sim["fast_add"], "대", src)
     facts.add("kw", "추가 가정 출력", sim["kw"], "kW", src)
     for label, key, unit in (("급속 ID", "fast_ids", "ID"),
                              ("전기차 1만 대당 급속 ID", "fast_per_10k_ev", "ID"),
@@ -85,6 +92,10 @@ def _add_scenario(facts: FactList, sim: dict) -> None:
                              ("병목 점수 순위", "score_rank", "위")):
         facts.add(f"{key}_before", f"{sim['gu']} {label} (현재)", before[key], unit, src)
         facts.add(f"{key}_after", f"{sim['gu']} {label} (추가 후)", after[key], unit, src)
+    facts.add("ev_per_fast_before", f"{sim['gu']} 급속 1개당 전기차 (현재)",
+              ev_per_fast(before["fast_per_10k_ev"]), "대", src)
+    facts.add("ev_per_fast_after", f"{sim['gu']} 급속 1개당 전기차 (추가 후)",
+              ev_per_fast(after["fast_per_10k_ev"]), "대", src)
     facts.add("parking_spaces", "필요 주차면", sim["parking_spaces"], "개", src)
     facts.add("occupancy_min", "급속 1회 충전 시간 중앙값 (가정)", sim["occupancy_min"], "분",
               sim["assumptions"]["occupancy"])

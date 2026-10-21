@@ -18,7 +18,7 @@ def _district_view(table, gu: str) -> dict:
 
 def simulate_fast_add(snap: Snapshot, station_id: str, fast_add: int,
                       kw: int = criteria.HIGH_POWER_KW) -> dict:
-    """한 거점에 급속 N기를 더했을 때 자치구 순위·병목·주차면·처리 대수를 계산하는 함수
+    """한 거점에 급속충전기 N대를 신설했을 때 자치구 순위·병목·주차면·처리 대수를 계산하는 함수
 
     Args:
         snap: 스냅샷
@@ -57,6 +57,6 @@ def simulate_fast_add(snap: Snapshot, station_id: str, fast_add: int,
         "assumptions": {
             "occupancy": f"서울 급속 {power_text} 마지막 1회 충전 시간 중앙값 "
                          f"(표본 {len(sessions)}개, 스냅샷 {snap.name})",
-            "parking": "급속 1기당 전용 주차면 1개",
+            "parking": "급속충전기 1대당 전용 주차면 1개",
         },
     }

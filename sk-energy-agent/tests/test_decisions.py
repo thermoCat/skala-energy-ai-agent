@@ -7,7 +7,7 @@ from agent.session_store import read_decision_log
 
 def _record(store, station_id="A0009172", gu="동대문구", company="SK에너지"):
     return store.record_human_decision(company, station_id, gu, "보류",
-                                       "소형 추가 (초급속 1~2기)", "부지 협의 필요", "담당자")
+                                       "소형 추가 (초급속 충전기 1~2대)", "부지 협의 필요", "담당자")
 
 
 def test_previous_decision_appears_in_station_answer(ask, store):

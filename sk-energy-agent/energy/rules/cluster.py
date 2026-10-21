@@ -49,13 +49,13 @@ def _station_verdict(row: pd.Series, eligible: set, chosen: set,
                      median: float) -> tuple[str, list[str]]:
     if row["UNI_ID"] in chosen:
         return "fast_candidate", [
-            "전기 병목 자치구",
+            "충전기 부족 구",
             "주유소 안 충전기 없음",
-            f"반경 1km 급속 {row['fast_1km']}개 ≤ 묶음 중앙값 {median:g}개",
+            f"1km 안 급속 {row['fast_1km']}개 (같은 구 자사 보통 {median:g}개 이하)",
         ]
     if row["UNI_ID"] in eligible:
-        return "keep", [f"급속 후보 조건은 충족하지만 반경 급속이 더 적은 "
-                        f"{criteria.FAST_CANDIDATE_MAX}곳에 밀림"]
+        return "keep", [f"후보 조건은 맞지만 1km 안 급속이 더 적은 "
+                        f"{criteria.FAST_CANDIDATE_MAX}곳이 먼저"]
     return "keep", []
 
 

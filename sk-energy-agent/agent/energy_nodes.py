@@ -21,7 +21,8 @@ from .validation import check_answer, check_priority
 
 JUDGED_TYPES = ("station", "district", "scenario")
 GATE_REASON = "기준에 따라 확정 (분석 에이전트 판별과 달라 교정)"
-PRIORITY_ONLY_FACTS = ("busy_1km:",)   # 판별·게이트를 거치는 요청
+PRIORITY_ONLY_FACTS = ("busy_1km:",)
+DISPLAY_ONLY_FACTS = ("ev_per_fast", "seoul_ev_per_fast")   # 1만 대당 값을 화면용으로 바꾼 것
 MAX_REPLAN = 1
 MAX_REWRITE = 1
 
@@ -229,7 +230,9 @@ async def replan_node(state: dict, deps: SupervisorDeps) -> dict:
 async def analyst_node(state: dict, deps: SupervisorDeps) -> dict:
     """분석 에이전트 — 사실 [F]만 보고 판별하는 노드 (기준 판정은 넘기지 않음)"""
     # 거점별 충전 중 비율은 우선순위 판단용 — 판별 입력에 섞으면 길어져 판별이 흐려졌다 (일치율 88.9 → 77.8%)
-    facts = [f for f in state["facts"] if not f["key"].startswith(PRIORITY_ONLY_FACTS)]
+    # 급속 1개당 전기차는 1만 대당 값과 같은 정보라 판별 입력에서 뺀다
+    facts = [f for f in state["facts"]
+             if not f["key"].startswith(PRIORITY_ONLY_FACTS + DISPLAY_ONLY_FACTS)]
     verdicts, usage = deps.quality_llm.judge_energy(state["request_type"], facts)
     summary = {item: v.get("value") for item, v in verdicts.items()}
     return {"llm_verdicts": verdicts, **_spend(state, usage),

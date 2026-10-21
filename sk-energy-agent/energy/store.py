@@ -3,6 +3,7 @@
 자치구 단위 급속충전기 수는 모든 계산에서 "서울 자치구가 배정된 급속 ID" 한 가지 기준만 쓴다.
 거점 반경 급속 수만 경계 너머 경기·인천 급속을 더한다 — 운전자는 시 경계를 가리지 않으므로.
 """
+import os
 from dataclasses import dataclass
 from functools import lru_cache
 from pathlib import Path
@@ -147,16 +148,19 @@ def add_fast_nearby(stations: pd.DataFrame, fast: pd.DataFrame,
     return out
 
 
-def load_status_history(limit: int = 3) -> list[pd.DataFrame]:
+def load_status_history(limit: int = 3, until: str | None = None) -> list[pd.DataFrame]:
     """최근 스냅샷들의 서울 급속 상태 표를 오래된 순으로 반환하는 함수 (매일 감시용)
 
     Args:
         limit: 최근 몇 개를 읽을지
+        until: 이 폴더 이름까지만 읽음 (없으면 SNAPSHOT_UNTIL 환경변수, 그것도 없으면 전부)
     Returns:
         fast_status.csv 표 목록 (key = "statId-chgerId" 컬럼 포함)
     """
+    # 수집이 쌓이면 "최근 3개"가 바뀌므로, 테스트는 SNAPSHOT_UNTIL 로 기준 시점을 고정한다
+    until = until or os.environ.get("SNAPSHOT_UNTIL")
     files = [p / "fast_status.csv" for p in SNAPSHOT_DIR.iterdir()
-             if (p / "fast_status.csv").exists()]
+             if (p / "fast_status.csv").exists() and (until is None or p.name <= until)]
     frames = []
     for path in files:
         df = _read_csv(path, dtype=str)

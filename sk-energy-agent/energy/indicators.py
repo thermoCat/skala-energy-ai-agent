@@ -38,6 +38,17 @@ def fast_density(fast_ids, ev_count):
     return fast_ids / ev_count * 10000
 
 
+def ev_per_fast(fast_per_10k_ev: float) -> float:
+    """급속 1개당 전기차 대수를 계산하는 함수 (화면용 — 판정은 1만 대당 값으로 한다)
+
+    Args:
+        fast_per_10k_ev: 전기차 1만 대당 급속 ID 수
+    Returns:
+        급속 ID 1개당 전기차 대수 (소수 첫째 자리)
+    """
+    return round(10000 / fast_per_10k_ev, 1)
+
+
 def _count(snap: Snapshot, month: str, fuel: str, gu: str | None = None) -> int:
     m = snap.monthly
     rows = m[(m["기준월"] == month) & (m["연료"] == fuel)]

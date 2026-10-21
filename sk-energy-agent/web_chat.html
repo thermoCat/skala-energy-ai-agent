@@ -127,8 +127,8 @@
           </h3>
           <div class="sub">{{ panel.card.gu }} · {{ panel.card.brand }} · {{ panel.card.facility }}</div>
           <div class="tiles">
-            <div class="tile"><div class="v">{{ panel.card.fast_1km }}</div><div class="k">반경 1km 급속<span v-if="panel.card.cluster_median_fast_1km !== undefined"> (묶음 중앙값 {{ panel.card.cluster_median_fast_1km }})</span></div></div>
-            <div class="tile"><div class="v">{{ panel.card.fast_1km_busy_pct ?? '-' }}<small v-if="panel.card.fast_1km_busy_pct !== null">%</small></div><div class="k">주변 충전 중 비율</div></div>
+            <div class="tile"><div class="v">{{ panel.card.fast_1km }}</div><div class="k">1km 안 급속<span v-if="panel.card.cluster_median_fast_1km !== undefined"> (같은 구 보통 {{ panel.card.cluster_median_fast_1km }}개)</span></div></div>
+            <div class="tile"><div class="v">{{ panel.card.fast_1km_busy_pct ?? '-' }}<small v-if="panel.card.fast_1km_busy_pct !== null">%</small></div><div class="k">주변 급속 사용 중</div></div>
             <div class="tile"><div class="v">{{ panel.card.in_station_fast_ids }}</div><div class="k">주유소 안 급속</div></div>
           </div>
           <div v-if="panel.card.verdict" class="why">{{ stationWhy(panel.card) }}</div>
@@ -138,20 +138,20 @@
         <!-- 자치구 -->
         <template v-else-if="panel.kind === 'gu' && panel.district">
           <h3>{{ panel.district.gu }}
-            <span v-if="districtFlags.ev" class="badge red">전기 병목</span>
+            <span v-if="districtFlags.ev" class="badge red">충전기 부족</span>
             <span v-for="f in districtFlags.idle" :key="f" class="badge blue">{{ f }} 감소</span>
           </h3>
           <div class="sub">{{ company }} 거점 {{ panel.district.own_stations.length }}곳</div>
           <div class="tiles">
             <div class="tile"><div class="v">{{ signed(ev.rate_pct) }}%</div><div class="k">전기차 1년 (서울 {{ signed(ev.seoul_rate_pct) }}%)</div></div>
-            <div class="tile"><div class="v">{{ Math.round(panel.district.supply.fast_per_10k_ev) }}</div><div class="k">1만 대당 급속 (서울 {{ Math.round(panel.district.supply.seoul_fast_per_10k_ev) }})</div></div>
+            <div class="tile"><div class="v">{{ evPerFast(panel.district.supply.fast_per_10k_ev) }}<small>대</small></div><div class="k">급속 1개당 전기차 (서울 {{ evPerFast(panel.district.supply.seoul_fast_per_10k_ev) }}대)</div></div>
             <div class="tile"><div class="v">{{ signed(panel.district.demand.fuels['경유'].rate_pct) }}%</div><div class="k">경유차 1년</div></div>
           </div>
           <div v-if="candidates.length" class="chips">
             <span class="hint">⚡ 급속 후보</span>
             <span v-for="s in candidates" :key="s.station_id" class="chip" @click="focusStation(s.station_id)">{{ s.name }}</span>
           </div>
-          <div v-else class="why">급속 후보 없음 — 전기 병목 자치구가 아님</div>
+          <div v-else class="why">급속 후보 없음 — 충전기 부족 구가 아님</div>
           <details>
             <summary>거점 전체 · 연료별 수치</summary>
             <table>
@@ -235,7 +235,7 @@
           <button v-for="q in suggestions" :key="q" type="button" @click="input = targetPrefix() + q">{{ q }}</button>
         </div>
         <form class="ask" @submit.prevent="onSubmit">
-          <input type="text" v-model="input" autocomplete="off" placeholder="예: 박미주유소에 급속 2기 넣으면?" />
+          <input type="text" v-model="input" autocomplete="off" placeholder="예: 박미주유소에 충전기 2대 신설하면?" />
           <button type="submit" :disabled="sending">보내기</button>
         </form>
       </div>
@@ -258,8 +258,8 @@ const yn = v => v === true ? '예' : v === false ? '아니오' : '판별 없음'
 const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 // 화면에서는 근거 번호를 숨기고 "근거 번호 보기"로 펼친다 — 번호는 검증용이라 읽기에 방해가 됨
 const stripCites = t => t.replace(/\[[FJ]\d+\]/g, '').replace(/[ \t]+/g, ' ').trim();
-const ITEM_NAMES = { ev_bottleneck: '전기 병목', diesel_idle: '경유차 감소', lpg_idle: 'LPG차 감소',
-  fast_candidates: '급속 후보', ev_bottleneck_before: '추가 전 병목', ev_bottleneck_after: '추가 후 병목' };
+const ITEM_NAMES = { ev_bottleneck: '충전기 부족', diesel_idle: '경유차 감소', lpg_idle: 'LPG차 감소',
+  fast_candidates: '급속 후보', ev_bottleneck_before: '추가 전 부족', ev_bottleneck_after: '추가 후 부족' };
 
 createApp({
   setup() {
@@ -283,6 +283,8 @@ createApp({
     const pinLayer = L.layerGroup(), districtLayer = L.layerGroup();
 
     const signed = v => (v > 0 ? '+' : '') + v.toFixed(1);
+    // 답변의 "급속 1개당 전기차"와 같은 계산 (energy.indicators.ev_per_fast)
+    const evPerFast = per10k => (10000 / per10k).toFixed(1);
     const targetPrefix = () => target.value ? target.value.prefix : '';
     const getJson = url => fetch(url).then(r => r.json());
     const q = encodeURIComponent;
@@ -324,7 +326,7 @@ createApp({
         style: f => districtStyle(districts[f.properties.name] || {}),
         onEachFeature: (f, layer) => {
           const gu = f.properties.name, d = districts[gu] || {};
-          const tags = [d.ev_bottleneck && '전기 병목', d.diesel_idle && '경유차 감소',
+          const tags = [d.ev_bottleneck && '충전기 부족', d.diesel_idle && '경유차 감소',
                         d.lpg_idle && 'LPG차 감소'].filter(Boolean).join(' · ');
           layer.bindTooltip(`${esc(gu)}${tags ? ' — ' + esc(tags) : ''}`, { sticky: true });
           layer.on('click', () => selectDistrict(gu));
@@ -343,7 +345,7 @@ createApp({
         div.innerHTML = `<details${open}><summary>범례</summary>`
           + Object.entries(BRAND_COLORS).map(([b, c]) => `<div><i style="background:${c}"></i>${esc(b)}</div>`).join('')
           + '<div style="margin-top:4px">● 주유소 ◆ LPG · ⚡ 급속 후보</div>'
-          + '<div>구: 빨강 전기 병목 · 파란 점선 경유·LPG차 감소</div></details>';
+          + '<div>구: 빨강 충전기 부족 · 파란 점선 경유·LPG차 감소</div></details>';
         L.DomEvent.disableClickPropagation(div);
         return div;
       };
@@ -391,8 +393,8 @@ createApp({
       if (card.is_own) loadDecisions(p.station_id);
       const prefix = `[${p.name}] `;
       target.value = { station_id: p.station_id, label: `${p.name} · ${p.gu}`, prefix };
-      suggestions.value = card.is_own ? ['이 주유소에 무엇을 더해야 해?', '급속 2기 넣으면?']
-                                      : ['이 주유소 주변 경쟁 현황은?'];
+      suggestions.value = card.is_own ? ['허브로 바꾸려면 뭐부터 넣을까?', '충전기 2대 신설하면?']
+                                      : ['이 주유소 주변 충전 경쟁은 어때?'];
       input.value = prefix + suggestions.value[0];
     }
 
@@ -402,7 +404,7 @@ createApp({
         getJson(`/api/clusters/${q(gu)}?company=${q(company)}`)]);
       Object.assign(panel, { kind: 'gu', card: null, district, cluster });
       target.value = { gu, label: `${gu} ${company} 거점`, prefix: '' };
-      suggestions.value = [`${gu} ${company} 거점을 어떻게 나눠 써야 해?`];
+      suggestions.value = [`${gu} ${company} 주유소 중 어디부터 허브로 바꿀까?`];
       input.value = suggestions.value[0];
     }
 
@@ -478,13 +480,13 @@ createApp({
     function answerView(text) {
       const lines = stripCites(text).split('\n').map(l => l.trim()).filter(Boolean);
       const top = [], more = [], foot = [];
-      let corrected = 0;
+      let corrected = 0, siteCheck = false;
       lines.forEach((l, i) => {
         if (i === 0 && l.startsWith('[')) top.push({ text: l.replace(/^\[|\]$/g, ''), cls: 'head' });
         else if (l.startsWith('요약:')) top.push({ text: l.replace(/^요약:\s*/, ''), cls: 'line' });
         else if (l.startsWith('※ 게이트 교정')) { corrected++; more.push({ text: l.replace(/^※\s*/, ''), cls: 'fix' }); }
-        else if (l.startsWith('현장 확인')) { foot.push('현장 확인 필요'); more.push({ text: l, cls: 'note' }); }
-        else if (l.startsWith('이 답변은')) foot.push('투자 결정이 아닌 진단');
+        else if (l.startsWith('현장 확인')) { siteCheck = true; more.push({ text: l, cls: 'note' }); }
+        else if (l.startsWith('이 답변은')) return;
         else if (l.startsWith('확정 판정 기준')) return;
         else {
           // "4) 이 주유소: …" 같은 줄은 항목 이름과 내용을 나눠 표처럼 보여준다
@@ -493,6 +495,7 @@ createApp({
           else more.push({ text: l, cls: l.startsWith('※') ? 'note' : (more.at(-1)?.cls === 'kv' ? 'kv-sub' : 'line') });
         }
       });
+      if (siteCheck) foot.push('AI 진단 결과로, 투자 시 추후 현장 확인 필요');
       if (corrected) foot.unshift(`게이트 교정 ${corrected}건`);
       // 요약 줄이 없는 답(되묻기·공개 정보 등)은 전부 보여준다
       if (top.length < 2) return { top: top.concat(more), more: [], foot: foot.join(' · ') };
@@ -602,7 +605,7 @@ createApp({
       es.onerror = finish;
     }
 
-    return { company, ownOnly, showDistricts, panel, decision, log, input, sending, logEl, target, suggestions,
+    return { company, ownOnly, showDistricts, evPerFast, panel, decision, log, input, sending, logEl, target, suggestions,
              unread, watching, signed, targetPrefix, ev, districtFlags, candidates, stationWhy, focusStation,
              clearTarget, saveDecision, showAlerts, runJob, alertTitle, alertWindow, alertTop, openAlertStation,
              answerView, onSubmit };

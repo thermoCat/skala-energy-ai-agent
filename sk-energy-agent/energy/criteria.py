@@ -55,7 +55,7 @@ FUEL_IDLE_LABEL = "🔻 차량 감소 (자치구 신호)"
 # 전환 유형 — 부지 크기를 몰라 판정하지 않고 선택지로만 보여준다
 CONVERSION_TYPES = (
     "유지",
-    "소형 추가 (초급속 1~2기)",
+    "소형 추가 (초급속 충전기 1~2대)",
     "복합 확장 (충전 + 발전 + 점포)",
     "재건축 (옥내 주유소 + 물류 + 연료전지)",
     "정리 검토",
@@ -63,12 +63,12 @@ CONVERSION_TYPES = (
 
 # 권위 게이트가 기준 판정과 대조하는 항목 (키 → 화면 이름)
 GATED_ITEMS = {
-    "ev_bottleneck": "전기 병목",
+    "ev_bottleneck": "충전기 부족",
     "diesel_idle": "경유차 감소",
     "lpg_idle": "LPG차 감소",
-    "fast_candidates": "묶음 급속 후보",
-    "ev_bottleneck_before": "급속 추가 전 전기 병목",
-    "ev_bottleneck_after": "급속 추가 후 전기 병목",
+    "fast_candidates": "급속 후보",
+    "ev_bottleneck_before": "급속 추가 전 충전기 부족",
+    "ev_bottleneck_after": "급속 추가 후 충전기 부족",
     "report_needed": "주간 보고에 올릴 변화",
     "watch_competitors": "경쟁 변화를 볼 거점",
     "alert_needed": "알림 필요",
@@ -76,9 +76,8 @@ GATED_ITEMS = {
 }
 
 # 모든 진단 카드에 붙는 현장 확인 항목
+# 부지·주차면은 토지대장 등이 붙으면 AI가 볼 수 있어, 따로 문의·측정해야 하는 두 가지만 남긴다
 SITE_CHECK_ITEMS = (
-    "부지 면적·배치 (충전공지·주차장 확보)",
-    "폭발위험장소 밖 설치 가능 여부",
     "한전 전력 인입 용량",
-    "주차면 수",
+    "안전거리 (폭발위험장소 밖 설치 가능 여부)",
 )
