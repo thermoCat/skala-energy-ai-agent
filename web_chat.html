@@ -236,7 +236,7 @@
                   <div v-if="l.cls === 'kv'" class="kv"><span class="k">{{ l.k }}</span><span>{{ l.text }}</span></div>
                   <div v-else :class="l.cls">{{ l.text }}</div>
                 </template>
-                <button type="button" class="link" @click="item.raw = !item.raw">{{ item.raw ? '근거 번호 숨기기' : '근거 번호 보기' }}</button>
+                <button type="button" class="link" @click="item.raw = !item.raw">{{ item.raw ? '출처 번호 숨기기' : '출처 번호 보기' }}</button>
                 <div v-if="item.raw" class="raw">{{ item.text }}</div>
               </div>
               <div v-if="item.done" class="actions">
@@ -281,7 +281,7 @@ const BRAND_COLORS = {
 const brandColor = b => BRAND_COLORS[b.startsWith('알뜰') ? '알뜰' : b] || '#888888';
 const yn = v => v === true ? '예' : v === false ? '아니오' : '판별 없음';
 const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-// 화면에서는 근거 번호를 숨기고 "근거 번호 보기"로 펼친다 — 번호는 검증용이라 읽기에 방해가 됨
+// 화면에서는 출처 번호를 숨기고 "출처 번호 보기"로 펼친다 — 번호는 검증용이라 읽기에 방해가 됨
 const stripCites = t => t.replace(/\[[FJ]\d+\]/g, '').replace(/[ \t]+/g, ' ').trim();
 const ITEM_NAMES = { ev_bottleneck: '충전기 부족', diesel_idle: '경유차 감소', lpg_idle: 'LPG차 감소',
   fast_candidates: '급속 후보', ev_bottleneck_before: '추가 전 부족', ev_bottleneck_after: '추가 후 부족' };
@@ -619,7 +619,7 @@ createApp({
           ? { text: `어디부터 (AI 판단): ${e.order.map((id, i) => '①②③④'[i] + ' ' + name(id)).join(' ')}`, key: 'priority' }
           : { text: `AI 우선순위가 검사를 통과 못함 → 기본 순서`, warn: true, key: 'priority' };
         case 'Validation': return e.verdict === '합격' || e.verdict === '생략'
-          ? { text: '검증 통과 (숫자·근거 대조)', key: 'valid' }
+          ? { text: '검증 통과 (숫자·출처 대조)', key: 'valid' }
           : { text: `검증 ${e.verdict}: ${(e.issues || []).join(', ')}`, warn: true, key: 'valid' };
         default: return null;
       }
