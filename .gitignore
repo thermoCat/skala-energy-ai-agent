@@ -8,3 +8,25 @@ CLAUDE.local.md
 
 # OS
 .DS_Store
+
+# 실행 환경·로컬 상태
+.env
+.venv/
+session.db
+__pycache__/
+.pytest_cache/
+*.log
+
+# 데이터: 용량이 크고 다시 받을 수 있는 원본 (data/README.md 참고)
+data/raw/keco_ev_charger_20221027.csv
+data/snapshots/*/ev_chargers_z28.csv
+data/snapshots/*/ev_chargers_z41.csv
+
+# 매시 수집 충전기 원본 (용량이 커서 제외, 감시에 필요한 열은 fast_status.csv 로 커밋)
+data/snapshots/*T*/ev_chargers_z11.csv
+
+# 로컬 개발 문서 (git 제외)
+dev-docs/
+
+# 강의 베이스코드 설명서 (로컬 참고용, 저장소에 올리지 않음)
+doc/
