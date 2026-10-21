@@ -20,6 +20,7 @@ data/
 | `seoul_fuel_registration_202609.xlsx` | 〃 | 2026.9 | 64KB | 커밋 |
 | `molit_vehicle_registration_202609.xlsx` | [국토교통 통계누리](https://stat.molit.go.kr/portal/cate/statMetaView.do?hRsId=58&hFormId=1244) 자동차 등록자료 통계 | 2026.9 | 436KB | 커밋 |
 | `kotsa_ev_registration_202504.csv` | [공공데이터포털 15142951](https://www.data.go.kr/data/15142951/fileData.do) 한국교통안전공단 전기차 등록대수 (cp949) | 2025.4 | 24KB | 커밋 |
+| `seoul_gu_boundaries_2013.json` | 서울 25개 자치구 경계 GeoJSON — [southkorea/seoul-maps](https://github.com/southkorea/seoul-maps) `kostat/2013/json/seoul_municipalities_geo_simple.json` (원자료 통계청 통계지리정보, 저장소 라이선스 표기 없음). 지도에서 구 신호를 경계 따라 칠할 때만 사용 | 2013 | 58KB | 커밋 |
 | `keco_ev_charger_20221027.csv` | [공공데이터포털 15119741](https://www.data.go.kr/data/15119741/fileData.do) 한국환경공단 충전소 위치 및 운영정보 | 2022.10.27 | 43MB | **제외** (용량, 위 링크에서 다시 받음) |
 
 > ⚠️ 월간 비교를 위해 `seoul_fuel_registration_202608.xlsx` 를 같은 출처에서 받아 추가해야 합니다.

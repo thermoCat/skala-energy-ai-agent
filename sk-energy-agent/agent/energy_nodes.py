@@ -104,7 +104,8 @@ async def resolve_node(state: dict, deps: SupervisorDeps) -> dict:
     found = await call_tool(deps, "resolve_station", args)
     candidates = found.get("candidates", [])
     event = {"type": "StationResolved", "query": state["station_name"],
-             "count": len(candidates)}
+             "count": len(candidates),
+             "station_id": candidates[0]["station_id"] if len(candidates) == 1 else None}
     if len(candidates) == 1:
         return {"station_id": candidates[0]["station_id"], "route": "energy",
                 "events": state["events"] + [event]}

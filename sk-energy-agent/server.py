@@ -10,6 +10,8 @@
 import json
 import os
 from contextlib import asynccontextmanager
+from functools import lru_cache
+from pathlib import Path
 from typing import Literal
 
 from dotenv import load_dotenv
@@ -330,6 +332,20 @@ async def api_alert_read(alert_id: int, company: str = "SK에너지"):
     if not app.state.deps.session_store.mark_alert_read(alert_id, company):
         raise HTTPException(status_code=404, detail={"message": "없는 알림"})
     return {"id": alert_id, "read": 1}
+
+
+BOUNDARIES = Path(__file__).parent / "data" / "raw" / "seoul_gu_boundaries_2013.json"
+
+
+@lru_cache(maxsize=1)
+def _boundaries() -> dict:
+    return json.loads(BOUNDARIES.read_text(encoding="utf-8"))
+
+
+@app.get("/api/boundaries")
+async def api_boundaries():
+    """서울 25개 자치구 경계 (통계청 2013, GeoJSON) — 지도에서 구 신호를 경계 따라 칠할 때 씀"""
+    return _boundaries()
 
 
 @app.get("/api/criteria")

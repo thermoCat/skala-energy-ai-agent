@@ -12,7 +12,7 @@ CURRENT_MONTH = "2026.09"
 # 전기 병목: 순위 합산 점수가 낮은 순 상위 20% (25구 → 5구, 동점 포함)
 EV_BOTTLENECK_TOP_RATIO = 0.2
 
-# 경유·LPG 유휴 위험: 1년 감소율이 가장 큰 쪽 하위 20% (25구 → 5구, 동점 포함)
+# 경유·LPG 유휴 위험(화면 이름 "차량 감소"): 1년 감소율이 가장 큰 쪽 하위 20% (25구 → 5구, 동점 포함)
 # "서울 평균보다 더 감소"로 하면 구조상 절반이 걸려, 판매량 없이 정리 검토를 남발하게 된다
 FUEL_IDLE_BOTTOM_RATIO = 0.2
 
@@ -45,12 +45,12 @@ FAST_CANDIDATE_MAX = 2
 # 시나리오: 이 출력 이상이면 고출력 충전 시간 중앙값을 쓴다
 HIGH_POWER_KW = 100
 
-# 거점 기준 판정 이름 — 유휴 위험은 근거가 자치구 숫자라 거점에 붙이지 않고 묶음 신호로만 보여준다
+# 거점 기준 판정 이름 — 차량 감소는 근거가 자치구 숫자라 거점에 붙이지 않고 묶음 신호로만 보여준다
 STATION_VERDICTS = {
     "fast_candidate": "⚡ 급속 후보",
     "keep": "유지",
 }
-FUEL_IDLE_LABEL = "🔻 유휴 위험 (자치구 신호)"
+FUEL_IDLE_LABEL = "🔻 차량 감소 (자치구 신호)"
 
 # 전환 유형 — 부지 크기를 몰라 판정하지 않고 선택지로만 보여준다
 CONVERSION_TYPES = (
@@ -64,8 +64,8 @@ CONVERSION_TYPES = (
 # 권위 게이트가 기준 판정과 대조하는 항목 (키 → 화면 이름)
 GATED_ITEMS = {
     "ev_bottleneck": "전기 병목",
-    "diesel_idle": "경유 유휴 위험",
-    "lpg_idle": "LPG 유휴 위험",
+    "diesel_idle": "경유차 감소",
+    "lpg_idle": "LPG차 감소",
     "fast_candidates": "묶음 급속 후보",
     "ev_bottleneck_before": "급속 추가 전 전기 병목",
     "ev_bottleneck_after": "급속 추가 후 전기 병목",

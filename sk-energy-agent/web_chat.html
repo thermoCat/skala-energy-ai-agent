@@ -6,200 +6,235 @@
 <title>에너지 허브 대시보드</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <style>
-  :root { color-scheme: dark; }
+  :root { color-scheme: dark; --bg: #1e1e2e; --panel: #191926; --line: #34344a; --muted: #9a9ac0; --text: #e6e6f2; --accent: #6b6bea; }
   * { box-sizing: border-box; }
   html, body { height: 100%; }
-  body {
-    margin: 0; height: 100vh; overflow: hidden;
-    font-family: -apple-system, "Apple SD Gothic Neo", sans-serif;
-    background: #1e1e2e; color: #e2e2f0;
-  }
+  body { margin: 0; height: 100vh; overflow: hidden; background: var(--bg); color: var(--text);
+         font-family: -apple-system, "Apple SD Gothic Neo", sans-serif; font-size: 14px; }
   #app { height: 100%; display: flex; flex-direction: column; }
-  header {
-    padding: 10px 18px; background: #262638; border-bottom: 1px solid #3a3a52;
-    display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; font-size: 14px;
-  }
-  header > * { white-space: nowrap; }
-  header b { font-size: 15px; }
-  header .muted { color: #8b8bd8; font-size: 12px; }
-  header label { font-size: 12px; color: #c3c3e0; display: flex; gap: 4px; align-items: center; }
+  header { padding: 10px 18px; background: #262638; border-bottom: 1px solid var(--line);
+           display: flex; align-items: center; gap: 12px; }
+  header b { font-size: 15px; margin-right: auto; white-space: nowrap; }
+  header button { white-space: nowrap; }
+  header label { font-size: 12px; color: var(--muted); display: flex; gap: 4px; align-items: center; white-space: nowrap; }
+  button { padding: 8px 14px; border-radius: 9px; border: none; background: var(--accent); color: white; font-size: 13px; cursor: pointer; }
+  button.ghost { background: #34345a; }
+  button.link { background: transparent; color: var(--muted); padding: 0; font-size: 12px; }
+  button:disabled { background: #3a3a52; cursor: default; }
   main { flex: 1; min-height: 0; display: flex; }
   #map { flex: 1; min-width: 0; }
-  aside { width: 460px; display: flex; flex-direction: column; border-left: 1px solid #3a3a52; }
+  aside { width: 440px; display: flex; flex-direction: column; border-left: 1px solid var(--line); }
 
-  /* 정보 패널 */
-  .panel { flex: 0 0 45%; overflow-y: auto; padding: 12px 16px; border-bottom: 2px solid #3a3a52; font-size: 13px; background: #191926; }
-  .panel h3 { margin: 0 0 6px; font-size: 15px; }
-  .panel .sub { color: #9a9ac0; font-size: 12px; margin-bottom: 8px; }
-  .panel table { width: 100%; border-collapse: collapse; margin: 6px 0; }
-  .panel td, .panel th { padding: 3px 4px; border-bottom: 1px solid #2e2e42; text-align: left; vertical-align: top; }
-  .panel th { color: #9a9ac0; font-weight: 400; }
-  .badge { display: inline-block; padding: 1px 7px; border-radius: 9px; background: #3a3a52; font-size: 12px; }
+  /* 정보 패널 — 판정 한 줄 + 숫자 3개, 나머지는 접기 */
+  .panel { flex: 0 0 auto; max-height: 42%; overflow-y: auto; padding: 14px 16px; background: var(--panel); border-bottom: 2px solid var(--line); }
+  .panel h3 { margin: 0; font-size: 16px; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  .sub { color: var(--muted); font-size: 12px; margin: 3px 0 10px; }
+  .badge { font-size: 12px; font-weight: 500; padding: 2px 9px; border-radius: 10px; background: #3a3a52; }
   .badge.fast { background: #6b4e00; color: #ffd36b; }
-  .badge.idle { background: #10345a; color: #8cc8ff; }
-  .chips { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px; }
-  .chip { padding: 2px 8px; border-radius: 9px; border: 1px solid #3a3a52; font-size: 12px; color: #c3c3e0; }
-  .note { color: #9a9ac0; font-size: 12px; margin-top: 6px; }
-  .hbtn { padding: 5px 10px; font-size: 12px; background: #34345a; }
-  .alert { border: 1px solid #3a3a52; border-radius: 8px; padding: 8px 10px; margin-bottom: 8px; white-space: pre-wrap; }
-  .alert.unread { border-color: #ffb86b; }
-  .alert .stations div { cursor: pointer; text-decoration: underline dotted; }
-  .decide { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 4px; }
-  .decide select, .decide input { background: #1e1e2e; color: #e2e2f0; border: 1px solid #3a3a52; border-radius: 6px; padding: 4px 6px; font-size: 12px; }
-  .decide input { flex: 1; min-width: 120px; }
+  .badge.red { background: #5a1d22; color: #ff9a9e; }
+  .badge.blue { background: #10345a; color: #8cc8ff; }
+  .tiles { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .tile { background: #23233a; border-radius: 9px; padding: 8px 10px; }
+  .tile .v { font-size: 18px; font-weight: 600; }
+  .tile .k { font-size: 11px; color: var(--muted); margin-top: 2px; }
+  .why { font-size: 13px; margin-top: 10px; line-height: 1.5; }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+  .chip { font-size: 13px; padding: 4px 10px; border-radius: 10px; background: #2b2b44; cursor: pointer; }
+  details { margin-top: 10px; font-size: 12px; color: var(--muted); }
+  details summary { cursor: pointer; }
+  details table { width: 100%; border-collapse: collapse; margin-top: 6px; }
+  details td, details th { padding: 3px 4px; border-bottom: 1px solid #2b2b40; text-align: left; font-weight: 400; }
+  .decide { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 6px; }
+  .decide select, .decide input { background: var(--bg); color: var(--text); border: 1px solid var(--line); border-radius: 6px; padding: 4px 6px; font-size: 12px; }
+  .decide input { flex: 1; min-width: 110px; }
   .decide button { padding: 4px 10px; font-size: 12px; }
+  .hint { color: var(--muted); font-size: 13px; line-height: 1.6; }
+
+  /* 알림 — 제목 한 줄 + 먼저 볼 거점 */
+  .alert { border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; margin-top: 10px; }
+  .alert.unread { border-color: #ffb86b; }
+  .alert .t { font-weight: 600; }
+  .alert .s { color: var(--muted); font-size: 12px; margin: 2px 0 6px; }
+  .alert .chip { font-size: 12px; }
+  .jobs { display: flex; gap: 6px; margin-top: 4px; }
+  .jobs button { padding: 5px 10px; font-size: 12px; }
 
   /* 채팅 */
-  #log { flex: 1; min-height: 0; overflow-y: auto; padding: 12px 16px; display: flex; flex-direction: column; gap: 10px; }
+  #log { flex: 1; min-height: 0; overflow-y: auto; padding: 14px 16px; display: flex; flex-direction: column; gap: 10px; }
   .row { display: flex; }
   .row.user { justify-content: flex-end; }
-  .bubble { max-width: 92%; padding: 9px 12px; border-radius: 12px; line-height: 1.5; font-size: 13px; white-space: pre-wrap; }
+  .bubble { max-width: 94%; padding: 10px 13px; border-radius: 12px; line-height: 1.6; }
   .row.user .bubble { background: #5b5bd6; color: white; border-bottom-right-radius: 4px; }
-  .row.agent .bubble { background: #2e2e42; border-bottom-left-radius: 4px; }
-  .steps { font-size: 12px; color: #9a9ac0; display: flex; flex-direction: column; gap: 2px; }
-  .steps .step::before { content: "✓ "; color: #7ee787; }
-  .steps .step.warn { color: #ffb86b; }
-  .steps .step.warn::before { content: "⚠ "; color: #ffb86b; }
-  .steps .step.link { cursor: pointer; text-decoration: underline dotted; }
-  .prompt-box { background: #17171f; border: 1px solid #3a3a52; border-radius: 8px; font-size: 12px; }
-  .prompt-box summary { cursor: pointer; padding: 6px 10px; color: #8b8bd8; }
-  .prompt-box pre { margin: 0; padding: 8px 10px; white-space: pre-wrap; max-height: 240px; overflow-y: auto; }
-  .composer { padding: 10px 16px; background: #262638; border-top: 1px solid #3a3a52; }
-  .target { font-size: 12px; color: #c3c3e0; margin-bottom: 6px; display: flex; gap: 6px; align-items: center; }
-  .target button { padding: 0 6px; background: transparent; color: #9a9ac0; font-size: 12px; }
+  .row.agent .bubble { background: #2a2a40; border-bottom-left-radius: 4px; }
+  .bubble .line { margin: 2px 0; }
+  .bubble .head { font-weight: 600; margin-bottom: 4px; }
+  .bubble .note { color: var(--muted); font-size: 12px; margin-top: 6px; }
+  .bubble .actions { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
+  button.small { padding: 5px 11px; font-size: 12px; }
+  .bubble .decide { margin-top: 8px; }
+  .detail { margin-top: 8px; font-size: 13px; }
+  .detail .kv { display: grid; grid-template-columns: 84px 1fr; gap: 8px; padding: 6px 0; border-top: 1px solid var(--line); }
+  .detail .kv .k { color: var(--muted); font-size: 12px; }
+  .detail .kv-sub { padding: 0 0 6px 92px; color: #ffd36b; font-size: 12px; }
+  .detail .fix { margin-top: 6px; padding: 5px 9px; border-radius: 7px; background: #3a2e14; color: #ffd08a; font-size: 12px; }
+  .detail .line { padding: 4px 0; border-top: 1px solid var(--line); }
+  .bubble .raw { white-space: pre-wrap; font-size: 12px; color: var(--muted); margin-top: 6px; }
+  .progress { font-size: 12px; color: var(--muted); }
+  .progress .warn { color: #ffb86b; }
+  .progress ul { margin: 4px 0 0; padding-left: 16px; }
+  .progress li.link { cursor: pointer; text-decoration: underline dotted; }
+  .composer { padding: 10px 16px; background: #262638; border-top: 1px solid var(--line); }
+  .target { font-size: 12px; color: var(--muted); margin-bottom: 6px; display: flex; gap: 8px; align-items: center; }
   .suggest { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 6px; }
-  .suggest button { padding: 4px 10px; font-size: 12px; background: #34345a; }
-  form { display: flex; gap: 8px; }
-  input[type=text] {
-    flex: 1; padding: 10px 12px; border-radius: 10px; border: 1px solid #3a3a52;
-    background: #1e1e2e; color: #e2e2f0; font-size: 13px;
-  }
-  button { padding: 10px 16px; border-radius: 10px; border: none; background: #5b5bd6; color: white; font-size: 13px; cursor: pointer; }
-  button:disabled { background: #3a3a52; cursor: default; }
+  .suggest button { padding: 5px 10px; font-size: 12px; background: #34345a; }
+  form.ask { display: flex; gap: 8px; }
+  form.ask input { flex: 1; padding: 10px 12px; border-radius: 10px; border: 1px solid var(--line); background: var(--bg); color: var(--text); font-size: 13px; }
 
   /* 지도 표식 */
+  /* 좁은 화면: 지도를 위, 패널·채팅을 아래로 */
+  @media (max-width: 900px) {
+    main { flex-direction: column; }
+    #map { flex: 0 0 42vh; }
+    aside { width: 100%; flex: 1; min-height: 0; border-left: none; border-top: 1px solid var(--line); }
+    .panel { max-height: 38%; }
+    header { gap: 8px; padding: 8px 12px; flex-wrap: wrap; }
+  }
+
   .pin-diamond { transform: rotate(45deg); border: 1px solid #111; }
   .pin-bolt { font-size: 15px; line-height: 15px; text-shadow: 0 0 3px #000; }
-  .legend { background: rgba(30,30,46,.92); color: #e2e2f0; padding: 8px 10px; border-radius: 8px; font-size: 12px; line-height: 1.7; }
+  .legend { background: rgba(30,30,46,.92); color: var(--text); padding: 6px 10px; border-radius: 8px; font-size: 12px; line-height: 1.7; }
+  .legend summary { cursor: pointer; color: var(--muted); }
   .legend i { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 6px; border: 1px solid #111; }
 </style>
 </head>
 <body>
 <div id="app">
   <header>
-    <b>{{ company }} 에너지 허브 대시보드</b>
-    <span class="muted">{{ backendLabel }}</span>
-    <button type="button" class="hbtn" @click="showAlerts">🔔 알림 {{ unread }}</button>
-    <button type="button" class="hbtn" :disabled="watching" @click="runJob('daily_watch')">{{ watching ? '실행 중…' : '매일 감시 실행' }}</button>
-    <button type="button" class="hbtn" :disabled="watching" @click="runJob('weekly')">주간 경쟁 실행</button>
-    <label><input type="checkbox" v-model="ownOnly" /> 자사 핀만</label>
-    <label><input type="checkbox" v-model="showDistricts" /> 자치구 신호 (빨강 전기 병목 · 파랑 테두리 유휴 위험)</label>
+    <b>{{ company }} 에너지 허브</b>
+    <label><input type="checkbox" v-model="ownOnly" /> 자사만</label>
+    <label><input type="checkbox" v-model="showDistricts" /> 자치구 신호</label>
+    <button type="button" class="ghost" @click="showAlerts">🔔 알림 {{ unread }}</button>
   </header>
   <main>
     <div id="map"></div>
     <aside>
-      <!-- 정보 패널: LLM 없이 API 숫자만 즉시 -->
       <div class="panel">
+        <!-- 주유소 -->
         <template v-if="panel.kind === 'station' && panel.card">
-          <h3>{{ panel.card.name }}</h3>
-          <div class="sub">{{ panel.card.gu }} · {{ panel.card.brand }} · {{ panel.card.facility }} · {{ panel.card.station_id }} · 패널 {{ panel.ms }}ms</div>
-          <div v-if="panel.card.verdict">
-            <span class="badge" :class="{ fast: panel.card.verdict.code === 'fast_candidate' }">{{ panel.card.verdict.label }}</span>
-            <span class="note"> 코드 기준 판정 (규칙 {{ panel.card.rule_version }})</span>
-            <ul v-if="panel.card.verdict.reasons.length" class="note"><li v-for="r in panel.card.verdict.reasons" :key="r">{{ r }}</li></ul>
+          <h3>{{ panel.card.name }}
+            <span v-if="panel.card.verdict" class="badge" :class="{ fast: panel.card.verdict.code === 'fast_candidate' }">{{ panel.card.verdict.label }}</span>
+            <span v-else class="badge">타사 · 공개 정보만</span>
+          </h3>
+          <div class="sub">{{ panel.card.gu }} · {{ panel.card.brand }} · {{ panel.card.facility }}</div>
+          <div class="tiles">
+            <div class="tile"><div class="v">{{ panel.card.fast_1km }}</div><div class="k">반경 1km 급속<span v-if="panel.card.cluster_median_fast_1km !== undefined"> (묶음 중앙값 {{ panel.card.cluster_median_fast_1km }})</span></div></div>
+            <div class="tile"><div class="v">{{ panel.card.fast_1km_busy_pct ?? '-' }}<small v-if="panel.card.fast_1km_busy_pct !== null">%</small></div><div class="k">주변 충전 중 비율</div></div>
+            <div class="tile"><div class="v">{{ panel.card.in_station_fast_ids }}</div><div class="k">주유소 안 급속</div></div>
           </div>
-          <div v-else class="note">타사 거점 — 공개 정보만 보여주고 투자 판별은 하지 않습니다.</div>
-          <table>
-            <tr><th>주유소 안 급속 ID</th><td>{{ panel.card.in_station_fast_ids }}개</td></tr>
-            <tr><th>반경 1km 급속 ID</th><td>{{ panel.card.fast_1km }}<span v-if="panel.card.cluster_median_fast_1km !== undefined"> (묶음 중앙값 {{ panel.card.cluster_median_fast_1km }})</span></td></tr>
-            <tr><th>반경 1km 충전 중 비율</th><td>{{ panel.card.fast_1km_busy_pct ?? '데이터 없음' }}<span v-if="panel.card.fast_1km_busy_pct !== null">% (한 시점, 대리 지표)</span></td></tr>
-          </table>
-          <div v-for="f in panel.card.fuel_signals || []" :key="f.fuel" class="note"><span class="badge idle">{{ f.label }}</span> {{ f.note }}</div>
-          <template v-if="panel.card.verdict">
-            <div class="note">결정 입력 (사람만 기록 — 에이전트는 읽기만)</div>
-            <form class="decide" @submit.prevent="saveDecision">
-              <select v-model="decision.choice"><option>진행</option><option>보류</option><option>제외</option></select>
-              <select v-model="decision.conversion_type">
-                <option :value="null">전환 유형 선택 안 함</option>
-                <option v-for="t in panel.card.conversion_types" :key="t" :value="t">{{ t }}</option>
-              </select>
-              <input type="text" v-model="decision.note" placeholder="메모 (예: 부지 협의 필요)" />
-              <button type="submit">저장</button>
-            </form>
-            <div v-for="d in panel.decisions" :key="d.id" class="note">· {{ d.created_at.slice(0, 16).replace('T', ' ') }} {{ d.choice }}<span v-if="d.conversion_type"> · {{ d.conversion_type }}</span> — {{ d.note }} ({{ d.decided_by }})</div>
-          </template>
-          <template v-if="panel.card.site_checks">
-            <div class="note">전환 유형 선택지</div>
-            <div class="chips"><span v-for="t in panel.card.conversion_types" :key="t" class="chip">{{ t }}</span></div>
-            <div class="note">현장 확인 항목</div>
-            <div class="chips"><span v-for="t in panel.card.site_checks" :key="t" class="chip">{{ t }}</span></div>
-          </template>
+          <div v-if="panel.card.verdict" class="why">{{ stationWhy(panel.card) }}</div>
+          <div v-if="panel.decisions.length" class="sub" style="margin-top:8px">지난 결정: {{ panel.decisions[0].choice }}{{ panel.decisions[0].note ? ' — ' + panel.decisions[0].note : '' }} ({{ panel.decisions[0].created_at.slice(5, 10) }})</div>
         </template>
 
+        <!-- 자치구 -->
         <template v-else-if="panel.kind === 'gu' && panel.district">
-          <h3>{{ panel.district.gu }} · {{ company }} 거점 {{ panel.district.own_stations.length }}곳</h3>
-          <div class="sub">패널 {{ panel.ms }}ms · {{ panel.district.demand.months.join(' → ') }}</div>
-          <table>
-            <tr><th>연료</th><th>1년 증감</th><th>서울</th></tr>
-            <tr v-for="(v, fuel) in panel.district.demand.fuels" :key="fuel">
-              <td>{{ fuel }}</td><td>{{ signed(v.rate_pct) }}%</td><td>{{ signed(v.seoul_rate_pct) }}%</td>
-            </tr>
-          </table>
-          <div class="note">전기차 1만 대당 급속 ID {{ panel.district.supply.fast_per_10k_ev }} (서울 {{ panel.district.supply.seoul_fast_per_10k_ev }}) · 수소충전소 {{ panel.district.h2.station_count }}곳 · 대기 {{ panel.district.h2.wait_total }}대</div>
-          <template v-if="panel.cluster">
+          <h3>{{ panel.district.gu }}
+            <span v-if="districtFlags.ev" class="badge red">전기 병목</span>
+            <span v-for="f in districtFlags.idle" :key="f" class="badge blue">{{ f }} 감소</span>
+          </h3>
+          <div class="sub">{{ company }} 거점 {{ panel.district.own_stations.length }}곳</div>
+          <div class="tiles">
+            <div class="tile"><div class="v">{{ signed(ev.rate_pct) }}%</div><div class="k">전기차 1년 (서울 {{ signed(ev.seoul_rate_pct) }}%)</div></div>
+            <div class="tile"><div class="v">{{ Math.round(panel.district.supply.fast_per_10k_ev) }}</div><div class="k">1만 대당 급속 (서울 {{ Math.round(panel.district.supply.seoul_fast_per_10k_ev) }})</div></div>
+            <div class="tile"><div class="v">{{ signed(panel.district.demand.fuels['경유'].rate_pct) }}%</div><div class="k">경유차 1년</div></div>
+          </div>
+          <div v-if="candidates.length" class="chips">
+            <span class="hint">⚡ 급속 후보</span>
+            <span v-for="s in candidates" :key="s.station_id" class="chip" @click="focusStation(s.station_id)">{{ s.name }}</span>
+          </div>
+          <div v-else class="why">급속 후보 없음 — 전기 병목 자치구가 아님</div>
+          <details>
+            <summary>거점 전체 · 연료별 수치</summary>
             <table>
-              <tr><th>거점</th><th>반경 1km 급속</th><th>판정</th></tr>
               <tr v-for="s in panel.cluster.stations" :key="s.station_id" @click="focusStation(s.station_id)" style="cursor:pointer">
-                <td>{{ s.name }}<div class="note">{{ s.facility }}</div></td>
-                <td>{{ s.fast_1km }}</td>
-                <td><span class="badge" :class="{ fast: s.verdict === 'fast_candidate' }">{{ s.label }}</span></td>
+                <td>{{ s.name }}</td><td>{{ s.facility }}</td><td>반경 급속 {{ s.fast_1km }}</td><td>{{ s.label }}</td>
               </tr>
             </table>
-            <div class="note">묶음 반경 1km 급속 중앙값 {{ panel.cluster.cluster_median_fast_1km }}</div>
-            <div v-for="f in panel.cluster.fuel_signals.filter(x => x.idle)" :key="f.fuel" class="note"><span class="badge idle">{{ f.label }}</span> {{ f.note }}</div>
-          </template>
+            <table>
+              <tr v-for="(v, fuel) in panel.district.demand.fuels" :key="fuel">
+                <td>{{ fuel }}</td><td>{{ signed(v.rate_pct) }}%</td><td>서울 {{ signed(v.seoul_rate_pct) }}%</td>
+              </tr>
+            </table>
+          </details>
         </template>
 
+        <!-- 알림함 -->
         <template v-else-if="panel.kind === 'alerts'">
-          <h3>알림함</h3>
-          <div class="sub">{{ panel.runInfo }}</div>
-          <div v-if="!panel.alerts.length" class="note">알림이 없습니다. 이상이 없으면 알림을 만들지 않습니다 (LLM 0회).</div>
+          <h3>알림</h3>
+          <div class="jobs">
+            <button type="button" class="ghost" :disabled="watching" @click="runJob('daily_watch')">매일 감시 실행</button>
+            <button type="button" class="ghost" :disabled="watching" @click="runJob('weekly')">주간 경쟁 실행</button>
+          </div>
+          <div v-if="panel.runInfo" class="sub" style="margin-top:6px">{{ panel.runInfo }}</div>
+          <div v-if="!panel.alerts.length" class="hint" style="margin-top:8px">알림이 없습니다. 변화가 없으면 알림을 만들지 않습니다.</div>
           <div v-for="a in panel.alerts" :key="a.id" class="alert" :class="{ unread: !a.read }">
-            <div>{{ a.message }}</div>
-            <div class="stations note">
-              <div v-for="s in a.payload.stations || []" :key="s.station_id" @click="openAlertStation(a, s.station_id)">
-                {{ s.name }} ({{ s.gu }}) — 새 고장 {{ s.new_failures }}개
-              </div>
-              <div v-for="c in a.payload.changes || []" :key="c.charger" @click="openAlertStation(a, c.station_id)">
-                {{ c.name }} ({{ c.gu }}) — {{ c.change }} · {{ c.operator }}{{ c.own_operator ? ' (자사·계열)' : ' (타사)' }} · {{ c.distance_m }}m
-              </div>
+            <div class="t">{{ alertTitle(a) }}</div>
+            <div class="s">{{ alertWindow(a) }}</div>
+            <div class="chips" style="margin-top:0">
+              <span v-for="x in alertTop(a)" :key="x.id" class="chip" @click="openAlertStation(a, x.id)">{{ x.text }}</span>
             </div>
           </div>
         </template>
 
-        <div v-else class="note">지도에서 주유소 핀이나 자치구 원을 누르면 숫자가 바로 뜨고, 질문이 채워집니다.<br/>● 주유소 · ◆ LPG 충전소 · 큰 핀 = {{ company }} · ⚡ 급속 후보</div>
+        <div v-else class="hint">지도에서 주유소 핀이나 자치구를 누르세요.<br/>숫자는 바로 뜨고, 질문이 채워집니다.</div>
       </div>
 
       <!-- 채팅 -->
       <div id="log" ref="logEl">
         <template v-for="item in log" :key="item.id">
           <div v-if="item.kind === 'user'" class="row user"><div class="bubble">{{ item.text }}</div></div>
-          <div v-else-if="item.kind === 'steps'" class="steps">
-            <div v-for="(s, i) in item.steps" :key="i" class="step" :class="{ warn: s.warn, link: s.stationId }"
-                 @click="s.stationId && focusStation(s.stationId)">{{ s.text }}</div>
+          <div v-else-if="item.kind === 'steps'" class="progress">
+            <span :class="{ warn: item.warn }">{{ item.done ? '✓ ' + item.summary : '⏳ ' + (item.steps.at(-1)?.text || '시작') }}</span>
+            <button v-if="item.steps.length" type="button" class="link" @click="item.open = !item.open"> {{ item.open ? '접기' : '단계 보기' }}</button>
+            <ul v-if="item.open">
+              <li v-for="(s, i) in item.steps" :key="i" :class="{ warn: s.warn, link: s.stationId }"
+                  @click="s.stationId && focusStation(s.stationId)">{{ s.text }}</li>
+            </ul>
           </div>
-          <div v-else-if="item.kind === 'agent'" class="row agent"><div class="bubble">{{ item.text }}</div></div>
-          <details v-else-if="item.kind === 'prompt'" class="prompt-box">
-            <summary>LLM에 전달된 최종 프롬프트 보기</summary><pre>{{ item.text }}</pre>
-          </details>
+          <div v-else-if="item.kind === 'agent'" class="row agent">
+            <div class="bubble">
+              <template v-for="(l, i) in answerView(item.text).top" :key="'t' + i">
+                <div :class="l.cls">{{ l.text }}</div>
+              </template>
+              <div v-if="answerView(item.text).foot" class="note">{{ answerView(item.text).foot }}</div>
+              <div v-if="item.done && item.more" class="detail">
+                <template v-for="(l, i) in answerView(item.text).more" :key="'m' + i">
+                  <div v-if="l.cls === 'kv'" class="kv"><span class="k">{{ l.k }}</span><span>{{ l.text }}</span></div>
+                  <div v-else :class="l.cls">{{ l.text }}</div>
+                </template>
+                <button type="button" class="link" @click="item.raw = !item.raw">{{ item.raw ? '근거 번호 숨기기' : '근거 번호 보기' }}</button>
+                <div v-if="item.raw" class="raw">{{ item.text }}</div>
+              </div>
+              <div v-if="item.done" class="actions">
+                <button v-if="answerView(item.text).more.length" type="button" class="ghost small" @click="item.more = !item.more">{{ item.more ? '접기' : '자세히 보기' }}</button>
+                <button v-if="item.stationId && !item.deciding && !item.saved" type="button" class="small" @click="item.deciding = true">📝 이 주유소 결정 남기기</button>
+              </div>
+              <form v-if="item.done && item.deciding" class="decide" @submit.prevent="saveDecision(item)">
+                <select v-model="decision.choice"><option>진행</option><option>보류</option><option>제외</option></select>
+                <input type="text" v-model="decision.note" placeholder="메모 (예: 부지 협의 필요)" />
+                <button type="submit">저장</button>
+                <button type="button" class="ghost" @click="item.deciding = false">취소</button>
+              </form>
+              <div v-if="item.saved" class="note">✓ 결정을 남겼습니다. 다음에 물으면 AI가 이 결정을 함께 봅니다.</div>
+            </div>
+          </div>
         </template>
       </div>
       <div class="composer">
-        <div v-if="target" class="target">대상: {{ target.label }} <button type="button" @click="clearTarget">✕ 해제</button></div>
+        <div v-if="target" class="target">대상: {{ target.label }} <button type="button" class="link" @click="clearTarget">✕ 해제</button></div>
         <div v-if="suggestions.length" class="suggest">
           <button v-for="q in suggestions" :key="q" type="button" @click="input = targetPrefix() + q">{{ q }}</button>
         </div>
-        <form @submit.prevent="onSubmit">
+        <form class="ask" @submit.prevent="onSubmit">
           <input type="text" v-model="input" autocomplete="off" placeholder="예: 박미주유소에 급속 2기 넣으면?" />
           <button type="submit" :disabled="sending">보내기</button>
         </form>
@@ -211,7 +246,7 @@
 <script src="https://unpkg.com/vue@3.4.38/dist/vue.global.prod.js"></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
-const { createApp, ref, reactive, nextTick, onMounted, watch } = Vue;
+const { createApp, ref, reactive, computed, nextTick, onMounted, watch } = Vue;
 
 // 회사 공식 색 대신 색각 이상을 고려한 구분용 8색 (Okabe-Ito)
 const BRAND_COLORS = {
@@ -221,28 +256,21 @@ const BRAND_COLORS = {
 const brandColor = b => BRAND_COLORS[b.startsWith('알뜰') ? '알뜰' : b] || '#888888';
 const yn = v => v === true ? '예' : v === false ? '아니오' : '판별 없음';
 const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-
-const REQUEST_NAMES = { station: '주유소 진단', district: '자치구 묶음 진단', scenario: '급속 추가 시나리오' };
-const TOOL_NAMES = {
-  get_station_card: '주유소 카드', get_fuel_demand: '5개 연료 수요', get_ev_supply: '전기 공급',
-  get_h2_status: '수소 대기', search_stations: '자사 거점 목록', score_district: '자치구 기준 판정',
-  review_cluster: '묶음 기준 판정', simulate: '시나리오 계산',
-  get_nearby_competition: '주변 경쟁 현황', get_decision_log: '판단 이력',
-};
-const ITEM_NAMES = { ev_bottleneck: '전기 병목', diesel_idle: '경유 유휴', lpg_idle: 'LPG 유휴',
+// 화면에서는 근거 번호를 숨기고 "근거 번호 보기"로 펼친다 — 번호는 검증용이라 읽기에 방해가 됨
+const stripCites = t => t.replace(/\[[FJ]\d+\]/g, '').replace(/[ \t]+/g, ' ').trim();
+const ITEM_NAMES = { ev_bottleneck: '전기 병목', diesel_idle: '경유차 감소', lpg_idle: 'LPG차 감소',
   fast_candidates: '급속 후보', ev_bottleneck_before: '추가 전 병목', ev_bottleneck_after: '추가 후 병목' };
 
 createApp({
   setup() {
     const company = 'SK에너지';
-    const backendLabel = ref('');
     const ownOnly = ref(false);
     const showDistricts = ref(true);
     const panel = reactive({ kind: null, card: null, district: null, cluster: null, decisions: [],
-                             alerts: [], runInfo: '', ms: 0 });
+                             alerts: [], runInfo: '' });
     const unread = ref(0);
     const watching = ref(false);
-    const decision = reactive({ choice: '보류', conversion_type: null, note: '' });
+    const decision = reactive({ choice: '보류', note: '' });
     const log = ref([]);
     const input = ref('');
     const sending = ref(false);
@@ -250,23 +278,14 @@ createApp({
     const target = ref(null);        // {station_id | gu, label, prefix}
     const suggestions = ref([]);
     const thread = 't-web-' + Math.random().toString(36).slice(2, 8);
-    let nextId = 0, map = null;
+    let nextId = 0, map = null, pinsData = null;
     const pinsById = {};
     const pinLayer = L.layerGroup(), districtLayer = L.layerGroup();
 
-    fetch('/health').then(r => r.json()).then(h => {
-      backendLabel.value = `LLM ${h.llm_backend} (${h.fast_llm} / ${h.quality_llm})`;
-    }).catch(() => {});
-
     const signed = v => (v > 0 ? '+' : '') + v.toFixed(1);
     const targetPrefix = () => target.value ? target.value.prefix : '';
-
-    async function timedJson(url) {
-      const t0 = performance.now();
-      const r = await fetch(url);
-      const data = await r.json();
-      return [data, Math.round(performance.now() - t0)];
-    }
+    const getJson = url => fetch(url).then(r => r.json());
+    const q = encodeURIComponent;
 
     // ── 지도 ───────────────────────────────────────────────────
     function drawPins(pins) {
@@ -275,13 +294,13 @@ createApp({
         if (ownOnly.value && !p.own) continue;
         const color = brandColor(p.brand);
         let marker;
+        // 자사·타사를 같은 크기로 그린다 — 자사만 크게 그리면 지도가 자사 거점만 있는 것처럼 보인다
         if (p.prodcd === 'K015') {
-          const size = p.own ? 12 : 8;
-          marker = L.marker([p.lat, p.lng], { icon: L.divIcon({ className: '', iconSize: [size, size],
-            html: `<div class="pin-diamond" style="width:${size}px;height:${size}px;background:${color};opacity:${p.own ? 1 : 0.5}"></div>` }) });
+          marker = L.marker([p.lat, p.lng], { icon: L.divIcon({ className: '', iconSize: [9, 9],
+            html: `<div class="pin-diamond" style="width:9px;height:9px;background:${color}"></div>` }) });
         } else {
-          marker = L.circleMarker([p.lat, p.lng], { radius: p.own ? 7 : 4, color: p.own ? '#111' : color,
-            weight: p.own ? 2 : 1, fillColor: color, fillOpacity: p.own ? 0.95 : 0.45 });
+          marker = L.circleMarker([p.lat, p.lng], { radius: 5, color: '#222', weight: 1,
+            fillColor: color, fillOpacity: 0.85 });
         }
         marker.bindTooltip(`${esc(p.name)} · ${esc(p.brand)}`);
         marker.on('click', () => selectStation(p));
@@ -293,41 +312,44 @@ createApp({
       }
     }
 
-    function drawDistricts(pins, districts) {
+    // 자치구 경계(통계청 2013, 25개 구)를 따라 신호를 칠한다 — 확대·축소해도 경계에 붙어 있음
+    function districtStyle(d) {
+      const idle = d.diesel_idle || d.lpg_idle;
+      return { color: idle ? '#3b8eea' : '#8a8aa8', weight: idle ? 3 : 1, dashArray: idle ? '6 4' : null,
+               fillColor: d.ev_bottleneck ? '#e5484d' : '#000', fillOpacity: d.ev_bottleneck ? 0.28 : 0.02 };
+    }
+    function drawDistricts(boundaries, districts) {
       districtLayer.clearLayers();
-      // 경계 도형이 없어 자치구 거점 좌표의 평균 위치에 원으로 표시
-      const sums = {};
-      for (const p of pins) {
-        const s = sums[p.gu] ||= { lat: 0, lng: 0, n: 0 };
-        s.lat += p.lat; s.lng += p.lng; s.n += 1;
-      }
-      for (const [gu, s] of Object.entries(sums)) {
-        const d = districts[gu] || {};
-        const idle = d.diesel_idle || d.lpg_idle;
-        const circle = L.circleMarker([s.lat / s.n, s.lng / s.n], {
-          radius: 22, weight: idle ? 3 : 1, color: idle ? '#3b8eea' : '#777',
-          fillColor: d.ev_bottleneck ? '#e5484d' : '#888', fillOpacity: d.ev_bottleneck ? 0.35 : 0.08,
-          dashArray: idle ? '4 3' : null });
-        const tags = [d.ev_bottleneck && '전기 병목', d.diesel_idle && '경유 유휴 위험', d.lpg_idle && 'LPG 유휴 위험',
-                      d.h2_stations && `수소충전소 ${d.h2_stations}곳`].filter(Boolean).join(' · ');
-        circle.bindTooltip(`${esc(gu)}${tags ? ' — ' + esc(tags) : ''}`);
-        circle.on('click', () => selectDistrict(gu));
-        districtLayer.addLayer(circle);
-      }
+      L.geoJSON(boundaries, {
+        style: f => districtStyle(districts[f.properties.name] || {}),
+        onEachFeature: (f, layer) => {
+          const gu = f.properties.name, d = districts[gu] || {};
+          const tags = [d.ev_bottleneck && '전기 병목', d.diesel_idle && '경유차 감소',
+                        d.lpg_idle && 'LPG차 감소'].filter(Boolean).join(' · ');
+          layer.bindTooltip(`${esc(gu)}${tags ? ' — ' + esc(tags) : ''}`, { sticky: true });
+          layer.on('click', () => selectDistrict(gu));
+          layer.on('mouseover', () => layer.setStyle({ weight: 3, color: '#ffffff' }));
+          layer.on('mouseout', () => layer.setStyle(districtStyle(d)));
+        },
+      }).addTo(districtLayer);
     }
 
     function addLegend() {
       const legend = L.control({ position: 'bottomleft' });
       legend.onAdd = () => {
         const div = L.DomUtil.create('div', 'legend');
-        div.innerHTML = Object.entries(BRAND_COLORS)
-          .map(([b, c]) => `<div><i style="background:${c}"></i>${esc(b)}</div>`).join('');
+        // 좁은 화면에선 범례가 지도를 가려서 접힌 채로 시작한다
+        const open = window.innerWidth > 900 ? ' open' : '';
+        div.innerHTML = `<details${open}><summary>범례</summary>`
+          + Object.entries(BRAND_COLORS).map(([b, c]) => `<div><i style="background:${c}"></i>${esc(b)}</div>`).join('')
+          + '<div style="margin-top:4px">● 주유소 ◆ LPG · ⚡ 급속 후보</div>'
+          + '<div>구: 빨강 전기 병목 · 파란 점선 경유·LPG차 감소</div></details>';
+        L.DomEvent.disableClickPropagation(div);
         return div;
       };
       legend.addTo(map);
     }
 
-    let pinsData = null;
     onMounted(async () => {
       map = L.map('map', { preferCanvas: true }).setView([37.5565, 126.99], 11);
       L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -335,87 +357,53 @@ createApp({
       districtLayer.addTo(map);
       pinLayer.addTo(map);
       addLegend();
-      const [data] = await timedJson(`/api/pins?company=${encodeURIComponent(company)}`);
-      pinsData = data;
-      for (const p of data.pins) pinsById[p.station_id] = p;
-      drawDistricts(data.pins, data.districts);
-      drawPins(data.pins);
+      const [pins, boundaries] = await Promise.all([
+        getJson(`/api/pins?company=${q(company)}`), getJson('/api/boundaries')]);
+      pinsData = pins;
+      for (const p of pinsData.pins) pinsById[p.station_id] = p;
+      drawDistricts(boundaries, pinsData.districts);
+      drawPins(pinsData.pins);
       refreshUnread();
     });
     watch(ownOnly, () => pinsData && drawPins(pinsData.pins));
-    watch(showDistricts, v => v ? districtLayer.addTo(map) : districtLayer.remove());
+    // 핀과 같은 캔버스에 그려야 구 클릭이 먹힌다 — 다시 켤 때는 핀 아래로 내린다
+    watch(showDistricts, v => v
+      ? districtLayer.addTo(map).eachLayer(g => g.bringToBack())
+      : districtLayer.remove());
 
-    // ── 핀·자치구 클릭 → 정보 패널 + 질문 채움 (자동 전송 안 함) ────────
+    // ── 정보 패널 ───────────────────────────────────────────────
+    function stationWhy(card) {
+      if (card.verdict.code === 'fast_candidate') return '⚡ ' + card.verdict.reasons.join(' · ');
+      const reasons = card.verdict.reasons.length ? card.verdict.reasons.join(' · ') : '급속 후보 조건에 해당하지 않음';
+      const idle = (card.fuel_signals || []).filter(f => f.idle).map(f => `${f.fuel}차 감소 큰 구`).join(' · ');
+      return idle ? `${reasons} · 🔻 ${idle}` : reasons;
+    }
+    const ev = computed(() => panel.district?.demand.fuels['전기'] || {});
+    const districtFlags = computed(() => {
+      const d = pinsData?.districts[panel.district?.gu] || {};
+      return { ev: d.ev_bottleneck, idle: [d.diesel_idle && '경유차', d.lpg_idle && 'LPG차'].filter(Boolean) };
+    });
+    const candidates = computed(() => (panel.cluster?.stations || []).filter(s => s.verdict === 'fast_candidate'));
+
     async function selectStation(p) {
-      const [card, ms] = await timedJson(`/api/stations/${p.station_id}/card?company=${encodeURIComponent(company)}`);
-      Object.assign(panel, { kind: 'station', card, district: null, cluster: null, decisions: [], ms });
+      const card = await getJson(`/api/stations/${p.station_id}/card?company=${q(company)}`);
+      Object.assign(panel, { kind: 'station', card, district: null, cluster: null, decisions: [] });
       if (card.is_own) loadDecisions(p.station_id);
-      const prefix = `[${p.gu} · ${p.brand} ${p.name}] `;
-      target.value = { station_id: p.station_id, label: `${p.name} (${p.station_id})`, prefix };
+      const prefix = `[${p.name}] `;
+      target.value = { station_id: p.station_id, label: `${p.name} · ${p.gu}`, prefix };
       suggestions.value = card.is_own ? ['이 주유소에 무엇을 더해야 해?', '급속 2기 넣으면?']
                                       : ['이 주유소 주변 경쟁 현황은?'];
       input.value = prefix + suggestions.value[0];
     }
 
     async function selectDistrict(gu) {
-      const [[district, ms], [cluster]] = await Promise.all([
-        timedJson(`/api/districts/${encodeURIComponent(gu)}?company=${encodeURIComponent(company)}`),
-        timedJson(`/api/clusters/${encodeURIComponent(gu)}?company=${encodeURIComponent(company)}`)]);
-      Object.assign(panel, { kind: 'gu', card: null, district, cluster, ms });
-      const n = district.own_stations.length;
-      target.value = { gu, label: `${gu} (${company} 거점 ${n}곳)`, prefix: '' };
-      suggestions.value = [`${gu} ${company} 거점 ${n}곳을 어떻게 나눠 써야 해?`];
+      const [district, cluster] = await Promise.all([
+        getJson(`/api/districts/${q(gu)}?company=${q(company)}`),
+        getJson(`/api/clusters/${q(gu)}?company=${q(company)}`)]);
+      Object.assign(panel, { kind: 'gu', card: null, district, cluster });
+      target.value = { gu, label: `${gu} ${company} 거점`, prefix: '' };
+      suggestions.value = [`${gu} ${company} 거점을 어떻게 나눠 써야 해?`];
       input.value = suggestions.value[0];
-    }
-
-    async function refreshUnread() {
-      const [data] = await timedJson(`/api/alerts?company=${encodeURIComponent(company)}&unread=true`);
-      unread.value = data.alerts.length;
-    }
-
-    async function showAlerts() {
-      const [data] = await timedJson(`/api/alerts?company=${encodeURIComponent(company)}`);
-      Object.assign(panel, { kind: 'alerts', alerts: data.alerts });
-    }
-
-    async function runJob(job) {
-      const title = job === 'weekly' ? '주간 경쟁' : '매일 감시';
-      watching.value = true;
-      try {
-        const r = await fetch(`/api/jobs/${job}/run?company=${encodeURIComponent(company)}`, { method: 'POST' });
-        const res = await r.json();
-        panel.runInfo = res.alert_id
-          ? `${title} 실행: 알림 1건 (LLM ${res.llm_calls}회)`
-          : `${title} 실행: 변화 없음 → 알림 없음 (LLM ${res.llm_calls}회)`;
-        await refreshUnread();
-        await showAlerts();
-      } finally {
-        watching.value = false;
-      }
-    }
-
-    async function openAlertStation(alert, stationId) {
-      if (!alert.read) {
-        await fetch(`/api/alerts/${alert.id}/read?company=${encodeURIComponent(company)}`, { method: 'POST' });
-        alert.read = 1;
-        refreshUnread();
-      }
-      focusStation(stationId);
-    }
-
-    async function loadDecisions(stationId) {
-      const [log] = await timedJson(`/api/decisions?company=${encodeURIComponent(company)}&station_id=${stationId}`);
-      panel.decisions = log.human || [];
-    }
-
-    async function saveDecision() {
-      const body = { station_id: panel.card.station_id, company, choice: decision.choice,
-                     conversion_type: decision.conversion_type, note: decision.note };
-      const r = await fetch('/api/decisions', { method: 'POST', headers: { 'content-type': 'application/json' },
-                                                body: JSON.stringify(body) });
-      if (!r.ok) { alert('저장 실패: ' + JSON.stringify((await r.json()).detail)); return; }
-      decision.note = '';
-      loadDecisions(panel.card.station_id);
     }
 
     function focusStation(stationId) {
@@ -427,47 +415,133 @@ createApp({
 
     function clearTarget() { target.value = null; suggestions.value = []; }
 
+    async function loadDecisions(stationId) {
+      const data = await getJson(`/api/decisions?company=${q(company)}&station_id=${stationId}`);
+      panel.decisions = data.human || [];
+    }
+
+    // 사람이 진단을 보고 남기는 결정 — AI는 읽기만 하고 다음 판단(지난 결정·우선순위)에 반영
+    async function saveDecision(item) {
+      const body = { station_id: item.stationId, company, choice: decision.choice, note: decision.note };
+      const r = await fetch('/api/decisions', { method: 'POST', headers: { 'content-type': 'application/json' },
+                                                body: JSON.stringify(body) });
+      if (!r.ok) { alert('저장 실패: ' + JSON.stringify((await r.json()).detail)); return; }
+      decision.note = '';
+      item.deciding = false; item.saved = true;
+      if (panel.card?.station_id === item.stationId) loadDecisions(item.stationId);
+    }
+
+    // ── 알림 ───────────────────────────────────────────────────
+    async function refreshUnread() {
+      unread.value = (await getJson(`/api/alerts?company=${q(company)}&unread=true`)).alerts.length;
+    }
+    async function showAlerts() {
+      Object.assign(panel, { kind: 'alerts', alerts: (await getJson(`/api/alerts?company=${q(company)}`)).alerts });
+    }
+    async function runJob(job) {
+      const title = job === 'weekly' ? '주간 경쟁' : '매일 감시';
+      watching.value = true;
+      try {
+        const res = await (await fetch(`/api/jobs/${job}/run?company=${q(company)}`, { method: 'POST' })).json();
+        panel.runInfo = res.alert_id ? `${title}: 알림 1건 (LLM ${res.llm_calls}회)`
+                                     : `${title}: 변화 없음 → 알림 없음 (LLM ${res.llm_calls}회)`;
+        await refreshUnread();
+        await showAlerts();
+      } finally {
+        watching.value = false;
+      }
+    }
+    function alertTitle(a) {
+      const p = a.payload;
+      if (a.job === 'weekly') return `주간 경쟁 · 자사 거점 1km 안 변화 ${p.changes.length}건 (타사 신설 ${p.competitor_new}건)`;
+      return `매일 감시 · 새로 멈춘 급속 ${p.new_failures}개 · 거점 ${p.stations.length}곳`;
+    }
+    const alertWindow = a => a.payload.window.map(w => w.slice(5, 16).replace('T', ' ')).join(' → ');
+    function alertTop(a) {
+      if (a.job === 'weekly') {
+        return a.payload.changes.slice(0, 3).map(c => ({ id: c.station_id,
+          text: `${c.name} · ${c.change} ${c.operator}${c.own_operator ? '' : '(타사)'} ${c.distance_m}m` }));
+      }
+      return a.payload.stations.slice(0, 3).map(s => ({ id: s.station_id, text: `${s.name} · 새 고장 ${s.new_failures}` }));
+    }
+    async function openAlertStation(alertItem, stationId) {
+      if (!alertItem.read) {
+        await fetch(`/api/alerts/${alertItem.id}/read?company=${q(company)}`, { method: 'POST' });
+        alertItem.read = 1;
+        refreshUnread();
+      }
+      focusStation(stationId);
+    }
+
     // ── 채팅 (SSE) ──────────────────────────────────────────────
-    function stepFor(e) {
-      switch (e.type) {
-        case 'RouteDecided': return e.request_type ? { text: `요청 분류: ${REQUEST_NAMES[e.request_type] || e.request_type}` } : null;
-        case 'StationResolved': return { text: `이름 찾기: "${e.query}" → ${e.count}곳` };
-        case 'AskUser': return { text: '같은 이름이 여러 곳 → 되묻기', warn: true };
-        case 'PlanCreated': return { text: `조회 계획: ${e.gu} · Tool ${e.tools.length}개 병렬` };
-        case 'TaskCompleted': {
-          const name = TOOL_NAMES[e.source] || e.source;
-          return e.ok === false ? { text: `${name} 실패 → 데이터 없음으로 표시`, warn: true } : { text: `${name} 조회` };
+    // 답변을 "제목 + 요약 + 한 줄 안내"로 먼저 보여주고, 나머지는 "자세히 보기"로 접는다
+    function answerView(text) {
+      const lines = stripCites(text).split('\n').map(l => l.trim()).filter(Boolean);
+      const top = [], more = [], foot = [];
+      let corrected = 0;
+      lines.forEach((l, i) => {
+        if (i === 0 && l.startsWith('[')) top.push({ text: l.replace(/^\[|\]$/g, ''), cls: 'head' });
+        else if (l.startsWith('요약:')) top.push({ text: l.replace(/^요약:\s*/, ''), cls: 'line' });
+        else if (l.startsWith('※ 게이트 교정')) { corrected++; more.push({ text: l.replace(/^※\s*/, ''), cls: 'fix' }); }
+        else if (l.startsWith('현장 확인')) { foot.push('현장 확인 필요'); more.push({ text: l, cls: 'note' }); }
+        else if (l.startsWith('이 답변은')) foot.push('투자 결정이 아닌 진단');
+        else if (l.startsWith('확정 판정 기준')) return;
+        else {
+          // "4) 이 주유소: …" 같은 줄은 항목 이름과 내용을 나눠 표처럼 보여준다
+          const m = l.match(/^\d\)\s*([^:]{1,12}):\s*(.+)$/);
+          if (m) more.push({ k: m[1], text: m[2], cls: 'kv' });
+          else more.push({ text: l, cls: l.startsWith('※') ? 'note' : (more.at(-1)?.cls === 'kv' ? 'kv-sub' : 'line') });
         }
-        case 'FactsCollected': return { text: `사실 ${e.count}개 정리${e.is_own ? '' : ' (타사 — 판별하지 않음)'}` };
-        case 'Replanned': return { text: `재계획: ${e.from}에 자사 거점 없음 → ${e.to}`, warn: true };
+      });
+      if (corrected) foot.unshift(`게이트 교정 ${corrected}건`);
+      // 요약 줄이 없는 답(되묻기·공개 정보 등)은 전부 보여준다
+      if (top.length < 2) return { top: top.concat(more), more: [], foot: foot.join(' · ') };
+      return { top, more, foot: foot.join(' · ') };
+    }
+
+    function stepFor(e) {
+      const name = id => pinsById[id]?.name || id;
+      switch (e.type) {
+        case 'StationResolved': return { text: `이름 찾기: "${e.query}" → ${e.count}곳`, key: 'resolve' };
+        case 'AskUser': return { text: '같은 이름이 여러 곳 → 되묻기', warn: true, key: 'ask' };
+        case 'PlanCreated': return { text: `${e.gu} 데이터 ${e.tools.length}종 조회`, key: 'plan' };
+        case 'TaskCompleted': return e.ok === false ? { text: `${e.source} 실패 → 데이터 없음으로 표시`, warn: true, key: 'fail' } : null;
+        case 'Replanned': return { text: `${e.from}에 자사 거점 없음 → ${e.to}로 재계획`, warn: true, key: 'replan' };
         case 'Judged': {
           const parts = Object.entries(e).filter(([k]) => ITEM_NAMES[k])
-            .map(([k, v]) => `${ITEM_NAMES[k]} ${Array.isArray(v) ? v.length + '곳' : yn(v)}`);
-          if (e.by === 'gate') {
-            const fixed = new Set(e.corrected_items || []);
-            const marked = Object.entries(e).filter(([k]) => ITEM_NAMES[k])
-              .map(([k, v]) => `${ITEM_NAMES[k]} ${Array.isArray(v) ? v.length + '곳' : yn(v)}${fixed.has(k) ? '(교정됨)' : ''}`);
-            return { text: `권위 게이트 확정 (교정 ${e.corrected}건): ` + marked.join(', ') };
-          }
-          return { text: '분석 에이전트 판별: ' + parts.join(', ') };
+            .map(([k, v]) => `${ITEM_NAMES[k]} ${Array.isArray(v) ? v.length + '곳' : yn(v)}${(e.corrected_items || []).includes(k) ? '(교정됨)' : ''}`);
+          return e.by === 'gate'
+            ? { text: `권위 게이트 확정 · 교정 ${e.corrected}건: ${parts.join(', ')}`, key: 'gate', corrected: e.corrected }
+            : { text: `AI 판별: ${parts.join(', ')}`, key: 'judge' };
         }
         case 'GateCorrected': {
-          const fmt = v => Array.isArray(v) ? v.map(id => pinsById[id]?.name || id).join(', ') || '없음' : yn(v);
-          return { text: `게이트 교정: ${e.label} ${fmt(e.llm)} → ${fmt(e.baseline)}`, warn: true };
+          const fmt = v => Array.isArray(v) ? v.map(name).join(', ') || '없음' : yn(v);
+          return { text: `게이트 교정: ${e.label} ${fmt(e.llm)} → ${fmt(e.baseline)}`, warn: true, key: 'fix' };
         }
-        case 'EvidenceCard': return {
-          text: `근거 카드 ⚡ ${pinsById[e.station_id]?.name || e.station_id} — ${e.picked_by === 'gate' ? '게이트가 기준으로 추가(교정됨)' : `AI 선택 (${e.facts.join(', ')})`} · 눌러서 지도 이동`,
-          stationId: e.station_id, warn: e.picked_by === 'gate' };
+        case 'EvidenceCard': return { text: `⚡ ${name(e.station_id)} — ${e.picked_by === 'gate' ? '게이트가 추가(교정됨)' : 'AI 선택'} · 눌러서 지도 이동`, stationId: e.station_id, key: 'card' };
         case 'Prioritized': return e.by === 'llm'
-          ? { text: `어디부터 (AI 판단): ${e.order.map((id, i) => '①②③④'[i] + ' ' + (pinsById[id]?.name || id)).join(' ')}` }
-          : { text: `AI 우선순위 판단 검사 불통과 → 기본 순서: ${(e.issues || []).join(', ')}`, warn: true };
-        case 'DraftWritten': return { text: `답변 작성 (시도 ${e.attempt})` };
+          ? { text: `어디부터 (AI 판단): ${e.order.map((id, i) => '①②③④'[i] + ' ' + name(id)).join(' ')}`, key: 'priority' }
+          : { text: `AI 우선순위가 검사를 통과 못함 → 기본 순서`, warn: true, key: 'priority' };
         case 'Validation': return e.verdict === '합격' || e.verdict === '생략'
-          ? { text: '검증 통과 (숫자·근거 대조)' }
-          : { text: `검증 ${e.verdict}: ${(e.issues || []).join(', ')}`, warn: true };
-        case 'Finalize': return { text: '최종 답변 완성' };
+          ? { text: '검증 통과 (숫자·근거 대조)', key: 'valid' }
+          : { text: `검증 ${e.verdict}: ${(e.issues || []).join(', ')}`, warn: true, key: 'valid' };
         default: return null;
       }
+    }
+
+    // 끝나면 단계 목록을 한 줄 요약으로 접는다
+    function summarize(steps) {
+      const has = k => steps.find(s => s.key === k);
+      const parts = [];
+      if (has('replan')) parts.push('재계획');
+      if (has('judge')) parts.push('AI 판별');
+      const gate = has('gate');
+      if (gate) parts.push(gate.corrected ? `게이트 교정 ${gate.corrected}건` : '게이트 확인');
+      if (has('priority')) parts.push(has('priority').warn ? '우선순위 기본 순서' : '우선순위 AI 판단');
+      if (has('ask')) parts.push('되묻기');
+      const valid = has('valid');
+      if (valid) parts.push(valid.warn ? '검증 경고' : '검증 통과');
+      return parts.length ? parts.join(' → ') : '답변 완료';
     }
 
     async function scrollToBottom() {
@@ -481,47 +555,57 @@ createApp({
       log.value.push({ id: nextId++, kind: 'user', text });
       input.value = '';
       sending.value = true;
-      const stepsItem = reactive({ id: nextId++, kind: 'steps', steps: [] });
+      const stepsItem = reactive({ id: nextId++, kind: 'steps', steps: [], done: false, open: false, summary: '', warn: false });
       log.value.push(stepsItem);
       scrollToBottom();
 
+      let ownStation = target.value?.station_id && panel.card?.station_id === target.value.station_id
+        && panel.card.is_own ? target.value.station_id : null;
       const params = new URLSearchParams({ message: text, thread_id: thread, company });
       if (target.value?.station_id) params.set('station_id', target.value.station_id);
       if (target.value?.gu) params.set('gu', target.value.gu);
       const es = new EventSource(`/chat/stream?${params}`);
-      let streamItem = null, streamAttempt = null;
+      let answer = null, attempt = null;
+      const finish = () => {
+        es.close(); sending.value = false;
+        stepsItem.done = true;
+        stepsItem.summary = summarize(stepsItem.steps);
+        stepsItem.warn = stepsItem.steps.some(s => s.warn);
+        if (answer) answer.done = true;
+      };
 
       es.onmessage = (event) => {
-        if (event.data === '[DONE]') { es.close(); sending.value = false; return; }
+        if (event.data === '[DONE]') { finish(); return; }
         let e;
         try { e = JSON.parse(event.data); } catch { return; }
         if (e.type === 'AnswerToken') {
-          if (!streamItem || streamAttempt !== e.attempt) {
-            streamItem = reactive({ id: nextId++, kind: 'agent', text: '' });
-            log.value.push(streamItem);
-            streamAttempt = e.attempt;
+          if (!answer || attempt !== e.attempt) {
+            answer = reactive({ id: nextId++, kind: 'agent', text: '', raw: false, more: false, done: false, stationId: ownStation, deciding: false, saved: false });
+            log.value.push(answer);
+            attempt = e.attempt;
           }
-          streamItem.text += e.delta;
+          answer.text += e.delta;
           scrollToBottom();
           return;
         }
         if (e.type === 'FinalAnswer') {
-          if (!streamItem) { streamItem = reactive({ id: nextId++, kind: 'agent', text: '' }); log.value.push(streamItem); }
-          streamItem.text = e.reply;
-          if (e.prompt) log.value.push({ id: nextId++, kind: 'prompt', text: e.prompt });
-          streamItem = null; streamAttempt = null;
+          if (!answer) { answer = reactive({ id: nextId++, kind: 'agent', text: '', raw: false, more: false, done: false, stationId: ownStation, deciding: false, saved: false }); log.value.push(answer); }
+          answer.text = e.reply;
           scrollToBottom();
           return;
         }
+        // 이름으로 물어 한 곳으로 찾은 자사 주유소도 답변 아래 결정 버튼을 붙인다
+        if (e.type === 'StationResolved' && pinsById[e.station_id]?.own) ownStation = e.station_id;
         const step = stepFor(e);
         if (step) { stepsItem.steps.push(step); scrollToBottom(); }
       };
-      es.onerror = () => { es.close(); sending.value = false; };
+      es.onerror = finish;
     }
 
-    return { company, backendLabel, ownOnly, showDistricts, panel, decision, log, input, sending, logEl,
-             target, suggestions, signed, targetPrefix, focusStation, clearTarget, onSubmit, saveDecision,
-             unread, watching, showAlerts, runJob, openAlertStation };
+    return { company, ownOnly, showDistricts, panel, decision, log, input, sending, logEl, target, suggestions,
+             unread, watching, signed, targetPrefix, ev, districtFlags, candidates, stationWhy, focusStation,
+             clearTarget, saveDecision, showAlerts, runJob, alertTitle, alertWindow, alertTop, openAlertStation,
+             answerView, onSubmit };
   },
 }).mount('#app');
 </script>

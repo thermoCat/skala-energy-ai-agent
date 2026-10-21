@@ -64,7 +64,7 @@ def test_write_prompt_contains_facts_verdicts_and_musts():
     system, user, skeleton = p.write_prompt("district", FACTS_WITH_MEDIAN, verdicts, [], True, [], ("부지",),
                                   {"fast_candidates": "묶음 급속 후보"}, None, ["근거 없는 숫자: 320.0"])
     assert "[F2] 풍한주유소 (주유소) 반경 1km 급속 ID: 10 ID" in user
-    assert "## 답변 뼈대" in user and "풍한주유소 — 반경 1km 급속 ID 10[F2]" in user
+    assert "## 답변 뼈대" in user and "풍한주유소 — 반경 1km 급속 10[F2]" in user
     assert "현장 확인 항목: 부지" in user and "근거 없는 숫자: 320.0" in user
 
 

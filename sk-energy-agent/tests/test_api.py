@@ -120,3 +120,9 @@ def test_watch_job_api_and_alert_inbox(client):
     assert weekly["alert_id"] is not None and "수서지점" in weekly["message"]
     comp = client.get("/api/stations/A0009177/competition").json()       # 타사 거점도 공개 정보
     assert comp["fast_1km"] > 0 and comp["top"]
+
+
+def test_boundaries_cover_all_districts(client):
+    data = client.get("/api/boundaries").json()
+    names = {f["properties"]["name"] for f in data["features"]}
+    assert len(names) == 25 and "동대문구" in names
