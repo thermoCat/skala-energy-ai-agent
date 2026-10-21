@@ -360,6 +360,38 @@ createApp({
       }).addTo(districtLayer);
     }
 
+    // 휠·트랙패드 확대를 매 프레임 조금씩 따라가게 한다 (확대 중엔 캔버스를 늘려 보여주고, 멈추면 한 번 다시 그림)
+    function smoothWheelZoom(map) {
+      const el = map.getContainer();
+      let goal = null, anchor = null, frame = null, idle = null;
+      el.addEventListener('wheel', e => {
+        e.preventDefault();                         // 핀치(ctrl+휠)가 브라우저 화면 확대로 새지 않게
+        if (goal === null) { map._stop(); map._moveStart(true, false); goal = map.getZoom(); }
+        const px = e.deltaMode === 1 ? e.deltaY * 16 : e.deltaY;
+        // 핀치는 한 번에 오는 값이 작아서 더 크게 반영한다
+        goal = map._limitZoom(goal - px / (e.ctrlKey ? 60 : 250));
+        anchor = map.mouseEventToContainerPoint(e);
+        if (!frame) frame = requestAnimationFrame(step);
+        clearTimeout(idle);
+        idle = setTimeout(finish, 180);
+      }, { passive: false });
+      function step() {
+        frame = null;
+        const zoom = map.getZoom();
+        const next = Math.abs(goal - zoom) < 0.005 ? goal : zoom + (goal - zoom) * 0.35;
+        // 마우스가 가리키는 지점을 고정한 채 확대
+        const half = map.getSize().divideBy(2);
+        const shift = anchor.subtract(half).multiplyBy(1 - 1 / map.getZoomScale(next, zoom));
+        map._move(map.containerPointToLatLng(half.add(shift)), next);
+        if (next !== goal) frame = requestAnimationFrame(step);
+      }
+      function finish() {
+        if (frame) { idle = setTimeout(finish, 50); return; }   // 따라가는 중이면 끝날 때까지 기다림
+        goal = null;
+        map._moveEnd(true);
+      }
+    }
+
     function addLegend() {
       const legend = L.control({ position: 'bottomleft' });
       legend.onAdd = () => {
@@ -377,7 +409,10 @@ createApp({
     }
 
     onMounted(async () => {
-      map = L.map('map', { preferCanvas: true }).setView([37.5565, 126.99], 11);
+      // 기본 휠 확대는 트랙패드의 작은 움직임도 40ms마다 한 단계(2배)로 올림해 뚝뚝 끊긴다 → 직접 연속 확대
+      map = L.map('map', { preferCanvas: true, scrollWheelZoom: false, zoomSnap: 0 })
+        .setView([37.5565, 126.99], 11);
+      smoothWheelZoom(map);
       L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
         maxZoom: 18, attribution: '&copy; OpenStreetMap contributors' }).addTo(map);
       districtLayer.addTo(map);
