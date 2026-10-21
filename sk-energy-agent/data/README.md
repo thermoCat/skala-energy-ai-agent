@@ -47,11 +47,12 @@ data/
 | `2026-10-20T20/` | 2026-10-20 20:55 | `fast_status.csv`, `h2_wait.csv` |
 | `2026-10-21T09/` | 2026-10-21 09:02 | `fast_status.csv`, `h2_wait.csv` |
 | `2026-10-21T10/` | 2026-10-21 10:00 | `fast_status.csv`, `h2_wait.csv` |
+| `2026-10-21T11/` | 2026-10-21 11:00 | `fast_status.csv`, `h2_wait.csv` |
 
 - `fast_status.csv`: 서울 급속충전기 상태만 (`collected_at, statId, chgerId, statNm, busiNm, zscode, lat, lng, stat, statUpdDt, output, limitYn`). `statNm`·`limitYn`(이용자 제한)은 주유소 주간 추적에서 버스 전용·이용 제한 충전기를 가르는 데 씁니다 (10-21 전체 스냅샷을 원본에서 다시 만듦, 기존 열 값은 그대로). `build_fast_status.py` 로 만들고 커밋 (약 590KB). `2026-10-19/` 에도 같은 파일이 있습니다.
 - 매시 원본 `ev_chargers_z11.csv`(약 18MB)는 **git 제외** — 다시 받을 수 없으므로 로컬에 보관합니다.
 - 일간 추적 기준: 직전 수집에서 정상(`stat` 2·3)이던 급속이 그 뒤 3회 수집 연속 고장(`stat` 1·4·5) (`energy/criteria.py`). `statUpdDt` 는 운영사가 같은 상태를 다시 보고할 때마다 바뀌어 고장 시작 시각으로 쓰지 않습니다.
-- ⚠️ 간격이 고르지 않습니다(약 32시간 → 1시간 → 12시간 → 1시간). 10-21 11시 수집까지 예약돼 있습니다.
+- ⚠️ 간격이 고르지 않습니다(약 32시간 → 1시간 → 12시간 → 1시간 → 1시간). 오전 예약 수집은 10-21 11시로 끝났습니다.
 
 ## 급속충전기 숫자 기준
 
