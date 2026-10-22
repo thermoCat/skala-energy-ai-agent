@@ -27,7 +27,7 @@ def own_stations(snap: Snapshot, gu: str, brand: str) -> pd.DataFrame:
 
 
 def fast_candidates(own: pd.DataFrame, ev_bottleneck: bool) -> tuple[set, set]:
-    """급속 후보 조건을 만족하는 거점과 그중 실제 후보(최대 2곳)를 고르는 함수
+    """충전기 후보 조건을 만족하는 거점과 그중 실제 후보(최대 2곳)를 고르는 함수
 
     Args:
         own: 묶음 거점 표

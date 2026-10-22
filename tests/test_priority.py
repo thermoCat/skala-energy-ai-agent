@@ -1,4 +1,4 @@
-"""급속 후보 "어디부터, 왜" 테스트 — 기준 없는 판단은 AI가, 코드는 검사만"""
+"""충전기 후보 "어디부터, 왜" 테스트 — 기준 없는 판단은 AI가, 코드는 검사만"""
 from agent.fake_llm import QualityLLM
 from agent.validation import check_priority
 from tests.conftest import event_types

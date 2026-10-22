@@ -190,7 +190,7 @@ def to_markdown(backend: str, rows: list[dict], summary: dict) -> str:
              f"(판별 항목 {summary['judged_items']}개, 게이트 교정 {summary['gate_corrections']}건)",
              f"- 검증 합격 {summary['validation_passed']}/{summary['cases']}, "
              f"응답 시간 중앙값 {summary['median_seconds']}초",
-             f"- 급속 후보 우선순위(AI 판단, 기준 없음): 검사 통과해 채택 {summary['priority_llm']}/"
+             f"- 충전기 후보 우선순위(AI 판단, 기준 없음): 검사 통과해 채택 {summary['priority_llm']}/"
              f"{summary['priority_cases']}, 반복 {REPEAT}회 같은 순서 {summary['priority_same_order']}/"
              f"{summary['priority_repeat_cases']} (반복 실행 채택 {summary['priority_repeat_llm']}/"
              f"{summary['priority_repeat_runs']})", "",

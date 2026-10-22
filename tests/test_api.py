@@ -33,7 +33,7 @@ def test_own_station_card_within_one_second(client):
     r = client.get("/api/stations/A0009172/card")
     assert time.perf_counter() - started < 1.0
     card = r.json()
-    assert card["verdict"]["label"] == "⚡ 급속 후보" and len(card["site_checks"]) == 2
+    assert card["verdict"]["label"] == "⚡ 충전기 후보" and len(card["site_checks"]) == 2
 
 
 def test_other_company_card_and_unknown_station(client):

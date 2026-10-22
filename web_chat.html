@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>에너지 허브 대시보드</title>
+<title>HubCast</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <style>
   :root { color-scheme: dark; --bg: #1e1e2e; --panel: #191926; --line: #34344a; --muted: #9a9ac0; --text: #e6e6f2; --accent: #6b6bea; }
@@ -126,7 +126,7 @@
 <body>
 <div id="app">
   <header>
-    <b>{{ company }} 에너지 허브</b>
+    <b>HubCast · {{ company }}</b>
     <label class="switch"><input type="checkbox" v-model="ownOnly" role="switch" /><span class="track"><span class="knob"></span></span> 자사 주유소만</label>
     <button type="button" class="ghost" @click="showAlerts">🔔 알림 {{ unread }}</button>
   </header>
@@ -163,10 +163,10 @@
             <div class="tile"><div class="v">{{ signed(panel.district.demand.fuels['경유'].rate_pct) }}%</div><div class="k">경유차 1년</div></div>
           </div>
           <div v-if="candidates.length" class="chips">
-            <span class="hint">⚡ 급속 후보</span>
+            <span class="hint">⚡ 충전기 후보</span>
             <span v-for="s in candidates" :key="s.station_id" class="chip" @click="focusStation(s.station_id)">{{ s.name }}</span>
           </div>
-          <div v-else class="why">급속 후보 없음 — 충전기 부족 구가 아님</div>
+          <div v-else class="why">충전기 후보 없음 — 충전기 부족 구가 아님</div>
           <details>
             <summary>거점 전체 · 연료별 수치</summary>
             <table>
@@ -284,7 +284,7 @@ const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;'
 // 화면에서는 출처 번호를 숨기고 "출처 번호 보기"로 펼친다 — 번호는 검증용이라 읽기에 방해가 됨
 const stripCites = t => t.replace(/\[[FJ]\d+\]/g, '').replace(/[ \t]+/g, ' ').trim();
 const ITEM_NAMES = { ev_bottleneck: '충전기 부족', diesel_idle: '경유차 감소', lpg_idle: 'LPG차 감소',
-  fast_candidates: '급속 후보', ev_bottleneck_before: '추가 전 부족', ev_bottleneck_after: '추가 후 부족' };
+  fast_candidates: '충전기 후보', ev_bottleneck_before: '추가 전 부족', ev_bottleneck_after: '추가 후 부족' };
 
 createApp({
   setup() {
@@ -400,7 +400,7 @@ createApp({
         const open = window.innerWidth > 900 ? ' open' : '';
         div.innerHTML = `<details${open}><summary>범례</summary>`
           + Object.entries(BRAND_COLORS).map(([b, c]) => `<div><i style="background:${c}"></i>${esc(b)}</div>`).join('')
-          + '<div style="margin-top:4px">● 주유소 ◆ LPG · ⚡ 급속 후보</div>'
+          + '<div style="margin-top:4px">● 주유소 ◆ LPG · ⚡ 충전기 후보</div>'
           + '<div>구: 빨강 충전기 부족 · 파란 점선 경유·LPG차 감소</div></details>';
         L.DomEvent.disableClickPropagation(div);
         return div;
@@ -431,7 +431,7 @@ createApp({
     // ── 정보 패널 ───────────────────────────────────────────────
     function stationWhy(card) {
       if (card.verdict.code === 'fast_candidate') return '⚡ ' + card.verdict.reasons.join(' · ');
-      const reasons = card.verdict.reasons.length ? card.verdict.reasons.join(' · ') : '급속 후보 조건에 해당하지 않음';
+      const reasons = card.verdict.reasons.length ? card.verdict.reasons.join(' · ') : '충전기 후보 조건에 해당하지 않음';
       const idle = (card.fuel_signals || []).filter(f => f.idle).map(f => `${f.fuel}차 감소 큰 구`).join(' · ');
       return idle ? `${reasons} · 🔻 ${idle}` : reasons;
     }

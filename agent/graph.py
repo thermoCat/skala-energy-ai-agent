@@ -53,7 +53,7 @@ class AgentState(TypedDict, total=False):
     baseline: dict               # 코드 기준 판정 (게이트 전용, 분석 에이전트에게 주지 않음)
     verdicts: dict               # 확정 판정 (gate 노드만 씀)
     gate_corrections: list[dict]
-    priority: dict               # 급속 후보 순서·이유 (AI 판단, 기준 없음)
+    priority: dict               # 충전기 후보 순서·이유 (AI 판단, 기준 없음)
     validation: dict             # {"passed", "issues"}
     rewrite_count: int
     # 상시 작업

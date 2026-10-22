@@ -7,16 +7,16 @@ def _summary(result):
 
 def test_station_summary(ask):
     first = ask("이 주유소에 무엇을 더해야 해?", station_id="A0009172")
-    assert _summary(first) == "요약: ⚡ 급속 후보 — 같은 구 후보 2곳 중 첫 번째 · 충전기 부족 구"
+    assert _summary(first) == "요약: ⚡ 충전기 후보 — 같은 구 후보 2곳 중 첫 번째 · 충전기 부족 구"
     other = ask("이 주유소에 무엇을 더해야 해?", station_id="A0001146")          # 금천 박미
-    assert _summary(other).startswith("요약: 급속 후보 아님 · 충전기 부족 아님")
+    assert _summary(other).startswith("요약: 충전기 후보 아님 · 충전기 부족 아님")
 
 
 def test_district_summary_names_first_candidate_and_idle_signal(ask):
     assert _summary(ask("동대문구 SK 거점 어떻게 써?", gu="동대문구")) == \
-        "요약: 충전기 부족 구 · 급속 후보 2곳 — 먼저 풍한주유소"
+        "요약: 충전기 부족 구 · 충전기 후보 2곳 — 먼저 풍한주유소"
     gangnam = _summary(ask("강남구 SK 거점 어떻게 써?", gu="강남구"))
-    assert gangnam == "요약: 충전기 부족 아님 · 급속 후보 없음 · 경유차 감소 큰 구 · LPG차 감소 큰 구"
+    assert gangnam == "요약: 충전기 부족 아님 · 충전기 후보 없음 · 경유차 감소 큰 구 · LPG차 감소 큰 구"
 
 
 def test_scenario_and_public_summary(ask):

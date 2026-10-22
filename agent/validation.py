@@ -88,14 +88,14 @@ def check_answer(draft: str, facts: list[dict], verdicts: dict) -> list[str]:
 
 
 def check_priority(result: dict, candidates: list[str], facts: list[dict]) -> list[str]:
-    """AI의 급속 후보 우선순위 판단이 쓸 수 있는지 코드로 확인하는 함수
+    """AI의 충전기 후보 우선순위 판단이 쓸 수 있는지 코드로 확인하는 함수
 
     순서·이유 자체는 기준이 없어 고치지 않는다. 확정 후보만 썼는지, 이유가 그 거점의 사실을
     인용했는지, 이유에 근거 없는 숫자가 없는지만 본다.
 
     Args:
         result: {"order", "reasons": {station_id: {"text", "facts"}}}
-        candidates: 권위 게이트가 확정한 급속 후보
+        candidates: 권위 게이트가 확정한 충전기 후보
         facts: 번호 붙은 사실 목록
     Returns:
         문제 목록 (비어 있으면 채택)

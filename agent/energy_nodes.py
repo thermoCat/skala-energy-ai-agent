@@ -316,7 +316,7 @@ async def authority_gate_node(state: dict, deps: SupervisorDeps) -> dict:
 
 @traceable(name="prioritize_node")
 async def prioritize_node(state: dict, deps: SupervisorDeps) -> dict:
-    """확정된 급속 후보가 2곳 이상일 때 어디부터 볼지 순서와 이유를 AI가 판단하는 노드
+    """확정된 충전기 후보가 2곳 이상일 때 어디부터 볼지 순서와 이유를 AI가 판단하는 노드
 
     후보 자격은 게이트가 정했고, 순서·이유에는 정답 규칙이 없어 AI 판단을 채택한다.
     코드는 확정 후보만 썼는지, 이유가 그 거점의 사실을 인용했는지만 확인하고,

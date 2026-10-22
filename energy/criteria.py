@@ -46,7 +46,7 @@ NEARBY_TOP_OPERATORS = 5            # 주변 경쟁 현황에 보여줄 운영�
 BUS_DEPOT_WORDS = ("버스", "차고지", "운수", "교통")
 USE_PUBLIC, USE_BUS, USE_LIMITED, USE_UNKNOWN = "일반 이용", "버스 전용", "이용 제한", "이용 정보 없음"
 
-# 묶음 안 급속 후보: 반경 1km 급속 수가 같은 구 자사 거점 중앙값("보통") 이하, 적은 순으로 최대 2곳
+# 묶음 안 충전기 후보: 반경 1km 급속 수가 같은 구 자사 거점 중앙값("보통") 이하, 적은 순으로 최대 2곳
 FAST_CANDIDATE_MAX = 2
 
 # 시나리오: 이 출력 이상이면 고출력 충전 시간 중앙값을 쓴다
@@ -54,7 +54,7 @@ HIGH_POWER_KW = 100
 
 # 거점 기준 판정 이름 — 차량 감소는 근거가 자치구 숫자라 거점에 붙이지 않고 묶음 신호로만 보여준다
 STATION_VERDICTS = {
-    "fast_candidate": "⚡ 급속 후보",
+    "fast_candidate": "⚡ 충전기 후보",
     "keep": "유지",
 }
 FUEL_IDLE_LABEL = "🔻 차량 감소 (자치구 신호)"
@@ -73,7 +73,7 @@ GATED_ITEMS = {
     "ev_bottleneck": "충전기 부족",
     "diesel_idle": "경유차 감소",
     "lpg_idle": "LPG차 감소",
-    "fast_candidates": "급속 후보",
+    "fast_candidates": "충전기 후보",
     "ev_bottleneck_before": "급속 추가 전 충전기 부족",
     "ev_bottleneck_after": "급속 추가 후 충전기 부족",
     "report_needed": "주간 보고에 올릴 변화",

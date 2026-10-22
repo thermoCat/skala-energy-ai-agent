@@ -74,7 +74,7 @@ class EnergyAnswer:
         c = self.cite
         chosen = self.value("fast_candidates") or []
         candidate = station_id in chosen
-        verdict = "⚡ 급속 후보입니다" if candidate else "이번 기준으로는 급속 후보가 아닙니다"
+        verdict = "⚡ 충전기 후보입니다" if candidate else "이번 기준으로는 충전기 후보가 아닙니다"
         lines = [f"4) 이 주유소: 주유소 안 급속 {c('in_station_fast_ids', '{}개')} · "
                  f"1km 안 급속 {c('fast_1km', '{}개')}{self.versus_typical()} "
                  f"→ {verdict}{self.j('fast_candidates')}"]
@@ -88,20 +88,20 @@ class EnergyAnswer:
     def cluster_lines(self) -> list[str]:
         chosen = self.value("fast_candidates") or []
         if not chosen:
-            return [f"4) 급속 후보{self.j('fast_candidates')}: 없음 (충전기 부족 구가 아님)"]
+            return [f"4) 충전기 후보{self.j('fast_candidates')}: 없음 (충전기 부족 구가 아님)"]
         marks = "①②③④"
         pri = self.priority()
         if pri.get("by") == "llm":
             picks = [f"{marks[i]} {self.name(sid)} — {pri['reasons'][sid]['text']}"
                      for i, sid in enumerate(chosen)]
-            head = f"4) 급속 후보{self.j('fast_candidates')} — 먼저 볼 순서 (AI 판단): "
+            head = f"4) 충전기 후보{self.j('fast_candidates')} — 먼저 볼 순서 (AI 판단): "
         else:
             picks = [f"{marks[i]} {self.name(sid)} — 1km 안 급속 {self.cite(f'fast_1km:{sid}', '{}개')}, "
                      f"주유소 안 급속 {self.cite(f'in_station_fast:{sid}', '{}개')}"
                      for i, sid in enumerate(chosen)]
-            head = f"4) 급속 후보{self.j('fast_candidates')}: "
+            head = f"4) 충전기 후보{self.j('fast_candidates')}: "
             if pri.get("by") == "fallback":
-                head = (f"4) 급속 후보{self.j('fast_candidates')} — AI 우선순위 판단이 검사를 "
+                head = (f"4) 충전기 후보{self.j('fast_candidates')} — AI 우선순위 판단이 검사를 "
                         "통과하지 못해 1km 안 급속이 적은 순: ")
         return [head + "  ".join(picks),
                 f"   나머지 주유소는 유지 (같은 구 자사 주유소 보통 1km 안 급속 "
@@ -233,14 +233,14 @@ class EnergyAnswer:
         chosen = self.value("fast_candidates") or []
         if request_type == "station":
             station_id = self.by_key["station"]["station_id"]
-            head = "급속 후보 아님"
+            head = "충전기 후보 아님"
             if station_id in chosen:
-                head = "⚡ 급속 후보"
+                head = "⚡ 충전기 후보"
                 if len(chosen) > 1:
                     head += f" — 같은 구 후보 {len(chosen)}곳 중 {ORDINALS[chosen.index(station_id)]}"
             parts = [head, ev]
         else:
-            first = f"급속 후보 {len(chosen)}곳 — 먼저 {self.name(chosen[0])}" if chosen else "급속 후보 없음"
+            first = f"충전기 후보 {len(chosen)}곳 — 먼저 {self.name(chosen[0])}" if chosen else "충전기 후보 없음"
             parts = [ev, first]
         return "요약: " + " · ".join(parts + idle)
 

@@ -57,7 +57,7 @@ def test_dongdaemun_sk_cluster_fast_candidates():
     assert candidates == {"A0009172", "A0009248"}     # 풍한(10), 삼영(16)
     # 장안킹셀프(19)는 조건을 만족하지만 최대 2곳에 밀림
     assert by_id["A0009215"]["verdict"] == "keep" and by_id["A0009215"]["reasons"]
-    # LPG 충전소는 급속 후보가 될 수 없음
+    # LPG 충전소는 충전기 후보가 될 수 없음
     assert by_id["A0009251"]["verdict"] == "keep"
 
 

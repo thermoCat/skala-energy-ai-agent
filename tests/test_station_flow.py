@@ -23,7 +23,7 @@ def test_own_station_gate_corrects_diesel_judgement(ask, store):
 
     answer = result["final"]
     for text in ("동대문구", "풍한주유소", "+57.0%", "+43.2%", "31.5대", "17.1대",
-                 "-4.8%", "-6.6%", "⚡ 급속 후보입니다", "게이트 교정", "현장 확인 항목"):
+                 "-4.8%", "-6.6%", "⚡ 충전기 후보입니다", "게이트 교정", "현장 확인 항목"):
         assert text in answer
     assert result["validation"] == {"passed": True, "issues": []}
 

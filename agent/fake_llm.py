@@ -131,7 +131,7 @@ class QualityLLM(FakeLLM):
 
     @traceable(run_type="llm", name="quality_llm.judge_energy")
     def judge_energy(self, request_type: str, facts: list[dict]) -> tuple[dict, dict]:
-        """분석 에이전트 판별(fake) — 사실 [F]만 보고 충전기 부족·차량 감소·급속 후보를 판별하는 함수
+        """분석 에이전트 판별(fake) — 사실 [F]만 보고 충전기 부족·차량 감소·충전기 후보를 판별하는 함수
 
         의도적 오판 1건: 경유는 감소율 순위 사실을 보지 않고 "줄었으면 차량 감소"로 판별한다.
         동대문구(경유 -4.8%, 25구 중 24위)에서 권위 게이트가 이를 교정하는 장면이 매번 재현된다.
@@ -203,11 +203,11 @@ class QualityLLM(FakeLLM):
 
     @traceable(run_type="llm", name="quality_llm.prioritize")
     def prioritize(self, facts: list[dict], candidates: list[str]) -> tuple[dict, dict]:
-        """급속 후보 우선순위 판단(fake) — 보류 결정은 뒤로, 충전 중 비율이 높고 주변 급속이 적은 곳부터
+        """충전기 후보 우선순위 판단(fake) — 보류 결정은 뒤로, 충전 중 비율이 높고 주변 급속이 적은 곳부터
 
         Args:
             facts: 후보 거점들의 사실
-            candidates: 확정된 급속 후보
+            candidates: 확정된 충전기 후보
         Returns:
             ({"order", "reasons", "summary"}, 사용량)
         """

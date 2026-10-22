@@ -20,7 +20,7 @@ def test_corrected_item_is_tagged_and_drops_ai_reason(ask, store):
 
 
 class _OneCandidateOnly(QualityLLM):
-    """급속 후보를 1곳만 고르는 분석 에이전트 (게이트가 나머지를 더하는지 확인용)"""
+    """충전기 후보를 1곳만 고르는 분석 에이전트 (게이트가 나머지를 더하는지 확인용)"""
 
     def judge_energy(self, request_type, facts):
         result, usage = super().judge_energy(request_type, facts)

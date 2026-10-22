@@ -230,11 +230,11 @@ def build_competition_facts(summary: dict) -> list[dict]:
 
 def build_priority_facts(start: int, candidates: list[str], names: dict, competition: dict,
                          watch: dict, weekly: dict) -> list[dict]:
-    """급속 후보마다 우선순위 판단에 쓸 신호(주변 운영사·새 고장·타사 신설)를 사실로 만드는 함수
+    """충전기 후보마다 우선순위 판단에 쓸 신호(주변 운영사·새 고장·타사 신설)를 사실로 만드는 함수
 
     Args:
         start: 이미 있는 사실 수 (번호를 이어 붙임)
-        candidates: 확정된 급속 후보 주유소 번호
+        candidates: 확정된 충전기 후보 주유소 번호
         names: 주유소 번호 → 이름
         competition: 주유소 번호 → get_nearby_competition 결과
         watch: detect_anomalies 결과 (자치구 범위)

@@ -63,7 +63,7 @@ class EnergyQualityMixin:
 
     @traceable(run_type="llm", name="energy.judge")
     def judge_energy(self, request_type: str, facts: list[dict]) -> tuple[dict, dict]:
-        """사실 [F]만 보고 충전기 부족·차량 감소·급속 후보(또는 신설 전후 충전기 부족)를 판별하는 함수
+        """사실 [F]만 보고 충전기 부족·차량 감소·충전기 후보(또는 신설 전후 충전기 부족)를 판별하는 함수
 
         Args:
             request_type: "station" | "district" | "scenario"
@@ -78,11 +78,11 @@ class EnergyQualityMixin:
 
     @traceable(run_type="llm", name="energy.prioritize")
     def prioritize(self, facts: list[dict], candidates: list[str]) -> tuple[dict, dict]:
-        """확정된 급속 후보 중 어디부터 볼지 순서와 이유를 판단하는 함수 (기준 없는 판단)
+        """확정된 충전기 후보 중 어디부터 볼지 순서와 이유를 판단하는 함수 (기준 없는 판단)
 
         Args:
             facts: 후보 거점들의 사실
-            candidates: 확정된 급속 후보
+            candidates: 확정된 충전기 후보
         Returns:
             ({"order", "reasons", "summary"}, 사용량)
         """

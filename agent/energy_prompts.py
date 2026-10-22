@@ -265,7 +265,7 @@ def normalize_judgement(content: str, request_type: str, facts: list[dict]) -> d
 # ── 분석 에이전트: 어디부터, 왜 ─────────────────────────────────────
 
 PRIORITY_SYSTEM = (
-    "당신은 정유사 투자 검토를 돕는 분석 에이전트다. 아래 급속 후보 거점들은 이미 기준으로 자격이 확정됐다. "
+    "당신은 정유사 투자 검토를 돕는 분석 에이전트다. 아래 충전기 후보 거점들은 이미 기준으로 자격이 확정됐다. "
     "어느 거점부터 현장 검토할지 순서와 이유를 정하라. 정답 규칙은 없다 — 사실을 저울질하는 것이 당신의 일이다.\n"
     "고려할 신호: 반경 1km 급속 수(적을수록 새 수요를 흡수할 여지), 충전 중 비율(높을수록 수요 확인, 한 시점 대리 지표), "
     "주변 새로 멈춘 급속(대체 수요가 생김), 타사 신설(경쟁이 세짐), 지난 사람 결정(보류면 사유 해소 전엔 뒤로).\n"
@@ -295,7 +295,7 @@ def priority_user(facts: list[dict], candidates: list[str]) -> str:
     """우선순위 판단 프롬프트의 사용자 메시지를 만드는 함수"""
     names = {f["station_id"]: f.get("name", f["station_id"]) for f in facts if f.get("station_id")}
     listed = "\n".join(f"- {sid} {names.get(sid, '')}" for sid in candidates)
-    return f"## 확정된 급속 후보\n{listed}\n\n## 후보 거점 사실\n{render_facts(facts)}"
+    return f"## 확정된 충전기 후보\n{listed}\n\n## 후보 거점 사실\n{render_facts(facts)}"
 
 
 def normalize_priority(content: str, candidates: list[str]) -> dict:
@@ -317,7 +317,7 @@ WRITE_SYSTEM = (
     "당신은 정유사 리테일 네트워크 관리자에게 보고하는 작성 에이전트다. 한국어로 짧게 쓴다.\n"
     "'답변 뼈대'를 읽기 쉬운 보고 문장으로 다듬어라. 규칙:\n"
     "1. 뼈대의 줄 순서, 모든 숫자, [F번호]·[J번호]를 그대로 남긴다. 숫자를 빼거나 바꾸거나 새로 만들지 않는다\n"
-    "2. 결론(충전기 부족·차량 감소·급속 후보)은 뼈대와 같아야 한다\n"
+    "2. 결론(충전기 부족·차량 감소·충전기 후보)은 뼈대와 같아야 한다\n"
     "3. 판매량·부지·전력처럼 사실에 없는 정보는 말하지 않는다\n"
     "4. 뼈대의 '현장 확인 항목' 줄과 마지막 안내 문장은 글자 그대로 둔다\n"
     "5. 뼈대에 없는 줄·제목·항목(예: 새 '현장 확인 항목', '안내')을 덧붙이지 않는다\n"
